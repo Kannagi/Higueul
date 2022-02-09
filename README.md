@@ -60,8 +60,6 @@ But don't think of it exactly as a C-like, but as a macro-assembler.
 
 ### optimization/asm :
 - optimize
-- prefetch
-- flush
 - asm
 - acc
 - acc2
@@ -85,6 +83,13 @@ static spm vec2 u8 vector1,vector2;
 It is not possible to initialize , so do u8 var = 0; Is not valid.  
 Variables have a minimum scope of a function (not possible to make a variable with a scope of an if or for for example).  
 
+# Label
+
+```
+:label;
+```
+
+# Example
 ```
 #code
 
@@ -93,8 +98,10 @@ func u16 main:u32 arg ,f32 test,u64 var;
 	spm i8 var;
 	f32 a,b,c;
 	uregister u16 adr;
+	
+	adr = 0x5000;
   
-  adr[0] = 0b11001;
+  	adr[0] = 0b11001;
 	adr[0] += 0b11001 * 5;
 
 	adr[0] += 0b11001 + 65;
