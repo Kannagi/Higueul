@@ -91,21 +91,6 @@ acc is the accumulator, idx and idy are the address registers, they are defined 
 # ASM
 Assembler is rudimentary, you can access your global variable and label declared in your code, variables must start with @ in your assembly code.
 
-# Variables
-All variables by default are global, there is no stack.
-the variables stored in your functions will have the name function_name.myvariable;
-
-here is an example :
-```
-func void test:;
-{
-	uint8 var; //global name is test.var
-}
-
-```
-
-
-
 # Function
 
 - func type name: type argument,...   
@@ -133,7 +118,6 @@ func void test:;
 {
 	uint8 var; //global name is test.var
 }
-
 ```
 
 # Label
