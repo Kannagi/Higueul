@@ -81,24 +81,24 @@ But don't think of it exactly as a C-like, but as a macro-assembler.
 ## Naming
 The names of variables, function and label accept periods ".", however variables starting with a period the compiler
 
-# Optimization
+v Optimization
 acc is the accumulator, idx and idy are the address registers, they are defined arbitrarily according to the target platform.
 - 6502/65816/HuC6280: Acc = a, idx = X, idy = Y
 - 80286: Acc = AX, idx = SI, idy = DI
 - z80: Acc = a, idx = IX, idy = IY
 - RISC-V/MIPS/AltairX: Acc = t0, idx = t1, idy = t2
 
-# ASM
+## ASM
 Assembler is rudimentary, you can access your global variable and label declared in your code, variables must start with @ in your assembly code.
 
-# Function
+## Function
 
 - func type name: type argument,...   
 ```
 func void main:uint32 arg1,uint16 arg2;
 ```
 
-# Variable
+## Variable
 
 - memory type name1,name2,...
 ```
@@ -120,7 +120,7 @@ func void test:;
 }
 ```
 
-# Label
+## Label
 
 ```
 label:
