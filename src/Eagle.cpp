@@ -29,6 +29,7 @@ Eagle::Eagle()
 
 	this->keywords["register"]   = EAGLE_keywords::REGISTER;
 	this->keywords["spm"]        = EAGLE_keywords::SPM;
+	this->keywords["lib"]        = EAGLE_keywords::LIB;
 	this->keywords["stack"]      = EAGLE_keywords::STACK;
 
 	this->keywords["if"]         = EAGLE_keywords::IF;
@@ -56,7 +57,8 @@ Eagle::Eagle()
 	this->keywords[".funcmap"]   = EAGLE_keywords::FUNCMAP;
 	this->keywords[".funcmap.spm"]   = EAGLE_keywords::FUNCMAPSPM;
 	this->keywords[".funcmap.lib"]   = EAGLE_keywords::FUNCMAPLIB;
-	this->keywords[".spmmap"]    = EAGLE_keywords::SPMMAP;
+	this->keywords[".map.spm"]   = EAGLE_keywords::SPMMAP;
+	this->keywords[".map.lib"]   = EAGLE_keywords::LIBMAP;
 	this->keywords[".dfunc"]     = EAGLE_keywords::DFUNC;
 	this->keywords[".endmacro"]  = EAGLE_keywords::ENDMACRO;
 	this->keywords[".org"]       = EAGLE_keywords::ORG;

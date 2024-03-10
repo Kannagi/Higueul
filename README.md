@@ -4,6 +4,7 @@ Eagle is a low-level programming language
 It has a syntax inspired by C and assembler.  
 But don't think of it exactly as a C-like, but as a macro-assembler. 
 
+Discord : https://discord.gg/cWa37SRgYU
 
 # Keyword
 

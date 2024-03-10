@@ -14,7 +14,7 @@
 int main()
 {
 	Eagle eagle;
-	eagle.debug = false;
+	eagle.debug = true;
 
     eagle.load_file("main.egl");
 

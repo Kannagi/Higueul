@@ -774,7 +774,6 @@ void Eagle::out_asm()
 							else
 								this->mmap = std::stoi(tmp);
 
-							std::cout << this->mmap << "\n";
 							text_code += ".code " + tmp + "\n";
 						}
 

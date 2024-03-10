@@ -501,54 +501,56 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,const EAGLE_DFUNC dfun
 
 void Eagle::asm_return_65816(const EAGLE_VARIABLE &ret,bool retvoid)
 {
-	if(this->target == TARGET_65816)
+	if(retvoid == true)
 	{
-		if(retvoid == true)
-		{
+		if( (this->mmap&0x7F0000) == 0)
 			this->text_code += "rts\n";
-		}else
+		else
+			this->text_code += "rtl\n";
+	}else
+	{
+		if(ret.type == EAGLE_keywords::IDX)
 		{
-			if(ret.type == EAGLE_keywords::IDX)
-			{
-				this->text_code += "txa\n";
-			}
-
-			if(ret.type == EAGLE_keywords::IDY)
-			{
-				this->text_code += "tya\n";
-			}
-
-			if(ret.type != EAGLE_keywords::ACC)
-			{
-				if(ret.blabel == true)
-				{
-					if(ret.token1 == '$')
-						this->text_code += "lda #"+ this->label1 +"\n";
-					else
-					if(ret.token1 == ':')
-						this->text_code += "lda #:"+ this->label1 +"\n";
-					else
-						this->text_code += "lda "+ this->label1 +"\n";
-				}else
-				if(ret.token1 == '$')
-				{
-					this->text_code += "lda #"+ std::to_string(ret.address&0xFFFF) +"\n";
-				}else
-				if(ret.token1 == ':')
-				{
-					this->text_code += "lda #"+ std::to_string(ret.address>>16) +"\n";
-				}else
-				if(ret.bimm == true)
-					this->text_code += "lda #"+ std::to_string(ret.immediate&0xFFFF) +"\n";
-				else
-					this->text_code += "lda "+ std::to_string(ret.address) +"\n";
-			}
-			if( (this->mmap&0x7F0000) == 0)
-				this->text_code += "rts\n";
-			else
-				this->text_code += "rtl\n";
+			this->text_code += "txa\n";
 		}
+
+		if(ret.type == EAGLE_keywords::IDY)
+		{
+			this->text_code += "tya\n";
+		}
+
+		if(ret.type != EAGLE_keywords::ACC)
+		{
+			if(ret.blabel == true)
+			{
+				if(ret.token1 == '$')
+					this->text_code += "lda #"+ this->label1 +"\n";
+				else
+				if(ret.token1 == ':')
+					this->text_code += "lda #:"+ this->label1 +"\n";
+				else
+					this->text_code += "lda "+ this->label1 +"\n";
+			}else
+			if(ret.token1 == '$')
+			{
+				this->text_code += "lda #"+ std::to_string(ret.address&0xFFFF) +"\n";
+			}else
+			if(ret.token1 == ':')
+			{
+				this->text_code += "lda #"+ std::to_string(ret.address>>16) +"\n";
+			}else
+			if(ret.bimm == true)
+				this->text_code += "lda #"+ std::to_string(ret.immediate&0xFFFF) +"\n";
+			else
+				this->text_code += "lda "+ std::to_string(ret.address) +"\n";
+		}
+
+		if( (this->mmap&0x7F0000) == 0)
+			this->text_code += "rts\n";
+		else
+			this->text_code += "rtl\n";
 	}
+
 }
 
 void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2)
