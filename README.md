@@ -8,126 +8,164 @@ But don't think of it exactly as a C-like, but as a macro-assembler.
 # Keyword
 
 ### Data type :
-- i8   : signed 8 bits
-- i16  : signed 16 bits
-- i32  : signed 32 bits
-- i64  : signed 64 bits
-- u8   : unsigned 8 bits
-- u16  : unsigned 16 bits
-- u32  : unsigned 32 bits
-- u64  : unsigned 64 bits
-- f16  : float half (16 bits)
-- f32  : float single (32 bits)
-- f64  : float double (64 bits)
-- ptr  : pointer (16/32/64 bits)
-- vec2 : size vector 2
-- vec3 : size vector 3
-- vec4 : size vector 4
+- int8     : signed 8 bits
+- int16    : signed 16 bits
+- int32    : signed 32 bits
+- int64    : signed 64 bits
+- uint8    : unsigned 8 bits
+- uint16   : unsigned 16 bits
+- uint32   : unsigned 32 bits
+- uint64   : unsigned 64 bits
+- float16  : float half (16 bits)
+- float32  : float single (32 bits)
+- float64  : float double (64 bits)
+- void     : function only
 
 
 ### Memory :
-- uregister : unsaved register
-- sregister : saved register
+- register : register
 - spm : ScratchPad Memory
+- lib : Library Memory
 - stack : stack
-- memory1 : defined by the compiler
-- memory2 : defined by the compiler
-- memory3 : defined by the compiler
-- extern : variable external to the file
-- static : To specify a variable or function local to the file
 
 ### control :
 - if : to compare 2 values
-- and : to do an AND comparison
-- or : to do an OR comparison
 - else
 - do
-- while
-- for
-- loop
+- while : to compare 2 values
+- loop : to compare 2 values
 - jump
 - call
 - return
-- break
-- continue
 
+### definition function :
+- func    : simple function
+- funcspm : function which has these arguments in the spm
+- funclib : function which has these arguments in the lib
+- proc    : function that has no return
 
-### definition :
-- func
-- sizeof
-- struct
-- enum
+### definition memory mapping :
+- .code        : define where the code starts in the memory map
+- .rodata      : define where the rodata starts in the memory map
+- .bss         : defined where your variables start in the memory map
+- .funcmap     : defined where your function argument start in the memory map
+- .funcmap.spm : defined where your function spm argument start in the memory map
+- .funcmap.lib : defined where your function lib argument start in the memory map
+- .map.spm     : defined where your spm start in the memory map
+- .map.lib     : defined where your lib start in the memory map
+- .org         : position your code
+
+### definition  :
+- .define   : defined a word to replace
+- .macro    : create a macro with 8 possible arguments (.arg0 - .arg7)
+- .endmacro : indicates the end of the macro
+- .dfunc    : allows you to define a function not yet declared
+ 
+### data :
+- .data.b : data 1 byte
+- .data.w : data 2 bytes
+- .data.l : data 4 bytes
+- .data.q : data 8 bytes
+- .data.s : data string terminate per zero
+- .data.h : data 2 bytes (half float)
+- .data.f : data 4 bytes (single float)
+- .data.d : data 8 bytes (double float)
 
 ### optimization/asm :
-- optimize
-- asm
-- acc
-- acc2
-- accf
+- asm  : to write assembler
+- acc  : accumulator register
+- facc : float accumulator register
+- idx  : index x register
+- idy  : index y register
+
+## Naming
+The names of variables, function and label accept periods ".", however variables starting with a period the compiler
+
+# Optimization
+acc is the accumulator, idx and idy are the address registers, they are defined arbitrarily according to the target platform.
+- 6502/65816/HuC6280: Acc = a, idx = X, idy = Y
+- 80286: Acc = AX, idx = SI, idy = DI
+- z80: Acc = a, idx = IX, idy = IY
+- RISC-V/MIPS/AltairX: Acc = t0, idx = t1, idy = t2
+
+# ASM
+Assembler is rudimentary, you can access your global variable and label declared in your code, variables must start with @ in your assembly code.
+
+# Variables
+All variables by default are global, there is no stack.
+the variables stored in your functions will have the name function_name.myvariable;
+
+here is an example :
+```
+func void test:;
+{
+	uint8 var; //global name is test.var
+}
+
+```
+
+
 
 # Function
 
-- func type name : type argument,...   
+- func type name: type argument,...   
 ```
-func u8 main:u32 arg1,u16 arg2;
-or
-func main; //(equivaled in void main() in C)
+func void main:uint32 arg1,uint16 arg2;
 ```
 
 # Variable
 
-- scope memory type1 type2 name,name2,...
+- memory type name1,name2,...
 ```
-static spm vec2 u8 vector1,vector2;
+spm uint8 name1,name2;
+//or
+uint8 name1,name2;
 ```
 It is not possible to initialize , so do u8 var = 0; Is not valid.  
-Variables have a minimum scope of a function (not possible to make a variable with a scope of an if or for for example).  
+Variables have a minimum scope of a function (not possible to make a variable with a scope of an if or while for example).  
+
+All variables by default are global, there is no stack.  
+The variables stored in your functions will have the name function_name.myvariable;  
+
+here is an example :  
+```
+func void test:;
+{
+	uint8 var; //global name is test.var
+}
+
+```
 
 # Label
 
 ```
-:label;
+label:
 ```
 
 # Example
 ```
-#code
+.code 0x0000
 
-func u16 main:u32 arg ,f32 test,u64 var;
+func uint8 main:uint8 arg1,uint8 arg2,uint8 arg3;
 {
-	spm i8 var;
-	f32 a,b,c;
-	uregister u16 adr;
+	uint8 test;
+	uint16 test2;
+	spm uint8 var,var2 8,var3;
 	
-	adr = 0x5000;
-  
-  	adr[0] = 0b11001;
-	adr[0] += 0b11001 * 5;
-
-	adr[0] += 0b11001 + 65;
-
-	adr[0] += var + 8 + adr;
-
-	:label;
-
-	acc = 0;
-	acc += 1;
-	acc = adr + var;
-	acc += adr[1];
-
+	if [test2,idx] == 5
+	{
+		return 0;
+	}
 
 	call print:0;
-
-
 
 	return 0;
 }
 
 
-
-func print:u8 ap;
+func print:uint8 ap;
 {
-	spm i8 var;
+	spm int8 var;
 	return;
 }
 ```
