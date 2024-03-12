@@ -55,17 +55,18 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 	//------------
 	if(src1.bptr == true)
 	{
-		int py = false;
+		bool py = false;
+		bool px = false;
 		if(src1.ptr2.bimm == true)
 		{
 			if(src1.immediate > 0)
 			{
-				this->text_code  += "lda #" + std::to_string(src1.ptr2.value) +"\n";
+				this->text_code  += "lda #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
 				for(int i = 0;i < src1.immediate;i++)
 					this->text_code  += "asl\n";
 				this->text_code  += "tax\n";
 			}else
-				this->text_code  += "ldx #" + std::to_string(src1.ptr2.value) +"\n";
+				this->text_code  += "ldx #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
 		}else
 		{
 			if(src1.ptr2.type == EAGLE_keywords::IDX)
@@ -154,17 +155,18 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if(src2.bptr == true)
 	{
-		int py = false;
+		bool py = false;
+		bool px = false;
 		if(src2.ptr2.bimm == true)
 		{
 			if(src1.immediate > 0)
 			{
-				this->text_code  += "lda #" + std::to_string(src2.ptr2.value) +"\n";
+				this->text_code  += "lda #" + std::to_string(src2.ptr2.value&0xFFFF) +"\n";
 				for(int i = 0;i < src2.immediate;i++)
 					this->text_code  += "asl\n";
 				this->text_code  += "tax\n";
 			}else
-				this->text_code  += "ldx #" + std::to_string(src2.ptr2.value) +"\n";
+				this->text_code  += "ldx #" + std::to_string(src2.ptr2.value&0xFFFF) +"\n";
 		}else
 		{
 			if(src2.ptr2.type == EAGLE_keywords::IDX)
@@ -327,13 +329,14 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 	if(operator1 == '&')
 	{
 		if(src1.type == EAGLE_keywords::IDX)
-			this->text_code += "ldx " + src2value +"\n";
+			this->text_code += "txa \n";
 		else
 		if(src1.type == EAGLE_keywords::IDY)
-			this->text_code += "ldy " + src2value +"\n";
+			this->text_code += "tya \n";
 		else
-			if(src1.type != EAGLE_keywords::ACC)
-		this->text_code += "lda " + src2value + endv2 +"\n";
+		if(src1.type != EAGLE_keywords::ACC)
+			this->text_code += "lda " + src2value + endv2 +"\n";
+
 		this->text_code += "and " + src1value + endv1 +"\n";
 		this->text_code += "beq " + label_adr +"\n";
 		return;
@@ -607,12 +610,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		{
 			if(src1.immediate > 0)
 			{
-				this->text_code  += "lda #" + std::to_string(src1.ptr2.value) +"\n";
+				this->text_code  += "lda #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
 				for(int i = 0;i < src1.immediate;i++)
 					this->text_code  += "asl\n";
 				this->text_code  += "tax\n";
 			}else
-				this->text_code  += "ldx #" + std::to_string(src1.ptr2.value) +"\n";
+				this->text_code  += "ldx #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
 		}else
 		{
 			if(src1.ptr2.type == EAGLE_keywords::IDX)
@@ -705,12 +708,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		{
 			if(src1.immediate > 0)
 			{
-				this->text_code  += "lda #" + std::to_string(src2.ptr2.value) +"\n";
+				this->text_code  += "lda #" + std::to_string(src2.ptr2.value&0xFFFF) +"\n";
 				for(int i = 0;i < src2.immediate;i++)
 					this->text_code  += "asl\n";
 				this->text_code  += "tax\n";
 			}else
-				this->text_code  += "ldx #" + std::to_string(src2.ptr2.value) +"\n";
+				this->text_code  += "ldx #" + std::to_string(src2.ptr2.value&0xFFFF) +"\n";
 		}else
 		{
 			if(src2.ptr2.type == EAGLE_keywords::IDX)
@@ -1187,7 +1190,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 			int py = false;
 			if(dst.ptr2.bimm == true)
 			{
-					this->text_code  += "ldx #" + std::to_string(src1.ptr2.value) +"\n";
+					this->text_code  += "ldx #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
 			}else
 			{
 				if(dst.ptr2.type == EAGLE_keywords::IDX)

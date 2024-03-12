@@ -1,8 +1,11 @@
-# Eagle
-Eagle is a low-level programming language
+# Higueul
+Higueul is a low-level programming language
 
 It has a syntax inspired by C and assembler.  
 But don't think of it exactly as a C-like, but as a macro-assembler. 
+
+There is no "stable" version yet, the language is currently being tested.
+I will release it when it is functional and bug-free.
 
 Discord : https://discord.gg/cWa37SRgYU
 
@@ -60,7 +63,6 @@ Discord : https://discord.gg/cWa37SRgYU
 - .define   : defined a word to replace
 - .macro    : create a macro with 8 possible arguments (.arg0 - .arg7)
 - .endmacro : indicates the end of the macro
-- .dfunc    : allows you to define a function not yet declared
  
 ### data :
 - .data.b : data 1 byte
@@ -82,7 +84,7 @@ Discord : https://discord.gg/cWa37SRgYU
 ## Naming
 The names of variables, function and label accept periods ".", however variables starting with a period the compiler
 
-v Optimization
+## Optimization
 acc is the accumulator, idx and idy are the address registers, they are defined arbitrarily according to the target platform.
 - 6502/65816/HuC6280: Acc = a, idx = X, idy = Y
 - 80286: Acc = AX, idx = SI, idy = DI
