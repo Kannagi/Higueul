@@ -31,12 +31,3 @@ void Eagle::asm_alu_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 
 
-void Eagle::asm_mul_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-
-}
-
-void Eagle::asm_div_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-
-}

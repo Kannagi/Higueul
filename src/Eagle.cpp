@@ -75,8 +75,6 @@ Eagle::Eagle()
 	this->keywords[".data.f"]    = EAGLE_keywords::DATAF;
 	this->keywords[".data.d"]    = EAGLE_keywords::DATAD;
 
-	this->keywords["struct"]    = EAGLE_keywords::STRUCT;
-	this->keywords["dstruct"]   = EAGLE_keywords::DSTRUCT;
 
 	this->filetext.reserve(0x200000);
 	this->text_code.reserve(0x200000);
@@ -91,10 +89,12 @@ Eagle::Eagle()
 
 	this->wram_address = 0;
 
+	this->lib_address = 0;
 	this->spm_address = 0;
 	this->funcspm_address = 0;
 	this->funclib_address = 0;
 
+	this->lib_init = 0;
 	this->spm_init = 0;
 	this->funcspm_init = 0;
 	this->funclib_init = 0;
@@ -199,6 +199,12 @@ int Eagle::alloc(EAGLE_keywords type,int n)
 	{
 		tmp = this->spm_address;
 		this->spm_address += value;
+	}
+
+	if(this->mode_alloc == ALLOC_LIB)
+	{
+		tmp = this->lib_address;
+		this->lib_address += value;
 	}
 
 	if(this->mode_alloc == ALLOC_FSPM)
@@ -315,6 +321,7 @@ bool Eagle::isOperator_move(char c,char c2)
 {
 	return (c == '=') ||
 	( (c == '+') && (c2 == '=') ) || ( (c == '-') && (c2 == '=') ) ||
+	( (c == '*') && (c2 == '=') ) || ( (c == '/') && (c2 == '=') ) || ( (c == '%') && (c2 == '=') ) ||
 	( (c == '&') && (c2 == '=') ) || ( (c == '|') && (c2 == '=') ) || ( (c == '^') && (c2 == '=') );
 }
 
@@ -327,6 +334,6 @@ bool Eagle::isOperator_cmp(char c,char c2)
 
 bool Eagle::isOperator_calcul(char c,char c2)
 {
-	return (c == '+') || (c == '-') || (c == '/') || (c == '*') || (c == '&') || (c == '|') || (c == '^')
+	return (c == '+') || (c == '-') || (c == '/') || (c == '*') || (c == '&') || (c == '|') || (c == '^') || (c == '%')
 	|| ( (c == '<') && (c2 == '<') ) || ( (c == '>') && (c2 == '>') );
 }

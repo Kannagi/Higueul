@@ -57,22 +57,5 @@ void Eagle::asm_falu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const 
 		asm_falu_AltairX(dst,src1,src2,operator1,operator2);
 }
 
-void Eagle::asm_mul(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	if(this->target == TARGET_65816)
-		asm_mul_65816(dst,src1,src2);
 
-
-	if(this->target == TARGET_AltairX)
-		asm_mul_AltairX(dst,src1,src2);
-}
-
-void Eagle::asm_div(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	if(this->target == TARGET_65816)
-		asm_div_65816(dst,src1,src2);
-
-	if(this->target == TARGET_AltairX)
-		asm_div_AltairX(dst,src1,src2);
-}
 

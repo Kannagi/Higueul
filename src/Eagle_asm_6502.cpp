@@ -950,14 +950,4 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 
 }
 
-void Eagle::asm_mul_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	this->text_code += "mul\n";
-}
-
-
-void Eagle::asm_div_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	this->text_code += "div\n";
-}
 

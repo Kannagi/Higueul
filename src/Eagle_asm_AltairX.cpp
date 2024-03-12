@@ -34,12 +34,3 @@ void Eagle::asm_falu_AltairX(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src
 
 }
 
-void Eagle::asm_mul_AltairX(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-
-}
-
-void Eagle::asm_div_AltairX(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-
-}

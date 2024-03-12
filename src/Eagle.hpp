@@ -80,40 +80,12 @@ typedef struct
 
 typedef struct
 {
-	std::string name;
-	EAGLE_keywords type;
-	int nsize;
-
-}EAGLE_STRUCT;
-
-
-typedef struct
-{
-	bool exist;
-	std::vector<EAGLE_STRUCT> stc;
-
-}EAGLE_DSTRUCT;
-
-
-typedef struct
-{
 	bool exist;
 	bool macro;
 	std::string text;
 	std::string arg[8];
 
 }EAGLE_DEFINE;
-/*
-65816
-6502
-HuC6280
-
-z80
-8086/80186
-x64 (no all instruction)
-
-AltairX
-*/
 
 typedef struct
 {
@@ -144,6 +116,7 @@ class Eagle
 		void bin_x86_64(void);
 		void bin_z80(void);
 
+		std::string text_code;
 		bool debug;
 		int error;
 
@@ -170,18 +143,12 @@ class Eagle
 		void asm_alu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
 		void asm_falu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
 
-		void asm_mul(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-
 		void asm_bru(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
 
 		//---------65816--------------
 		void asm_return_65816(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
-
-		void asm_mul_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
 
 		void asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_65816(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
@@ -190,18 +157,12 @@ class Eagle
 		void asm_return_6502(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
 
-		void asm_mul_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-
 		void asm_bru_6502(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_6502(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
 
 		//---------80186--------------
 		void asm_return_80186(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
-
-		void asm_mul_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div_80186(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
 
 		void asm_bru_80186(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_80186(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
@@ -210,18 +171,12 @@ class Eagle
 		void asm_return_Huc6280(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu_Huc6280(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
 
-		void asm_mul_Huc6280(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div_Huc6280(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-
 		void asm_bru_Huc6280(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_Huc6280(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
 
 		//---------z80--------------
 		void asm_return_z80(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu_z80(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
-
-		void asm_mul_z80(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
-		void asm_div_z80(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2);
 
 		void asm_bru_z80(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_z80(const EAGLE_VARIABLE &var,const EAGLE_DFUNC dfunc,int narg,int type);
@@ -248,7 +203,6 @@ class Eagle
 		std::map<std::string, EAGLE_VARIABLE> gvariable;
 		std::map<std::string, EAGLE_DFUNC> dfunc;
 		std::map<std::string, bool> label;
-		std::map<std::string, EAGLE_DSTRUCT> dstruct;
 
 
 		std::map<std::string, EAGLE_DEFINE> define;
@@ -259,7 +213,6 @@ class Eagle
 		std::string kmacro[8];
 
 		std::string filetext;
-		std::string text_code;
 		std::vector<char> filebin;
 		std::map<std::string, int> labelbin;
 
@@ -267,24 +220,27 @@ class Eagle
 
 		EAGLE_VARIABLE arg[8];
 		int mmap;
-
+		EAGLE_DEFINE tmacro;
 
 
 		int idf,sizebin,offset;
 
 		int line,col;
-		int func_address;
 		int func_alloc;
 		int mode_alloc;
 		int target;
 		int ilabel;
 
+		int func_address;
 		int wram_address;
+
 		int spm_address;
+		int lib_address;
 		int funcspm_address;
 		int funclib_address;
 
 		int spm_init;
+		int lib_init;
 		int funcspm_init;
 		int funclib_init;
 
@@ -354,6 +310,7 @@ enum
 	ALLOC_FLIB,
 	ALLOC_REGISTER,
 	ALLOC_STACK,
+	ALLOC_LIB,
 };
 
 enum

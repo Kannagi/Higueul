@@ -100,10 +100,6 @@ enum class EAGLE_keywords : unsigned char
     DATAF,
     DATAD,
 
-    //DATA
-    STRUCT,
-    DSTRUCT,
-
     PTR,
 };
 

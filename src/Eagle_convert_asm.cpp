@@ -10,36 +10,6 @@
 
 #include "Eagle.hpp"
 
-void Eagle::out_error(const EAGLE_WORDS tword,const std::string text)
-{
-	std::cout << "error line " << tword.line << ":" << tword.col << " : " << text << tword.item << "\n";
-	this->error++;
-}
-
-void Eagle::convertStringToNumber(std::string str,int64_t &result,double &dresult)
-{
-
-	if( (str[0] == '0') && (str[1] == 'x') )
-	{
-		 str.substr(2);
-		 result = std::stoi(str, 0, 16);
-		 dresult = result;
-
-	}else
-	if( (str[0] == '0') && (str[1] == 'b') )
-	{
-		str.substr(2);
-		result = std::stoi(str, 0, 2);
-		dresult = result;
-	}else
-	{
-		dresult = std::stod(str);
-		result = std::stoll(str);
-	}
-}
-
-
-
 static void convertNumber(std::string &tmp)
 {
 	if( (tmp[0] == '0') && (tmp[1] == 'x') )
@@ -53,150 +23,6 @@ static void convertNumber(std::string &tmp)
 		tmp[0] = ' ';
 		tmp[1] = '%';
 	}
-}
-
-bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
-{
-	var = this->variable[tword.item];
-	if(var.type != EAGLE_keywords::UNKNOW)
-	{
-		var.token1 = tword.token1;
-		var.token2 = tword.token2;
-		return true;
-	}else
-	{
-		var = this->gvariable[tword.item];
-		if(var.type != EAGLE_keywords::UNKNOW)
-		{
-			var.token1 = tword.token1;
-			var.token2 = tword.token2;
-			return true;
-		}
-		else
-		{
-			if(tword.type == TYPE_NUMBER)
-			{
-				var.bimm = true;
-				var.blabel = false;
-				var.bptr = false;
-
-				convertStringToNumber(tword.item,var.immediate,var.dimmediate);
-
-				var.token1 = tword.token1;
-				var.token2 = tword.token2;
-				return true;
-			}
-
-			if(tword.type == TYPE_CONSTANT)
-			{
-				var.bimm = true;
-				var.blabel = false;
-				var.bptr = false;
-
-				Constant_folding cfold;
-				cfold.evaluate(tword.item);
-				var.immediate = cfold.result;
-				var.dimmediate = cfold.fresult;
-
-				var.token1 = tword.token1;
-				var.token2 = tword.token2;
-				return true;
-			}
-
-			if(tword.type == TYPE_PTR)
-			{
-				var.bimm = false;
-				var.blabel = false;
-				var.bptr = true;
-
-				var.immediate = 0;
-				var.ptr_type = tword.ktype;
-
-				if(tword.pn == 0)
-					return false;
-
-				if(tword.ptype[0] == TYPE_NUMBER)
-				{
-					convertStringToNumber(tword.ptr[0],var.ptr1.value,var.dimmediate);
-					var.ptr1.bimm = true;
-				}else
-				{
-					var.ptr1.bimm = false;
-
-					EAGLE_VARIABLE tvar = this->variable[tword.ptr[0]];
-					if(tvar.type != EAGLE_keywords::UNKNOW)
-					{
-						var.ptr1.value = tvar.address;
-						var.ptr1.type = tvar.type;
-					}else
-					{
-						EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[0]];
-						if(tvar.type != EAGLE_keywords::UNKNOW)
-						{
-							var.ptr1.value = tvar.address;
-							var.ptr1.type = tvar.type;
-						}else
-						{
-							return false;
-						}
-					}
-
-				}
-
-				if(tword.pn > 1)
-				{
-					if(tword.ptype[1] == TYPE_NUMBER)
-					{
-						convertStringToNumber(tword.ptr[1],var.ptr2.value,var.dimmediate);
-						var.ptr2.bimm = true;
-					}else
-					{
-						var.ptr2.bimm = false;
-
-						EAGLE_VARIABLE tvar = this->variable[tword.ptr[1]];
-						if(tvar.type != EAGLE_keywords::UNKNOW)
-						{
-							var.ptr2.value = tvar.address;
-							var.ptr2.type = tvar.type;
-						}else
-						{
-							EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[1]];
-							if(tvar.type != EAGLE_keywords::UNKNOW)
-							{
-								var.ptr2.value = tvar.address;
-								var.ptr2.type = tvar.type;
-							}else
-							{
-								return false;
-							}
-						}
-					}
-				}
-
-
-				if(tword.pn > 2)
-					convertStringToNumber(tword.ptr[2],var.immediate,var.dimmediate);
-
-				var.token1 = tword.token1;
-				var.token2 = tword.token2;
-				return true;
-			}
-
-
-			if( (tword.type == TYPE_LABEL) && (elabel > 0) )
-			{
-				var.bimm = false;
-				var.blabel = true;
-
-				var.token1 = tword.token1;
-				var.token2 = tword.token2;
-				return true;
-			}
-		}
-
-	}
-
-	return false;
 }
 
 void Eagle::out_asm()
@@ -219,9 +45,24 @@ void Eagle::out_asm()
 		tword = this->instructions[i][0];
 		EAGLE_keywords inst = this->keywords[tword.item];
 
-		if(tword.type == TYPE_NUMBER)
+		if( (tword.type == TYPE_NUMBER) || (tword.type == TYPE_CONSTANT) )
 		{
 			out_error(tword,"the number is not instruction ");
+		}
+
+		//std::cout <<  this->funclib_address <<" FUNCLIB " << tword.item << "  \n" ;
+
+		for(int l = 1;l < n2;l++)
+		{
+			if(this->instructions[i][l].type == TYPE_CONSTANT)
+			{
+				Constant_folding cfold;
+				cfold.evaluate(this->instructions[i][l].item);
+
+				this->instructions[i][l].item = std::to_string(cfold.result);
+				this->instructions[i][l].type = TYPE_NUMBER;
+			}
+
 		}
 
 		switch(inst)
@@ -303,7 +144,6 @@ void Eagle::out_asm()
 					}
 					if(n2 < 3)
 					{
-						std::cout << this->instructions[i][0].item << " " << this->instructions[i][1].item << "\n";
 						out_error(tword,"not enough instruction ");
 					}else
 					{
@@ -359,14 +199,7 @@ void Eagle::out_asm()
 									this->label1 = this->instructions[i][2].item;
 									this->label2 = this->instructions[i][4].item;
 
-									if(operator1a == '*')
-										this->asm_mul(var1,var2,var3);
-									else
-									if(operator1a == '/')
-										this->asm_div(var1,var2,var3);
-									else
-										this->asm_alu(var1,var2,var3,operator1a,operator2a);
-
+									this->asm_alu(var1,var2,var3,operator1a,operator2a);
 
 								}else
 								{
@@ -442,7 +275,7 @@ void Eagle::out_asm()
 
 
 			case EAGLE_keywords::CALL:
-				if( (n2 > 2) && (n2 < 10) )
+				if( (n2 > 1) && (n2 < 10) )
 				{
 					//comment asm
 					this->text_code += ";" + this->instructions[i][0].item+ " " + this->instructions[i][1].item + "\n";
@@ -561,13 +394,13 @@ void Eagle::out_asm()
 
 				break;
 
-
 			case EAGLE_keywords::END:
 
 				if(tword.type == TYPE_END)
 				{
 					if(tword.scope == 0)
 					{
+						this->lib_address = this->lib_init;
 						this->spm_address = this->spm_init;
 						this->funcspm_address = this->funcspm_init;
 						this->funclib_address = this->funclib_init;
@@ -614,6 +447,7 @@ void Eagle::out_asm()
 
 					if(inst == EAGLE_keywords::FUNCLIB)
 						this->mode_alloc = ALLOC_FLIB;
+
 
 					func.clear();
 
@@ -758,29 +592,24 @@ void Eagle::out_asm()
 					if(n2 == 2)
 					{
 						tmp = this->instructions[i][1].item;
-						convertNumber(tmp);
+						std::string tmap = tmp;
 
 						if(this->instructions[i][1].type != TYPE_NUMBER)
 							out_error(instructions[i][1],"the argument is not a number ");
 						else
-						if(inst == EAGLE_keywords::CODE)
 						{
-							tmp = this->instructions[i][1].item;
-							if( (tmp[0] == '0') && (tmp[1] == 'x') )
+							convertNumber(tmp);
+							if( (tmap[0] == '0') && (tmap[1] == 'x') )
 							{
-								 tmp.substr(2);
-								 this->mmap = std::stoi(tmp, nullptr, 16);
+								this->mmap = std::stoi(tmap, nullptr, 16);
 							}
 							else
-								this->mmap = std::stoi(tmp);
-
-							text_code += ".code " + tmp + "\n";
+								this->mmap = std::stoi(tmap);
 						}
-
 					}
 
-
-
+					if(inst == EAGLE_keywords::CODE)
+						text_code += ".code " + tmp + "\n";
 
 					if(inst == EAGLE_keywords::RODATA)
 						text_code += ".rodata " + tmp + "\n";
@@ -795,6 +624,7 @@ void Eagle::out_asm()
 			case EAGLE_keywords::FUNCMAPSPM:
 			case EAGLE_keywords::FUNCMAPLIB:
 			case EAGLE_keywords::SPMMAP:
+			case EAGLE_keywords::LIBMAP:
 
 					if(n2 == 2)
 					{
@@ -802,7 +632,6 @@ void Eagle::out_asm()
 						tmp = this->instructions[i][1].item;
 						if( (tmp[0] == '0') && (tmp[1] == 'x') )
 						{
-							 tmp.substr(2);
 							 address = std::stoi(tmp, nullptr, 16);
 						}
 						else
@@ -812,13 +641,28 @@ void Eagle::out_asm()
 							this->func_address = address;
 
 						if(inst == EAGLE_keywords::SPMMAP)
+						{
+							this->spm_init = address;
 							this->spm_address = address;
+						}
+
+						if(inst == EAGLE_keywords::LIBMAP)
+						{
+							this->lib_init = address;
+							this->lib_address = address;
+						}
 
 						if(inst == EAGLE_keywords::FUNCMAPSPM)
+						{
+							this->funcspm_init = address;
 							this->funcspm_address = address;
+						}
 
 						if(inst == EAGLE_keywords::FUNCMAPLIB)
+						{
+							this->funclib_init = address;
 							this->funclib_address = address;
+						}
 
 						if(inst == EAGLE_keywords::BSS)
 						{
@@ -941,65 +785,12 @@ void Eagle::out_asm()
 					break;
 				break;
 
-
-				case EAGLE_keywords::DSTRUCT :
-					if(n2 >= 4)
-					{
-						EAGLE_DSTRUCT dstc = this->dstruct[this->instructions[i][1].item];
-						if(dstc.exist == false)
-						{
-							dstc.exist = true;
-
-							for(int l = 2;l < n2;l+=2)
-							{
-								EAGLE_keywords type1 = this->keywords[this->instructions[i][l+0].item];
-								EAGLE_keywords type2 = this->keywords[this->instructions[i][l+1].item];
-								tword = this->instructions[i][l+1];
-
-								EAGLE_STRUCT tstc;
-
-								if( (type1 >= EAGLE_keywords::INT8) && (type1 < EAGLE_keywords::VOID) )
-								{
-									tstc.type = type1;
-								}else
-								{
-									out_error(instructions[i][l+0],"type incorrect ");
-								}
-
-								if( (type2 == EAGLE_keywords::UNKNOW) && (tword.type == TYPE_WORD) )
-								{
-									tstc.name = tword.item;
-								}else
-								{
-									out_error(instructions[i][l+1],"name variable incorrect ");
-								}
-
-								tstc.nsize = 1;
-
-								if( (l+2) < n2)
-								{
-									tword = this->instructions[i][l+2];
-									if(tword.type == TYPE_NUMBER)
-									{
-										tstc.nsize = std::stoi(tword.item)&0xFFFFFFF;
-										l++;
-									}
-								}
-
-								dstc.stc.push_back(tstc);
-
-							}
-
-						}else
-							out_error(tword,"struct exist ");
-					}else
-						out_error(tword," not the right number of arguments in ");
-				break;
-
 			default:
 				int mode = ALLOC_UNK;
 				this->mode_alloc =0;
 
+				if(inst == EAGLE_keywords::LIB)
+					mode = ALLOC_LIB;
 				if(inst == EAGLE_keywords::SPM)
 					mode = ALLOC_SPM;
 				if(inst == EAGLE_keywords::REGISTER)
@@ -1020,7 +811,7 @@ void Eagle::out_asm()
 				if(mode != ALLOC_UNK)
 				{
 					int ib = 0;
-					if( (mode == ALLOC_SPM) || (mode == ALLOC_REGISTER) || (mode == ALLOC_STACK))
+					if( (mode == ALLOC_LIB) ||  (mode == ALLOC_SPM) || (mode == ALLOC_REGISTER) || (mode == ALLOC_STACK))
 						ib = 1;
 
 					bool exist = false;
@@ -1070,17 +861,17 @@ void Eagle::out_asm()
 									tword = this->instructions[i][l+1];
 									if(tword.type == TYPE_NUMBER)
 									{
-										n = std::stoi(tword.item)&0xFFFFFFF;
+										if( (tword.item[0] == '0') && (tword.item[1] == 'x') )
+										{
+											 n = std::stoi(tword.item, nullptr, 16);
+										}
+										else
+											n = std::stoi(tword.item);
+
+										n &= 0xFFFFFFF;
 										l++;
 									}
 
-									if(tword.type == TYPE_CONSTANT)
-									{
-										Constant_folding cfold;
-										cfold.evaluate(tword.item);
-										n = cfold.result&0xFFFFFFF;
-										l++;
-									}
 								}
 
 								var1.address = alloc(var1.type,n);
@@ -1108,14 +899,167 @@ void Eagle::out_asm()
 					}
 
 					this->mode_alloc = ALLOC_FRAM;
-
-
 				}
 				break;
 		}
 
 	}
 
-	this->write_file("code.asm",text_code);
+}
+
+void Eagle::out_error(const EAGLE_WORDS tword,const std::string text)
+{
+	std::cout << "error line " << tword.line << ":" << tword.col << " : " << text << tword.item << "\n";
+	this->error++;
+}
+
+void Eagle::convertStringToNumber(std::string str,int64_t &result,double &dresult)
+{
+
+	if( (str[0] == '0') && (str[1] == 'x') )
+	{
+		 str.substr(2);
+		 result = std::stoi(str, 0, 16);
+		 dresult = result;
+
+	}else
+	if( (str[0] == '0') && (str[1] == 'b') )
+	{
+		str.substr(2);
+		result = std::stoi(str, 0, 2);
+		dresult = result;
+	}else
+	{
+		dresult = std::stod(str);
+		result = std::stoll(str);
+	}
+}
+
+bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
+{
+	var = this->variable[tword.item];
+	if(var.type != EAGLE_keywords::UNKNOW)
+	{
+		var.token1 = tword.token1;
+		var.token2 = tword.token2;
+		return true;
+	}else
+	{
+		var = this->gvariable[tword.item];
+		if(var.type != EAGLE_keywords::UNKNOW)
+		{
+			var.token1 = tword.token1;
+			var.token2 = tword.token2;
+			return true;
+		}
+		else
+		{
+			if(tword.type == TYPE_NUMBER)
+			{
+				var.bimm = true;
+				var.blabel = false;
+				var.bptr = false;
+
+				convertStringToNumber(tword.item,var.immediate,var.dimmediate);
+
+				var.token1 = tword.token1;
+				var.token2 = tword.token2;
+				return true;
+			}
+
+			if(tword.type == TYPE_PTR)
+			{
+				var.bimm = false;
+				var.blabel = false;
+				var.bptr = true;
+
+				var.immediate = 0;
+				var.ptr_type = tword.ktype;
+
+				if(tword.pn == 0)
+					return false;
+
+				if(tword.ptype[0] == TYPE_NUMBER)
+				{
+					convertStringToNumber(tword.ptr[0],var.ptr1.value,var.dimmediate);
+					var.ptr1.bimm = true;
+				}else
+				{
+					var.ptr1.bimm = false;
+
+					EAGLE_VARIABLE tvar = this->variable[tword.ptr[0]];
+					if(tvar.type != EAGLE_keywords::UNKNOW)
+					{
+						var.ptr1.value = tvar.address;
+						var.ptr1.type = tvar.type;
+					}else
+					{
+						EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[0]];
+						if(tvar.type != EAGLE_keywords::UNKNOW)
+						{
+							var.ptr1.value = tvar.address;
+							var.ptr1.type = tvar.type;
+						}else
+						{
+							return false;
+						}
+					}
+
+				}
+
+				if(tword.pn > 1)
+				{
+					if(tword.ptype[1] == TYPE_NUMBER)
+					{
+						convertStringToNumber(tword.ptr[1],var.ptr2.value,var.dimmediate);
+						var.ptr2.bimm = true;
+					}else
+					{
+						var.ptr2.bimm = false;
+
+						EAGLE_VARIABLE tvar = this->variable[tword.ptr[1]];
+						if(tvar.type != EAGLE_keywords::UNKNOW)
+						{
+							var.ptr2.value = tvar.address;
+							var.ptr2.type = tvar.type;
+						}else
+						{
+							EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[1]];
+							if(tvar.type != EAGLE_keywords::UNKNOW)
+							{
+								var.ptr2.value = tvar.address;
+								var.ptr2.type = tvar.type;
+							}else
+							{
+								return false;
+							}
+						}
+					}
+				}
+
+
+				if(tword.pn > 2)
+					convertStringToNumber(tword.ptr[2],var.immediate,var.dimmediate);
+
+				var.token1 = tword.token1;
+				var.token2 = tword.token2;
+				return true;
+			}
+
+
+			if( (tword.type == TYPE_LABEL) && (elabel > 0) )
+			{
+				var.bimm = false;
+				var.blabel = true;
+
+				var.token1 = tword.token1;
+				var.token2 = tword.token2;
+				return true;
+			}
+		}
+
+	}
+
+	return false;
 }
 

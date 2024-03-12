@@ -2,6 +2,7 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <chrono>
 
 #include <stdint.h>
 #include <string.h>
@@ -13,18 +14,33 @@
 
 int main()
 {
+	auto timer_start = std::chrono::high_resolution_clock::now();
+
 	Eagle eagle;
 	eagle.debug = true;
-
+	//eagle.debug = false;
     eagle.load_file("main.egl");
 
 	eagle.parser_word();
 
 	eagle.out_asm();
 
+	if(eagle.error != 0)
+		return eagle.error;
+
+
+	eagle.write_file("out.asm",eagle.text_code);
+
 	eagle.bin_65816();
 
+
 	eagle.write_file_bin("out.smc");
+
+	auto timer_end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timer_end - timer_start);
+
+	std::cout << "Time compilation: " << duration.count() << " millisecondes" << std::endl;
+
     return 0;
 }
 

@@ -120,6 +120,13 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 		}else
 		{
+			src1value = "(218";
+
+			if(py == false)
+				endv1 = "),X";
+			else
+				endv1 = "),Y";
+
 			if(src1.ptr1.type == EAGLE_keywords::IDX)
 			{
 				this->text_code  += "stx 218\n";
@@ -133,16 +140,13 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 				this->text_code  += "sta 218\n";
 			}else
 			{
-				this->text_code  += "lda " + std::to_string(src1.ptr1.value) +"\n";
-				this->text_code  += "sta 218\n";
+				src1value  = std::to_string(src1.ptr1.value);
+				if(py == false)
+					endv1 = ",X";
+				else
+					endv1 = ",Y";
 			}
 
-			src1value = "(218";
-
-			if(py == false)
-				endv1 = "),X";
-			else
-				endv1 = "),Y";
 
 
 		}
@@ -209,6 +213,12 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 		}else
 		{
+			src2value = "(220";
+
+			if(py == false)
+				endv2 = "),X";
+			else
+				endv2 = "),Y";
 			if(src2.ptr1.type == EAGLE_keywords::IDX)
 			{
 				this->text_code  += "stx 220\n";
@@ -222,20 +232,12 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 				this->text_code  += "sta 220\n";
 			}else
 			{
-				this->text_code  += "lda " + std::to_string(src2.ptr1.value) +"\n";
-				this->text_code  += "sta 220\n";
+				src1value  = std::to_string(src1.ptr1.value);
+				if(py == false)
+					endv1 = ",X";
+				else
+					endv1 = ",Y";
 			}
-
-			src2value = "(220";
-
-			if(py == false)
-				endv2 = "),X";
-			else
-				endv2 = "),Y";
-
-			//if( (src2.ptr1.type == EAGLE_keywords::UINT16) || (src2.ptr1.type == EAGLE_keywords::INT16) )
-
-
 		}
 
 	}
@@ -380,11 +382,12 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if( (operator1 == '>') && (operator2 == '=') )
 	{
-		this->text_code += "bmi " + label_adr +"\n";
+		this->text_code += "bpl " + label_adr +"\n";
+
 	}else
 	if(operator1 == '>')
 	{
-		this->text_code += "bmi " + label_adr +"\n";
+		this->text_code += "bpl " + label_adr +"\n";
 	}
 
 }
@@ -397,67 +400,71 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,const EAGLE_DFUNC dfun
 	if(type >= 1)
 		mnemonic = "jsr ";
 
-	int sizearg = 0;
-
 	for(int i = 0;i < ninst;i++)
 	{
 		EAGLE_VARIABLE var = this->arg[i];
 		EAGLE_keywords type = dfunc.type[i];
 
-		bool zero = false;
-
 		if(var.type == EAGLE_keywords::IDX)
 		{
 			this->text_code += "stx @" + src1value + "..arg" + std::to_string(i) +"\n";
-			zero = true;
 		}else
 		if(var.type == EAGLE_keywords::IDY)
 		{
 			this->text_code += "sty @" + src1value + "..arg" + std::to_string(i) +"\n";
-			zero = true;
 		}else
 		if(var.type == EAGLE_keywords::ACC)
 		{
 			this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
-			zero = true;
 		}else
 		{
-			if(var.token1 == '$')
+			if( (type == EAGLE_keywords::UINT8) || (type == EAGLE_keywords::INT8))
 			{
-				this->text_code += "lda #" + std::to_string(var.address&0xFFFF) +"\n";
-				this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				if(var.token1 == '$')
+				{
+					this->text_code += "lda #" + std::to_string(var.address&0xFFFF) +"\n";
+					this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}else
+				if(var.token1 == ':')
+				{
+					this->text_code += "lda #" + std::to_string(var.address>>16) +"\n";
+					this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}else
+				if(var.bimm == false)
+				{
+					this->text_code += "lda " + std::to_string(var.address) +"\n";
+					this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}
+				else
+				{
+					this->text_code += "lda #" + std::to_string(var.immediate&0xFFFF) +"\n";
+					this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}
 			}else
-			if(var.token1 == ':')
 			{
-				this->text_code += "lda #" + std::to_string(var.address>>16) +"\n";
-				this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
-			}else
-			if(var.bimm == false)
-			{
-				this->text_code += "lda " + std::to_string(var.address) +"\n";
-				this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
+				if(var.token1 == '$')
+				{
+					this->text_code += "ldx #" + std::to_string(var.address&0xFFFF) +"\n";
+					this->text_code += "stx @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}else
+				if(var.token1 == ':')
+				{
+					this->text_code += "ldx #" + std::to_string(var.address>>16) +"\n";
+					this->text_code += "stx @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}else
+				if(var.bimm == false)
+				{
+					this->text_code += "ldx " + std::to_string(var.address) +"\n";
+					this->text_code += "stx @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}
+				else
+				{
+					this->text_code += "ldx #" + std::to_string(var.immediate&0xFFFF) +"\n";
+					this->text_code += "stx @" + src1value + "..arg" + std::to_string(i) +"\n";
+				}
 			}
-			else
-			{
-				this->text_code += "lda #" + std::to_string(var.immediate&0xFFFF) +"\n";
-				this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
-			}
+
 		}
-
-
-		if( (type == EAGLE_keywords::UINT8) || (type == EAGLE_keywords::INT8))
-			sizearg += 1;
-		else
-		if( (type == EAGLE_keywords::UINT16) || (type == EAGLE_keywords::INT16))
-			sizearg += 2;
-		else
-		if( (type == EAGLE_keywords::UINT32) || (type == EAGLE_keywords::INT32))
-			sizearg += 4;
-		else
-		if( (type == EAGLE_keywords::UINT64) || (type == EAGLE_keywords::INT64))
-			sizearg += 8;
-		else
-			sizearg += 1;
 	}
 
 	if(src.bimm == true)
@@ -660,6 +667,13 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 		}else
 		{
+			src1value = "(218";
+
+			if(py == false)
+				endv1 = "),X";
+			else
+				endv1 = "),Y";
+
 			if(src1.ptr1.type == EAGLE_keywords::IDX)
 			{
 				this->text_code  += "stx 218\n";
@@ -673,18 +687,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				this->text_code  += "sta 218\n";
 			}else
 			{
-				this->text_code  += "lda " + std::to_string(src1.ptr1.value) +"\n";
-				this->text_code  += "sta 218\n";
+				src1value  = std::to_string(src1.ptr1.value);
+				if(py == false)
+					endv1 = ",X";
+				else
+					endv1 = ",Y";
 			}
-
-			src1value = "(218";
-
-			if(py == false)
-				endv1 = "),X";
-			else
-				endv1 = "),Y";
-
-
 		}
 
 		optimize = false;
@@ -751,6 +759,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 		}else
 		{
+			src2value = "(220";
+
+			if(py == false)
+				endv2 = "),X";
+			else
+				endv2 = "),Y";
 			if(src2.ptr1.type == EAGLE_keywords::IDX)
 			{
 				this->text_code  += "stx 220\n";
@@ -764,20 +778,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				this->text_code  += "sta 220\n";
 			}else
 			{
-				this->text_code  += "lda " + std::to_string(src2.ptr1.value) +"\n";
-				this->text_code  += "sta 220\n";
+				src2value  = std::to_string(src2.ptr1.value);
+				if(py == false)
+					endv2 = ",X";
+				else
+					endv2 = ",Y";
 			}
-
-			src2value = "(220";
-
-			if(py == false)
-				endv2 = "),X";
-			else
-				endv2 = "),Y";
-
-			//if( (src2.ptr1.type == EAGLE_keywords::UINT16) || (src2.ptr1.type == EAGLE_keywords::INT16) )
-
-
 		}
 
 		optimize = false;
@@ -812,7 +818,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 	if(operator1 == '-')
 	{
-		mnemonic = "sub ";
+		mnemonic = "sbc ";
 		flag = "sec\n";
 	}
 
@@ -820,7 +826,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		mnemonic = "and ";
 
 	if(operator1 == '|')
-		mnemonic = "or ";
+		mnemonic = "ora ";
 
 	if(operator1 == '^')
 		mnemonic = "eor ";
@@ -965,14 +971,14 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				if(operator1 == '+')
 				{
 					for(int i = 0;i < srcvalue;i++)
-						this->text_code += "inc\n";
+						this->text_code += "ina\n";
 					return;
 				}
 
 				if(operator1 == '-')
 				{
 					for(int i = 0;i < srcvalue;i++)
-						this->text_code += "dec\n";
+						this->text_code += "dea\n";
 					return;
 				}
 			}
@@ -980,6 +986,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 		if(type1 == 0)
 		{
+			if(src1.address < 0x10000)
 			if(srcvalue < 3)
 			{
 				if(operator1 == '+')
@@ -1061,7 +1068,27 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		}
 	}
 
+	if(src2.bimm == true)
+	{
+		if(srcvalue < 3)
+		{
+			src2value = "";
+			mnemonic = "";
+			if(operator1 == '+')
+			{
+				flag ="";
+				for(int i = 0;i < srcvalue;i++)
+					src2value += "ina\n";
+			}
 
+			if(operator1 == '-')
+			{
+				flag ="";
+				for(int i = 0;i < srcvalue;i++)
+					src2value += "dea\n";
+			}
+		}
+	}
 
 
 	//var , var
@@ -1084,7 +1111,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		else
 			this->text_code += mnemonic + src2value + endv2 + "\n";
 
-		this->text_code += tmp;
+		//this->text_code += tmp;
 	}else
 	//acc acc
 	if( (type1 == 1) && (type2 == 1) )
@@ -1163,15 +1190,15 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 					this->text_code  += "ldx #" + std::to_string(src1.ptr2.value) +"\n";
 			}else
 			{
-				if(src1.ptr2.type == EAGLE_keywords::IDX)
+				if(dst.ptr2.type == EAGLE_keywords::IDX)
 				{
 					py = false;
 				}else
-				if(src1.ptr2.type == EAGLE_keywords::IDY)
+				if(dst.ptr2.type == EAGLE_keywords::IDY)
 				{
 					py = true;
 				}else
-				if(src1.ptr2.type == EAGLE_keywords::ACC)
+				if(dst.ptr2.type == EAGLE_keywords::ACC)
 				{
 					this->text_code  += "tax\n";
 				}else
@@ -1195,20 +1222,18 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				if(dst.ptr1.type == EAGLE_keywords::IDX)
 				{
 					this->text_code += "stx 222\n";
+					this->text_code += "sta (222)" + endv1 +"\n";
 				}else
 				if(dst.ptr1.type == EAGLE_keywords::IDY)
 				{
 					this->text_code += "sty 222\n";
+					this->text_code += "sta (222)" + endv1 +"\n";
 				}else
 				{
-					this->text_code  += "lda " + std::to_string(dst.ptr1.value) +"\n";
-					this->text_code  += "sta 222\n";
-
-					//if( (dst.ptr1.type == EAGLE_keywords::UINT16) || (dst.ptr1.type == EAGLE_keywords::INT16) )
-
+					this->text_code += "sta "+ std::to_string(dst.ptr1.value) + endv1 +"\n";
 				}
 
-				this->text_code += "sta (222)" + endv1 +"\n";
+
 			}
 		}else
 		if(dst.type != EAGLE_keywords::ACC)
@@ -1219,13 +1244,3 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 }
 
-void Eagle::asm_mul_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	this->text_code += "mul\n";
-}
-
-
-void Eagle::asm_div_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2)
-{
-	this->text_code += "div\n";
-}

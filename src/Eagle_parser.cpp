@@ -52,6 +52,7 @@ int Eagle::isConstantFolding(char c1,int i,EAGLE_WORDS &tword)
 		tword.col  = this->col;
 		EAGLE_DEFINE tdefine;
 		std::string word;
+		//tword.item += '(';
 
 		i++;
 		while(this->filetext[i] != 0)
@@ -65,9 +66,22 @@ int Eagle::isConstantFolding(char c1,int i,EAGLE_WORDS &tword)
 					if(tdefine.exist == true)
 						word = tdefine.text;
 
-					tword.item += word;
+
+					if(tmacro.exist == true)
+					{
+						for(int l = 0;l < 8;l++)
+						{
+							if(this->kmacro[l] == word)
+							{
+								word = tmacro.arg[l];
+								l = 8;
+							}
+						}
+					}
+
 				}
-				std::cout << tword.item << " v\n";
+
+				tword.item += word;
 				return i;
 			}
 			else
@@ -86,20 +100,25 @@ int Eagle::isConstantFolding(char c1,int i,EAGLE_WORDS &tword)
 						if(tdefine.exist == true)
 							word = tdefine.text;
 
+						if(tmacro.exist == true)
+						{
+							for(int l = 0;l < 8;l++)
+							{
+								if(this->kmacro[l] == word)
+								{
+									word = tmacro.arg[l];
+									l = 8;
+								}
+							}
+						}
+
+
 						tword.item += word + letter;
 						word = "";
 					}else
 						tword.item += letter;
 				}
 
-			}
-
-
-			this->col++;
-			if(letter == '\n')
-			{
-				this->line++;
-				this->col = 0;
 			}
 
 			i++;
@@ -199,6 +218,7 @@ void Eagle::parser_word()
 	EAGLE_DEFINE tdefine,tdefine2;
 	tdefine.exist = true;
 	char token = 0;
+	tmacro.exist = false;
 
 	while(this->filetext[i] != 0)
 	{
@@ -208,6 +228,8 @@ void Eagle::parser_word()
 		if(preproc == -1)
 		{
 			label_macro:
+			tmacro = tdefine;
+			tmacro.exist = true;
 			i-=1;
 			this->filetext.insert(i,tdefine2.text);
 			preproc = 6;
@@ -278,6 +300,7 @@ void Eagle::parser_word()
 				if(preproc == 5)
 				{
 					tdefine.arg[parg] = word;
+
 					parg++;
 					parg &=7;
 				}
@@ -377,6 +400,7 @@ void Eagle::parser_word()
 
 				if(tmp == EAGLE_keywords::ENDMACRO)
 				{
+					tmacro.exist = false;
 					if(preproc == 4)
 					{
 						this->define[dword] = tdefine;
@@ -386,6 +410,7 @@ void Eagle::parser_word()
 					if(preproc == 6)
 					{
 						preproc = 0;
+						this->line--;
 					}
 				}else
 				{

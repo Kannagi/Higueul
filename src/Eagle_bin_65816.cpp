@@ -191,6 +191,15 @@ int Eagle::line_code_asm(int mode)
 
 				if(mnemonic[0].item == ".org")
 				{
+					if(mode == 1)
+					{
+						n = this->offset&0x7FFF;
+
+						if( (n != 0) && (n != 0x7FB0))
+						std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
+					}
+
+
 					if(mnemonic[1].token1 == '$')
 						this->offset = std::stoi(mnemonic[1].item, 0, 16);
 					else
@@ -201,6 +210,7 @@ int Eagle::line_code_asm(int mode)
 						n = this->offset - this->filebin.size();
 						for(int i = 0;i < n;i++)
 							this->filebin.push_back(0);
+
 					}
 					mnemonic.clear();
 					keyl = true;
@@ -222,6 +232,7 @@ int Eagle::line_code_asm(int mode)
 						this->offset = std::stoi(mnemonic[1].item, 0, 16);
 					else
 						this->offset = std::stoi(mnemonic[1].item);
+
 					mnemonic.clear();
 					keyl = true;
 				}
@@ -410,8 +421,8 @@ void Eagle::bin_65816()
 
 					if( (mnemonic[0].item == "jsr") || (mnemonic[0].item == "jmp") )
 					{
-
-						value &= 0x7FFFFF;
+						if(value < 0x810000)
+							value &= 0x7FFFFF;
 						if(value < 0x100)
 							value = 0x1000;
 					}
@@ -580,7 +591,8 @@ void Eagle::bin_65816()
 
 					if( (instw == "jsr") || (instw == "jmp") )
 					{
-						value &= 0x7FFFFF;
+						if(value < 0x810000)
+							value &= 0x7FFFFF;
 						if(value < 0x100)
 							value = 0x1000;
 					}
@@ -633,7 +645,7 @@ void Eagle::bin_65816()
 				if(instw == "clv")
 					this->filebin.push_back(0xB8);
 
-				if(instw == "dec")
+				if(instw == "dea")
 					this->filebin.push_back(0x3A);
 
 				if(instw == "dex")
@@ -642,7 +654,7 @@ void Eagle::bin_65816()
 				if(instw == "dey")
 					this->filebin.push_back(0x88);
 
-				if(instw == "inc")
+				if(instw == "ina")
 					this->filebin.push_back(0x1A);
 
 				if(instw == "inx")
@@ -1160,7 +1172,8 @@ void Eagle::bin_65816()
 
 			if(instw == "jmp")
 			{
-				mnemonic[1].value &= 0x7FFFFF;
+				if(mnemonic[1].value < 0x810000)
+					mnemonic[1].value &= 0x7FFFFF;
 				format = 2;
 				tdata[0] = 0x4C; //addr
 				tdata[1] = 0x6C; //addr indirect
@@ -1178,7 +1191,8 @@ void Eagle::bin_65816()
 
 			if(instw == "jsr")
 			{
-				mnemonic[1].value &= 0x7FFFFF;
+				if(mnemonic[1].value < 0x810000)
+					mnemonic[1].value &= 0x7FFFFF;
 				format = 2;
 				tdata[0] = 0x20; //addr
 				tdata[1] = 0xFC; //addr indirect
@@ -1589,7 +1603,32 @@ void Eagle::bin_65816()
 
 	}
 
+	int n = this->filebin.size();
 
+
+
+	uint16_t checksum1 = 0;
+	uint16_t checksum2 = 0;
+
+	for(int i = 0;i < n;i++)
+	{
+		checksum1 += this->filebin[i];
+	}
+
+	checksum2 = -checksum1;
+	/*
+	this->filebin[0x7FDC] = checksum1;
+	this->filebin[0x7FDD] = checksum1>>8;
+	this->filebin[0x7FDE] = checksum2;
+	this->filebin[0x7FDF] = checksum2>>8;
+
+	this->filebin[0xFFDC] = checksum1;
+	this->filebin[0xFFDD] = checksum1>>8;
+	this->filebin[0xFFDE] = checksum2;
+	this->filebin[0xFFDF] = checksum2>>8;
+*/
+
+	//std::cout << checksum1 << " " << checksum2 << "\n";
 
 
 }
