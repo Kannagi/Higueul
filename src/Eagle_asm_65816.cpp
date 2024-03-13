@@ -338,7 +338,10 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 			this->text_code += "lda " + src2value + endv2 +"\n";
 
 		this->text_code += "and " + src1value + endv1 +"\n";
-		this->text_code += "beq " + label_adr +"\n";
+		if(type == 2)
+			this->text_code += "beq " + label_adr +"\n";
+		else
+			this->text_code += "bne " + label_adr +"\n";
 		return;
 	}
 	if(optimize_zero == false)

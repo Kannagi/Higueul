@@ -1,0 +1,139 @@
+//test comment
+
+/*
+
+comment two
+
+abcd
+*/
+
+.define TEST 50
+
+.macro ADD
+varg += TEST;
+varg += (10*2 + 5);
+.endmacro
+
+.macro ADD2
+varg += .arg1;
+varg += .arg2;
+.endmacro
+
+.rodata
+//
+
+
+
+.data.b 10,20,0x20,0x40;
+
+.incbin "text.txt"
+
+
+.data.s "hello world";
+
+
+.data.f 1.12,1.5,0.0,1.0;
+.org 0x200
+
+str_hello:
+
+
+.dfunc print uint16,uint16,uint16,uint16
+.bss 0x8000
+uint8 varg;
+
+.code
+.funcmap 0x200
+
+
+func uint8 main:uint8 arg1,uint8 arg2,uint8 arg3;
+{
+
+	uint8 test;
+	uint16 test2;
+	spm uint8 var,var2$8,var3;
+
+	if [test2,idx] == 5
+	{
+		return 0;
+	}
+
+
+	varg = [test2,idx] + [test,idx];
+
+	ADD
+
+
+
+	ADD2 varg,20
+
+	acc = var2 + main:;
+	do
+	{
+
+	}
+	while acc == 0
+
+	if idx == 8
+	{
+			if idy == 8
+				{idy = 1;}
+
+			if idy == 8
+				{idy = 1;}
+	}
+	else
+		{idy = acc << 3;}
+	
+	if acc == arg2
+	{
+
+	}
+	idy = idx << 3;
+
+	idy = acc << 3;
+
+	idy = arg2 << arg3;
+
+	arg2 = 0;
+	arg2 = (0x28+8);
+
+	idx = 8;
+
+	acc = arg2 + idy;
+
+	acc = acc + arg3;
+	
+	idx += 1;
+
+
+	acc += 2;
+
+	arg3 = arg2 + arg1;
+
+	acc = arg2 + idy;
+
+	acc = idx + idy;
+	arg1 = idx + idy;
+	arg2 = idx + idx;
+
+	call print:idx,5,test,idy;
+
+	return arg1;
+
+	arg2 = idx + idx;
+}
+
+
+
+func void print:uint8 ap,uint8 ap1,uint8 ap2,uint8 ap3;
+{
+	uint8 test;
+	spm uint8 var,var2$8,var3;
+
+	acc = test + ap;
+	return;
+}
+
+
+
