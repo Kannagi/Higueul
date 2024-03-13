@@ -455,7 +455,7 @@ void Eagle::out_asm()
 									tmp = this->instructions[i][l].item;
 									EAGLE_keywords ktype2 = this->keywords[tmp];
 									if( (ktype2 >= EAGLE_keywords::UINT8) && (ktype2 <= EAGLE_keywords::FLOAT64) )
-									{
+									{//
 										//func.arg_type[j] = ktype;
 									}else
 									{

@@ -130,9 +130,9 @@ func void test:;
 }
 ```
 ## Operation
-Possible operations are `+ - * / % & ^ | << >>` 
-Possible comparisons are `== != > >= < <=` 
-Possible copy operation are `= += -= /= *= &= |= ^=` 
+Possible operations are `+ - * / % & ^ | << >>`  
+Possible comparisons are `== != > >= < <=`  
+Possible copy operation are `= += -= /= *= &= |= ^=`  
 ```
 var += 5;
 var1 = var2 + var3;
@@ -158,7 +158,7 @@ label:
 ```
 .code 0x0000
 
-func uint8 main:uint8 arg1,uint8 arg2,uint8 arg3;
+func main:uint8 arg1,uint8 arg2,uint8 arg3;
 {
 	uint8 test;
 	uint16 test2;

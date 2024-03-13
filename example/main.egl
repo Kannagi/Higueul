@@ -271,8 +271,8 @@ uint8 SNDK_Bullet.x 128;
 uint8 SNDK_Bullet.y 128;
 uint8 SNDK_Bullet.vx 128;
 uint8 SNDK_Bullet.vy 128;
-uint8 SNDK_BG3 0x800;
-
+uint8 SNDK_BG3.t1;
+uint8 SNDK_BG3.t2 0x800;
 
 .bss 0x7F0000
 uint8 SNDK_BufferBG1 0x4000;
@@ -442,7 +442,7 @@ uint8 SNDK_BufferSPR3 0x2000;
 	idy =  .arg1;
 	VMADD = idy;
 	
-	DMA_BANK_0 =  :.arg2:;
+	DMA_BANK_0 =  #.arg2:;
 	
 	idy =  $.arg2:;
 	DMA_ADD_0 = idy;
@@ -453,7 +453,7 @@ uint8 SNDK_BufferSPR3 0x2000;
 	MDMAEN = 1;
 .endmacro
 
-.macro  SNDK_SendVRAM_RAM
+.macro  SNDK_SendVRAM_ADR
 
 	idy =  .arg1;
 	VMADD = idy;
@@ -473,7 +473,7 @@ uint8 SNDK_BufferSPR3 0x2000;
 
 	CGADD = .arg1;
 	
-	DMA_BANK_5 = :.arg2:;
+	DMA_BANK_5 = #.arg2:;
 	
 	idy = $.arg2:;
 	DMA_ADD_5 = idy;
@@ -485,13 +485,27 @@ uint8 SNDK_BufferSPR3 0x2000;
 
 .endmacro
 
+.macro SNDK_SendCGRAM_ADR
 
+	CGADD = .arg1;
+	
+	DMA_BANK_5 = .arg3;
+	
+	idy = .arg2;
+	DMA_ADD_5 = idy;
+	
+	idy = .arg4;
+	DMA_SIZE_5 = idy;
+	
+	MDMAEN = 0x20;
+
+.endmacro
 
 //-----------------
 
 SNES_BANK 0
 
-proc void _start:;
+proc _start:;
 {
 	asm "
 	sei
@@ -522,7 +536,7 @@ proc void _start:;
 	jump main:;
 }
 
-func void SNDK_Joypad:;
+func SNDK_Joypad:;
 {
 	uint8 joya,joyb;
 	
@@ -555,7 +569,7 @@ func void SNDK_Joypad:;
 	pad4h = STDCONTROL4H;
 }
 
-proc void VBlank:;
+proc VBlank:;
 {
 	asm "
 		jml FastVBlank
@@ -586,16 +600,16 @@ FastVBlank:
 		while HVBJOY & 0x01
 		call SNDK_Joypad:;
 		
+		idy = 0;
 		if wait == 0
 		{
-			idy = 0;
 			do
 			{
 				idy+=1;
 			}
 			while HVBJOY & 0x80
-			time = idy
 		}
+		time = idy
 	}
 	
 	
@@ -614,23 +628,23 @@ FastVBlank:
 }
 
 //error
-proc void SNES_ERROR:;
+proc SNES_ERROR:;
 {
 	asm "rti";
 }
 
-proc void SNES_IRQHV:;
+proc SNES_IRQHV:;
 {
 	asm "rti";
 }
 
-proc void main:;
+proc main:;
 {
 
-	SNDK_SendCGRAM 0x80,pal_data,0x20
+	SNDK_SendCGRAM 0x80,pal_data:,0x20
 	
-	SNDK_SendVRAM 0x6000,sprite_data,0x200
-	SNDK_SendVRAM 0x6100,sprite_data,0x200
+	SNDK_SendVRAM 0x6000,sprite_data:,0x200
+	SNDK_SendVRAM 0x6100,sprite_data:,0x200
 	
 	uint8 position.x,position.y,joypad;
 	spm uint8 tmp;
@@ -640,6 +654,8 @@ proc void main:;
 	
 	position.x = 128;
 	position.y = 128;
+	
+	
 	
 
 	Game_Loop:
@@ -664,12 +680,16 @@ proc void main:;
 		position.y -= 1;
 	}
 	
-	tmp = text_hello:;
-	
-	
-	idx = 0;
-	[0x7F0000,idx] = tmp-32;
-	[0x7F0001,idx] = SNDK_FONTPAL1;
+	if position.x == 129
+	{
+		position.y += 1;
+	}
+
+
+	call SNDK_PrintLine: $text_hello:,#text_hello:,12,5,SNDK_FONTPAL1;
+
+	call SNDK_Print: $text_hello:,#text_hello:,12,12,SNDK_FONTPAL1;
+
 	
 	call SNDK_Sprite:;
 	
@@ -677,7 +697,9 @@ proc void main:;
 	
 	call SNDK_SpriteDraw2: 0,position.y,0,0;
 	
+	call SNDK_PrintHexa8: 0xE0,2,2,SNDK_FONTPAL1;
 	
+	call SNDK_PrintHexa16: 0xABCD,2,3,SNDK_FONTPAL1;
 
 	call SNDK_WaitVBlank:;
 	
@@ -687,6 +709,125 @@ proc void main:;
 	
 }
 
+funclib SNDK_PrintLine:uint16 adr,uint8 ibank,uint16 px,uint16 py,uint8 pal;
+{
+	lib uint8 tpal;
+	tpal = pal;
+	MODE16
+	acc = py << 6;
+	idx = acc + px;
+	MODE8
+
+	acc = @adr;
+	do
+	{		
+		[SNDK_BG3.t1,idx] = acc-32;
+		[SNDK_BG3.t2,idx] = tpal;
+		adr +=1;
+		idx+=2;
+		
+		acc = @adr;
+	}
+	while acc!= 0
+}
+
+funclib SNDK_Print:uint16 adr,uint8 ibank,uint16 px,uint16 py,uint8 pal;
+{
+	lib uint8 tpal,count;
+	tpal = pal;
+	MODE16
+	acc = py << 6;
+	idx = acc + px;
+	MODE8
+	count = 2;
+	acc = @adr;
+	do
+	{		
+		[SNDK_BG3.t1,idx] = acc-32;
+		[SNDK_BG3.t2,idx] = tpal;
+		adr +=1;
+		idx+=2;
+		count+=2;
+		
+		if @adr == 0x0A
+		{
+			idx +=0x40;
+			idx  -= count;
+			count = 0;
+		}
+	}
+	while @adr != 0
+}
+
+.macro PRINT_HEXA
+{
+	acc = acc & 0xF;
+	if acc < 0xA
+	{
+		acc += 7;
+	}
+	acc += 0x10;
+}
+.endmacro
+
+funclib SNDK_PrintHexa8:uint8 number,uint16 px,uint16 py,uint8 pal;
+{
+	MODE16
+	idx = py << 6;
+	idx += px;
+	MODE8
+	
+	
+	acc = number>>4;
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+	idx+=2;
+	
+	acc = number;
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+}
+
+funclib SNDK_PrintHexa16:uint16 number,uint16 px,uint16 py,uint8 pal;
+{
+	lib uint16 tnumber2,tnumber3;
+	
+	MODE16
+	idx = py << 6;
+	idx += px;
+	
+	acc = number;
+	tnumber3 = acc>>4;
+	tnumber2 = acc>>4;
+	acc = acc>>4;
+	MODE8
+	
+	
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+	idx+=2;
+	
+	acc = tnumber2;
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+	idx+=2;
+	
+	acc = tnumber3;
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+	idx+=2;
+	
+	acc = number;
+	PRINT_HEXA
+	[SNDK_BG3.t1,idx] = acc;
+	[SNDK_BG3.t2,idx] = pal;
+	idx+=2;
+}
 
 .org 0x7FB0
 .org 0x7FC0
@@ -694,10 +835,13 @@ SNES_HEADER
 
 SNES_BANK 1
 text_hello:
-.data.s "HELLO WORLD";
+.data.s "HELLO WORLD
+OK
+TEST 12345
+(0XFFFF) ! ?";
 
 
-func void SNDK_Init:;
+func SNDK_Init:;
 {
 	VBlank.enable = 0;
 	OBJSEL = SNDK_SPR_16_32;
@@ -780,6 +924,8 @@ func void SNDK_Init:;
 	DMA_7 = 0x08;
 	DMA_BADD_7 = 0x80; //WMDATA memset $80
 	
+	
+	
 	//clear RAM
 	MODE16
 	idy = 0x3C0;
@@ -813,16 +959,8 @@ func void SNDK_Init:;
 	}
 	loop idy == 0
 	
-	MODE8
+	MODE8	
 	
-	idy = 128;
-	idx = 0;
-	do
-	{
-		[SNDK_OAMH,idx] = 0x00;
-		idx += 4;
-	}
-	loop idy == 0
 	idy = 128;
 	idx = 0;
 	do
@@ -832,39 +970,55 @@ func void SNDK_Init:;
 	}
 	loop idy == 0
 	
+	
+	
 	SNDK_SendCGRAM 0x00,DATA_FONT_SNDK_P,0x20
 	SNDK_SendVRAM 0x4000,DATA_FONT_SNDK_S,0x400
+	
+
 
 	SNDK_SendOAM
 }
 	
-func void SNDK_VBlank:;
+func SNDK_VBlank:;
 {
+	uint16 adrbg3;
+	spm uint16 tmp;
 	//OAM Update
 	SNDK_SendOAM
+
+	//BG3
+	MODE16
+	acc = adrbg3;
+	acc = acc>>1;
+	VMADD = acc + 0x5C00;
 	
-	idy =  0x5C00;
-	VMADD = idy;
+	DMA_ADD_0 = $SNDK_BG3.t1 + adrbg3;
 	
-	DMA_BANK_0 =  0x7F;
+	acc = adrbg3;
+	acc += 0x40;
+	if acc == 0x800
+	{
+		acc = 0;
+	}
+	adrbg3 = acc;
+	 
+	DMA_SIZE_0 = 0x40;
+	MODE8
 	
-	idy =  0;
-	DMA_ADD_0 = idy;
-	
-	idy =  0x400;
-	DMA_SIZE_0 = idy;
+	DMA_BANK_0 =  #SNDK_BG3.t1;
 	
 	MDMAEN = 1;
 }
 
-func void SNDK_ModeAlpha:;
+func SNDK_ModeAlpha:;
 {
 	TS = 0x11;
 	CGSWSEL = 0x02;
 	CGADSUB = 0x42;
 }
 
-func void SNDK_Sprite:;
+func SNDK_Sprite:;
 {
 	uint16 oam;
 	
@@ -872,7 +1026,7 @@ func void SNDK_Sprite:;
 	oam = idx;
 }
 
-func void SNDK_SpriteDraw:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
+func SNDK_SpriteDraw:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
 {
 	idx = SNDK_Sprite.oam;
 	[SNDK_OAM0.x,idx] = position.x;
@@ -885,7 +1039,7 @@ func void SNDK_SpriteDraw:uint8 position.x,uint8 position.y,uint8 tile,uint8 att
 	MODE8
 }
 
-func void SNDK_SpriteDraw2:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
+func SNDK_SpriteDraw2:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
 {
 	idx = SNDK_Sprite.oam;
 	[SNDK_OAM0.x,idx] = position.x;
@@ -903,7 +1057,7 @@ func void SNDK_SpriteDraw2:uint8 position.x,uint8 position.y,uint8 tile,uint8 at
 	MODE8
 }
 
-func void SNDK_WaitVBlank:;
+func SNDK_WaitVBlank:;
 {
 	acc = SNDK.clockf;
 	acc += 1;
@@ -953,12 +1107,41 @@ func void SNDK_WaitVBlank:;
 	VBlank.enable = 0;
 }
 
-funclib void tesss:uint8 ok;
+funclib tesss:uint8 ok;
 {
 	spm uint8 ok1;
 	lib uint8 ok2;
 	ok = ok1 + ok2;;
+	
+	spm uint16 address;
+	spm uint8 bank,tmp;
+	idy = $text_hello:;
+	address = idy;
+	address = #text_hello:;
+	
+	idx = 0;
+	spm uint16 idx1,idx2;
+	idx1 = 0;
+	idx2 = 0;
+	do
+	{
+		tmp = @address;
+		address +=1;
 
+	}
+	while tmp != 0
+	
+	
+	idy = $text_hello:;
+	address = idy;
+	bank = #text_hello:;
+	
+	acc = address;
+	acc = acc>>8;
+	
+	DMA_ADD_0 = $SNDK_BG3.t1 + address;
+	
+	DMA_ADD_0 = acc+ $SNDK_BG3.t1;
 }
 
 DATA_FONT_SNDK_S:
