@@ -18,7 +18,7 @@ int main()
 
 	Eagle eagle;
 	eagle.debug = true;
-	//eagle.debug = false;
+	eagle.debug = false;
     eagle.load_file("main.egl");
 
 	eagle.parser_word();

@@ -298,7 +298,19 @@ void Eagle::parser_word()
 				}
 
 				if(preproc == 5)
-				{
+				{/*
+					if(token == '#')
+						word = token + word;
+
+					if(token == '$')
+						word = token + word;
+
+					if(token == '@')
+						word = token + word;
+
+					if(letter == ':')
+						word +=  letter;
+*/
 					tdefine.arg[parg] = word;
 
 					parg++;
@@ -380,6 +392,8 @@ void Eagle::parser_word()
 				{
 					ptword.ptr[iptr] = word;
 					ptword.ptype[iptr] = tword.type;
+					ptword.ptoken1[iptr] = token;
+					ptword.ptoken2[iptr] = letter;
 					iptr++;
 					iptr &= 3;
 					ptword.pn = iptr;
@@ -546,13 +560,6 @@ void Eagle::parser_word()
 
 
 	}
-
-	//std::cout << this->filetext;
-/*
-	for (const auto& pair : this->define) {
-                std::cout << "Clé: " << pair.first << ", Texte: " << pair.second.text << std::endl;
-    }
-*/
 
 }
 

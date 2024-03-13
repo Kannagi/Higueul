@@ -59,7 +59,6 @@ Eagle::Eagle()
 	this->keywords[".funcmap.lib"]   = EAGLE_keywords::FUNCMAPLIB;
 	this->keywords[".map.spm"]   = EAGLE_keywords::SPMMAP;
 	this->keywords[".map.lib"]   = EAGLE_keywords::LIBMAP;
-	this->keywords[".dfunc"]     = EAGLE_keywords::DFUNC;
 	this->keywords[".endmacro"]  = EAGLE_keywords::ENDMACRO;
 	this->keywords[".org"]       = EAGLE_keywords::ORG;
 

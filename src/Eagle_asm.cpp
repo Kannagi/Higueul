@@ -24,13 +24,13 @@ void Eagle::asm_bru(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const 
 		asm_bru_AltairX(src1,src2,operator1,operator2,type,clabel);
 }
 
-void Eagle::asm_call_jump(const EAGLE_VARIABLE &src,const EAGLE_DFUNC dfunc,int ninst,int type)
+void Eagle::asm_call_jump(const EAGLE_VARIABLE &src,int ninst,int type)
 {
 	if(this->target == TARGET_65816)
-		asm_call_jump_65816(src,dfunc,ninst,type);
+		asm_call_jump_65816(src,ninst,type);
 
 	if(this->target == TARGET_AltairX)
-		asm_call_jump_AltairX(src,dfunc,ninst,type);
+		asm_call_jump_AltairX(src,ninst,type);
 }
 
 void Eagle::asm_return(const EAGLE_VARIABLE &ret,bool retvoid)

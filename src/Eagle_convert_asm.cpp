@@ -79,16 +79,21 @@ void Eagle::out_asm()
 					this->text_code += ";" + this->instructions[i][0].item + " " + this->instructions[i][1].item+ " " ;
 					if(n2 == 4)
 					{
+						this->label2 = this->instructions[i][3].item;
+						this->label1 = this->instructions[i][1].item;
+
 						this->text_code += this->instructions[i][2].item + " "   + this->instructions[i][3].item+ "\n";
 						tmp = this->instructions[i][2].item;
 						operator1 = tmp[0];
 						operator2 = tmp[1];
 						bvar = variable_exist(this->instructions[i][3],var2,2);
-						this->label2 = this->instructions[i][3].item;
+
 					}else
 					{
 						operator1 = '=';
 						operator2 = '=';
+						this->label2 = this->instructions[i][1].item;
+						this->label1 = this->instructions[i][1].item;
 					}
 
 
@@ -108,11 +113,13 @@ void Eagle::out_asm()
 								this->scope_label[tword.scope&0x7F] = this->ilabel;
 							}
 
-							this->label1 = this->instructions[i][1].item;
+							if(n == 2)
+								var2 = var1;
 
 							this->asm_bru(var1,var2,operator1,operator2,type,this->scope_label[tword.scope&0x7F]);
 						}else
 						{
+
 							if(variable_exist(this->instructions[i][1],var1,1) == false)
 								out_error(this->instructions[i][1],"variable not exist ! ");
 
@@ -161,12 +168,13 @@ void Eagle::out_asm()
 								//comment asm
 								this->text_code += this->instructions[i][2].item+ "\n";
 
-								if( (variable_exist(this->instructions[i][0],var1,0) == true) &&
-									(variable_exist(this->instructions[i][2],var2,1) == true)
+								this->label1 = this->instructions[i][2].item;
+								this->label2 = this->instructions[i][2].item;
+
+								if( (variable_exist(this->instructions[i][0],var1,1) == true) &&
+									(variable_exist(this->instructions[i][2],var2,2) == true)
 								)
 								{
-									this->label1 = this->instructions[i][2].item;
-									this->label2 = this->instructions[i][2].item;
 									this->asm_alu(var1,var1,var2,operator1,operator2);
 								}else
 								{
@@ -191,13 +199,15 @@ void Eagle::out_asm()
 									out_error(this->instructions[i][3],"operator error ");
 								}
 
+								this->label1 = this->instructions[i][2].item;
+								this->label2 = this->instructions[i][4].item;
+
 								if( (variable_exist(this->instructions[i][0],var1,0) == true) &&
 									(variable_exist(this->instructions[i][2],var2,1) == true) &&
 									(variable_exist(this->instructions[i][4],var3,2) == true)
 								)
 								{
-									this->label1 = this->instructions[i][2].item;
-									this->label2 = this->instructions[i][4].item;
+
 
 									this->asm_alu(var1,var2,var3,operator1a,operator2a);
 
@@ -266,9 +276,7 @@ void Eagle::out_asm()
 					if(variable_exist(this->instructions[i][1],var1,1) == false)
 						out_error(this->instructions[i][1],"variable not exist ! ");
 
-					EAGLE_DFUNC tdfunc = this->dfunc[this->instructions[i][1].item];
-
-					this->asm_call_jump(var1,tdfunc,0,0);
+					this->asm_call_jump(var1,0,0);
 				}else
 					out_error(tword," not the right number of arguments in ");
 			break;
@@ -285,14 +293,13 @@ void Eagle::out_asm()
 						out_error(this->instructions[i][1],"variable not exist ! ");
 
 
-					EAGLE_DFUNC tdfunc = this->dfunc[this->instructions[i][1].item];
-
 					int j = 0;
 
 					for(int l = 2;l < n2;l++)
 					{
 						if(j < 8)
 						{
+							this->labelarg[j] = this->instructions[i][l].item;
 							if(variable_exist(this->instructions[i][l],var2,1) == true)
 								this->arg[j] = var2;
 							else
@@ -307,49 +314,7 @@ void Eagle::out_asm()
 					}
 
 
-					this->asm_call_jump(var1,tdfunc,n2-2,1);
-				}else
-					out_error(tword," not the right number of arguments in ");
-
-			break;
-
-			case EAGLE_keywords::DFUNC:
-				if(n2 >= 3)
-				{
-					//comment asm
-					this->text_code += ";" + this->instructions[i][0].item+ " " + this->instructions[i][1].item + " "+ this->instructions[i][2].item + "\n";
-					EAGLE_DFUNC tdfunc;
-
-					int ba = 2;
-
-					if(this->instructions[i][2].item == ".spm")
-						ba = 3;
-
-					if(this->instructions[i][2].item == ".lib")
-						ba = 3;
-
-					int j = 0,derror = 0;
-					for(int l = ba;l < n2;l++)
-					{
-						if(j < 8)
-						{
-
-							tdfunc.type[j] = this->keywords[this->instructions[i][l].item];
-						}
-						else
-						{
-							out_error(tword," max 8 arguments in ");
-							derror = 1;
-							break;
-						}
-						j++;
-					}
-
-					if(derror == 0)
-					{
-						this->dfunc[this->instructions[i][1].item] = tdfunc;
-					}
-
+					this->asm_call_jump(var1,n2-2,1);
 				}else
 					out_error(tword," not the right number of arguments in ");
 
@@ -510,7 +475,7 @@ void Eagle::out_asm()
 										bool exist = false;
 										tmp2 = func.name + "." + tmp;
 
-										var = this->variable[tmp];
+										var = this->gvariable[tmp];
 
 										if(var.type != EAGLE_keywords::UNKNOW)
 											exist = true;
@@ -546,9 +511,6 @@ void Eagle::out_asm()
 									j++;
 
 								}
-
-
-
 							}
 
 						}else
@@ -979,6 +941,21 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 				if(tword.pn == 0)
 					return false;
 
+				if(elabel == 0)
+					this->label0 = tword.ptr[0];
+
+				if(elabel == 1)
+					this->label1 = tword.ptr[0];
+
+				if(elabel == 2)
+					this->label2 = tword.ptr[0];
+
+				var.ptr1.token1 = tword.ptoken1[0];
+				var.ptr1.token2 = tword.ptoken2[0];
+
+				var.ptr2.token1 = tword.ptoken1[1];
+				var.ptr2.token2 = tword.ptoken2[1];
+
 				if(tword.ptype[0] == TYPE_NUMBER)
 				{
 					convertStringToNumber(tword.ptr[0],var.ptr1.value,var.dimmediate);
@@ -1001,14 +978,18 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 							var.ptr1.type = tvar.type;
 						}else
 						{
-							return false;
+							std::cout << "ok " << this->label1 << "\n";
+							if(var.ptr1.token2 != ':')
+								return false;
 						}
 					}
 
 				}
 
+				var.ptr2_exist = false;
 				if(tword.pn > 1)
 				{
+					var.ptr2_exist = true;
 					if(tword.ptype[1] == TYPE_NUMBER)
 					{
 						convertStringToNumber(tword.ptr[1],var.ptr2.value,var.dimmediate);

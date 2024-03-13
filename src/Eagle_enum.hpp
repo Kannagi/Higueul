@@ -85,7 +85,6 @@ enum class EAGLE_keywords : unsigned char
     FUNCMAPSPM,
     SPMMAP,
     LIBMAP,
-    DFUNC,
     ORG,
     MACRO,
     ENDMACRO,

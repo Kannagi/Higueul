@@ -945,16 +945,16 @@ void Eagle::bin_65816()
 				tdata[4] = 0xAD; //adr
 				tdata[5] = 0xAF; //adr long
 
-				tdata[6] = 0xDD; //adr X
-				tdata[7] = 0xDF; //adr long X
-				tdata[8] = 0xD9; //adr Y
-				tdata[9] = 0xD5; //dp X
-				tdata[10] = 0xC1; //(dp),X
-				tdata[11] = 0xD1; //(dp),Y
-				tdata[12] = 0xD7; //[dp], Y
+				tdata[6] = 0xBD; //adr X
+				tdata[7] = 0xBF; //adr long X
+				tdata[8] = 0xB9; //adr Y
+				tdata[9] = 0xB5; //dp X
+				tdata[10] = 0xA1; //(dp),X
+				tdata[11] = 0xB1; //(dp),Y
+				tdata[12] = 0xB7; //[dp], Y
 
-				tdata[13] = 0xC3; //sr s
-				tdata[14] = 0xD3; //sr S ,Y
+				tdata[13] = 0xA3; //sr s
+				tdata[14] = 0xB3; //sr S ,Y
 			}
 
 			if(instw == "ora")

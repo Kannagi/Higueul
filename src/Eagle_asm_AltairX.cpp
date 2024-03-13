@@ -14,7 +14,7 @@ void Eagle::asm_bru_AltairX(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src
 
 }
 
-void Eagle::asm_call_jump_AltairX(const EAGLE_VARIABLE &src,const EAGLE_DFUNC dfunc,int ninst,int type)
+void Eagle::asm_call_jump_AltairX(const EAGLE_VARIABLE &src,int ninst,int type)
 {
 
 }
