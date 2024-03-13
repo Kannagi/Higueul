@@ -122,7 +122,6 @@ Variables have a minimum scope of a function (not possible to make a variable wi
 All variables by default are global, there is no stack.  
 The variables stored in your functions will have the name function_name.myvariable;  
 
-here is an example :  
 ```
 func void test:;
 {
@@ -142,7 +141,7 @@ if var1 == 2
 }
 ```
 
-##Constant folding
+## Constant folding
 all constant folding are in parentheses  
 ```
 var += (50*8*0x80 +50);
