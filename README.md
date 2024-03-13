@@ -2,9 +2,9 @@
 Higueul is a low-level programming language
 
 It has a syntax inspired by C and assembler.  
-But don't think of it exactly as a C-like, but as a macro-assembler. 
+But don't think of it exactly as a C-like, but as a macro-assembler-like. 
 
-There is no "stable" version yet, the language is currently being tested.
+There is no "stable" version yet, the language is currently being tested. 
 I will release it when it is functional and bug-free.
 
 Discord : https://discord.gg/cWa37SRgYU
@@ -93,12 +93,19 @@ acc is the accumulator, idx and idy are the address registers, they are defined 
 
 ## ASM
 Assembler is rudimentary, you can access your global variable and label declared in your code, variables must start with @ in your assembly code.
+```
+asm "
+add t0,t1,t2
 
+lb t3,@mavar(zero)
+sub t0,t1,t3
+";
+```
 ## Function
 
-- func type name: type argument,...   
+- func name: type argument,...   
 ```
-func void main:uint32 arg1,uint16 arg2;
+func main:uint32 arg1,uint16 arg2;
 ```
 
 ## Variable
@@ -121,6 +128,24 @@ func void test:;
 {
 	uint8 var; //global name is test.var
 }
+```
+## Operation
+Possible operations are `+ - * / % & ^ | << >>` 
+Possible comparisons are `== != > >= < <=` 
+Possible copy operation are `= += -= /= *= &= |= ^=` 
+```
+var += 5;
+var1 = var2 + var3;
+if var1 == 2
+{
+
+}
+```
+
+##Constant folding
+all constant folding are in parentheses  
+```
+var += (50*8*0x80 +50);
 ```
 
 ## Label

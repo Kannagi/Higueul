@@ -392,11 +392,11 @@ void Eagle::out_asm()
 			case EAGLE_keywords::FUNCLIB:
 			case EAGLE_keywords::FUNC:
 
-				if(n2 > 19)
+				if(n2 > 18)
 				{
 					out_error(tword,"too many arguments in ");
 				}
-				if(n2 < 3)
+				if(n2 < 2)
 				{
 					out_error(tword,"not enough argument ");
 				}
@@ -422,16 +422,11 @@ void Eagle::out_asm()
 						func.retauto = false;
 					}
 
-					tmp = this->instructions[i][1].item;
-					ktype = this->keywords[tmp];
-
-					func.type = ktype;
 					func.address = this->func_address;
 
 					//type function
-					if( (ktype >= EAGLE_keywords::UINT8) && (ktype <= EAGLE_keywords::VOID) )
 					{
-						tmp = this->instructions[i][2].item;
+						tmp = this->instructions[i][1].item;
 						ktype = this->keywords[tmp];
 						text_code += tmp + ":\n";
 						func.name = tmp;
@@ -441,15 +436,15 @@ void Eagle::out_asm()
 							this->label[tmp] = true;
 						}else
 						{
-							out_error(this->instructions[i][2],"function exist ! ");
+							out_error(this->instructions[i][1],"function exist ! ");
 						}
 
 						//Function Name
-						if( (ktype == EAGLE_keywords::UNKNOW) && (this->instructions[i][2].type == TYPE_LABEL) )
+						if( (ktype == EAGLE_keywords::UNKNOW) && (this->instructions[i][1].type == TYPE_LABEL) )
 						{
 							int j = 0;
 
-							for(int l = 3;l < n2;l+=2)
+							for(int l = 2;l < n2;l+=2)
 							{
 								if( (l+2) > n2)
 								{
@@ -518,9 +513,6 @@ void Eagle::out_asm()
 							out_error(tword,"Wait a name function ");
 						}
 
-					}else
-					{
-						out_error(tword,"Wait for a variable type ");
 					}
 				}
 
