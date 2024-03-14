@@ -1630,5 +1630,6 @@ void Eagle::bin_65816()
 
 	//std::cout << checksum1 << " " << checksum2 << "\n";
 
-
+	std::cout << "func used :"<< func_address << "\n";
+	std::cout << "wram used :"<< wram_address << "\n";
 }

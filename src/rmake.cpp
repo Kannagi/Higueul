@@ -2,13 +2,19 @@
 #include <stdlib.h>
 #include <dirent.h>
 #include <string.h>
-
+#include <sys/stat.h>
 #define MAX_ENTRIES 4000
+
+void rmake_add_file(char *filename);
+void rmake_option(char *filename);
+
+void rmake_compile_run(char *target);
 
 void listFilesRecursive(const char *path, char *entries[], int *entryCount)
 {
     DIR *dir;
     struct dirent *entry;
+    struct stat info;
 
     if ((dir = opendir(path)) == NULL)
 	{
@@ -24,31 +30,37 @@ void listFilesRecursive(const char *path, char *entries[], int *entryCount)
 
         char fullPath[1024];
         snprintf(fullPath, sizeof(fullPath), "%s/%s", path, entry->d_name);
-        //printf("%s\n", fullPath);
+
+		// Store the file path in entries array
         entries[*entryCount] = strdup(fullPath);
         (*entryCount)++;
-/*
-        if (entry->d_type == DT_DIR)
+
+
+        if (stat(fullPath, &info) != 0) {
+            perror("stat");
+            continue;
+        }
+
+        if (S_ISDIR(info.st_mode)) {
+            // It's a directory
             listFilesRecursive(fullPath, entries, entryCount);
-        else
-        {
+        } else {
             int l = strlen(fullPath);
             if( (fullPath[l-4] == '.') && (fullPath[l-3] == 'e') && (fullPath[l-2] == 'g') && (fullPath[l-1] == 'l') )
             {
-                fullPath[l-4] = 0;
-                //rmakeCommand(_rmake_file,_rmake_rmake,_rmake_rmake->cmd_compiler,fullPath,1);
+				//printf("konw format %s\n",fullPath);
+                rmake_add_file(fullPath);
 
             }else
                 printf("unkonw format %s\n",fullPath);
-
         }
-        */
+
     }
 
     closedir(dir);
 }
 
-void listFiles(FILE *file,const char *path)
+void listFiles(const char *path)
 {
     char *entries[MAX_ENTRIES];
     int entryCount = 0;
@@ -106,38 +118,7 @@ void* loadFile(const char* filename,int *sz)
 
     return buffer;
 }
-/*
-void *rmake_keyword(RMAKE *rmake,char *keywords)
-{
-    if(strcmp(keywords,"exe_name") == 0)
-        return rmake->exe_name;
 
-    if(strcmp(keywords,"compiler") == 0)
-        return rmake->compiler;
-
-    if(strcmp(keywords,"options") == 0)
-        return rmake->options;
-
-    if(strcmp(keywords,"target") == 0)
-        return rmake->target;
-
-    if(strcmp(keywords,"cmd_precompiler") == 0)
-        return rmake->cmd_precompiler;
-
-    if(strcmp(keywords,"cmd_postcompiler") == 0)
-        return rmake->cmd_postcompiler;
-
-    if(strcmp(keywords,"cmd_compiler") == 0)
-        return rmake->cmd_compiler;
-
-    if(strcmp(keywords,"add_folder") == 0)
-        return rmake->folder;
-
-    if(strcmp(keywords,"add_file") == 0)
-        return rmake->file;
-
-    return NULL;
-}*/
 
 int rmake_keyword(char *keywords)
 {
@@ -214,7 +195,7 @@ void rmakeInit(char *buffer,int n)
                         l++;
                     }
                     buf[l] = 0;
-                    //printf("cmd:%s\n",buf);
+                    //printf("cmd:%s \n",buf);
 
                     if(l > 0)
                     {
@@ -224,35 +205,37 @@ void rmakeInit(char *buffer,int n)
 						}else
 						if(kcmd == 2) //compiler_run
 						{
-
+							rmake_compile_run(buf);
 						}else
 						{
 							int bn = strlen(buf);
 							int j = 0;
 							while(j < bn)
 							{
+
 								int k = 0;
 								while((buf[j] != ';') && (j < bn))
 								{
 									filename[k] = buf[j];
 									k++;
-									k++;
+									j++;
 								}
+								j++;
 								filename[k] = 0;
 
 								if(kcmd == 0) // option
 								{
-
+									rmake_option(filename);
 								}
 
 								if(kcmd == 3) //add_folder
 								{
-
+									listFiles(filename);
 								}
 
 								if(kcmd == 4) //add_folder
 								{
-
+									rmake_add_file(filename);
 								}
 
 							}
@@ -275,219 +258,20 @@ void rmakeInit(char *buffer,int n)
     }
 }
 
-/*
-void rmakeCommand(FILE *file,RMAKE *rmake,char *buffer,char *filename,int compiler_type)
-{
-    char keywords[32];
-    int l;
-
-    int n = strlen(buffer);
-
-    for(int i = 0;i < n;i++)
-    {
-        if(buffer[i] == '$')
-        {
-            l = 0;
-            i++;
-            while((buffer[i] != ' ') && (i < n))
-            {
-                keywords[l] = buffer[i];
-                i++;
-                l++;
-            }
-
-            keywords[l] = 0;
-
-            if(strcmp(keywords,"compiler") == 0)
-            {
-				fputs(rmake->compiler,file);
-            }
 
 
-            if(strcmp(keywords,"options") == 0)
-                fputs(rmake->options,file);
-
-
-
-            if(strcmp(keywords,"file") == 0)
-            {
-                fputs(filename,file);
-
-				fputs(".egl",file);
-
-
-                char crt0[6];
-
-                int n = strlen(filename);
-
-                crt0[0] = filename[n-4];
-                crt0[1] = filename[n-3];
-                crt0[2] = filename[n-2];
-                crt0[3] = filename[n-1];
-                crt0[4] = filename[n-0];
-                crt0[5] = 0;
-
-                if(strcmp(crt0,"crt0") == 0)
-                {
-                    sprintf(rmake->crt0,"obj/%s.o ",filename);
-                }else
-                {
-                    strcat(rmake->obj,"obj/");
-                    strcat(rmake->obj,filename);
-                    strcat(rmake->obj,".o ");
-                }
-
-                //folderRCreate(filename,"obj/");
-            }
-
-            if(strcmp(keywords,"object") == 0)
-            {
-                if(compiler_type < 16)
-                {
-                    fputs("obj/",file);
-                    fputs(filename,file);
-                    fputs(".o",file);
-                }
-                else
-                {
-                    fputs(rmake->crt0,file);
-                    fputs(rmake->obj,file);
-                }
-
-            }
-
-            if(strcmp(keywords,"exe_name") == 0)
-                fputs(rmake->exe_name,file);
-        }
-
-        if(i < n)
-            fputc(buffer[i],file);
-
-    }
-}
-
-
-
-
-void rmakeCompileFile(FILE *file,RMAKE *rmake,char *buffer)
-{
-    char filename[256];
-    int n = strlen(buffer);
-    for(int i = 0;i < n;i++)
-    {
-        int l = 0;
-        while((buffer[i] != ';') && (i < n))
-        {
-            filename[l] = buffer[i];
-            i++;
-            l++;
-        }
-        filename[l] = 0;
-
-        if(l > 0)
-        {
-            filename[l] = 0;
-
-            if( (filename[l-2] == '.') && (filename[l-1] == 'c') )
-            {
-                filename[l-2] = 0;
-                rmakeCommand(file,rmake,rmake->cmd_compiler,filename,0);
-                fputs("\n",file);
-            }else
-            if( (filename[l-4] == '.') && (filename[l-3] == 'c') && (filename[l-2] == 'p') && (filename[l-1] == 'p') )
-            {
-                filename[l-4] = 0;
-                rmakeCommand(file,rmake,rmake->cmd_compiler,filename,1);
-                fputs("\n",file);
-            }else
-                printf("unkonw format %s\n",filename);
-        }
-    }
-}
-
-
-void rmakeCreate(RMAKE *rmake)
-{
-    FILE *file = fopen(".vscode/compile.sh","w");
-
-    if(file == NULL)
-    {
-        printf("Error write file compile.sh\n");
-        return;
-    }
-
-
-    //fputs(bin_sh,file);
-
-    //pre compiler
-    fputs(rmake->cmd_precompiler,file);
-    fputs("\n",file);
-
-    //compiler file
-    rmakeCompileFile(file,rmake,rmake->file);
-
-    char filename[256];
-    int n = strlen(rmake->folder);
-    for(int i = 0;i < n;i++)
-    {
-        int l = 0;
-        while((rmake->folder[i] != ';') && (i < n))
-        {
-            filename[l] = rmake->folder[i];
-            i++;
-            l++;
-        }
-        filename[l] = 0;
-
-        if(l > 0)
-        {
-            filename[l] = 0;
-
-            listFiles(rmake,file,filename);
-        }
-    }
-
-    fputs("\n",file);
-
-
-    //linker
-    //rmakeCommand(file,rmake,rmake->cmd_linker,"",16);
-    fputs("\n\n",file);
-
-    //post compiler
-    fputs(rmake->cmd_postcompiler,file);
-    fputs("\n",file);
-
-    fclose(file);
-
-    //---------------
-    file = fopen(".vscode/execute.sh","w");
-
-    if(file == NULL)
-    {
-        printf("Error write file execute.sh\n");
-        return;
-    }
-
-    //fputs(bin_sh,file);
-    //fputs(rmake->cmd_execute,file);
-    fputs("\n",file);
-
-
-    fclose(file);
-}
-
-*/
-
-
-int rmakeLoad(char *filename)
+int rmakeLoad(const char *filename)
 {
     char *buffer = NULL;
     int fsize;
 
     buffer = (char*)loadFile(filename,&fsize);
     if (buffer == NULL)
-        return 0;
+    {
+		printf("Error: Unable to open higueul_make.txt file\n");
+		return 0;
+    }
+
 
     rmakeInit(buffer,fsize);
 

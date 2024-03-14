@@ -122,6 +122,7 @@ Eagle::Eagle()
 	this->kmacro[7] = ".arg8";
 
 	this->debug = false;
+	this->bout_asm = false;
 }
 
 int Eagle::alloc(EAGLE_keywords type,int n)
@@ -274,7 +275,7 @@ void Eagle::load_file(const char *path)
         return;
     }
 
-    std::cerr << "File: "<< path << std::endl;
+    std::cerr << "File: "<< path << "\n";
 
     file.seekg(0, std::ios::end);
     std::streampos filesizesp = file.tellg();

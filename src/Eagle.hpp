@@ -112,8 +112,9 @@ class Eagle
 		void bin_z80(void);
 
 		std::string text_code;
-		bool debug;
+		bool debug,bout_asm;
 		int error;
+		int target;
 
 	private:
 		bool isWord(char c);
@@ -222,7 +223,6 @@ class Eagle
 		int line,col;
 		int func_alloc;
 		int mode_alloc;
-		int target;
 		int ilabel;
 
 		int func_address;

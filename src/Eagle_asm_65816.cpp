@@ -125,20 +125,34 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if( (operator1 == '<') && (operator2 == '=') )
 	{
-		this->text_code += "bmi " + label_adr +"\n";
+		if(type == 2)
+			this->text_code += "bcs " + label_adr +"\n";
+		else
+			this->text_code += "bcc " + label_adr +"\n";
 	}else
 	if(operator1 == '<')
 	{
-		this->text_code += "bmi " + label_adr +"\n";
+		if(type == 2)
+			this->text_code += "bcs " + label_adr +"\n";
+		else
+			this->text_code += "bcc " + label_adr +"\n";
 	}
 
 	if( (operator1 == '>') && (operator2 == '=') )
 	{
-		this->text_code += "bpl " + label_adr +"\n";
+		if(type == 2)
+			this->text_code += "bcc " + label_adr +"\n";
+		else
+			this->text_code += "bcs " + label_adr +"\n";
 	}else
 	if(operator1 == '>')
 	{
-		this->text_code += "bpl " + label_adr +"\n";
+		if(type == 2)
+		{
+			this->text_code += "bcc " + label_adr +"\n";
+		}
+		else
+			this->text_code += "bcs " + label_adr +"\n";
 	}
 
 }
@@ -720,7 +734,7 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 	}
 
 	if(src.token1 == '@')
-		srcvalue = "[" + srcvalue + "}";
+		srcvalue = "[" + srcvalue + "]";
 
 	if(src.token1 == '?')
 		srcvalue = "(" + srcvalue + ")";

@@ -102,15 +102,13 @@ sub t0,t1,t3
 ";
 ```
 ## Function
-
-- func name: type argument,...   
+func name: type argument,...   
 ```
 func main:uint32 arg1,uint16 arg2;
 ```
 
 ## Variable
-
-- memory type name1,name2,...
+memory type name1,name2,...  
 ```
 spm uint8 name1,name2;
 //or

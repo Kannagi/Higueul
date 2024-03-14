@@ -50,8 +50,6 @@ void Eagle::out_asm()
 			out_error(tword,"the number is not instruction ");
 		}
 
-		//std::cout <<  this->funclib_address <<" FUNCLIB " << tword.item << "  \n" ;
-
 		for(int l = 1;l < n2;l++)
 		{
 			if(this->instructions[i][l].type == TYPE_CONSTANT)

@@ -220,6 +220,10 @@ void Eagle::parser_word()
 	char token = 0;
 	tmacro.exist = false;
 
+	this->line = 1;
+	this->col = 0;
+	this->instructions.clear();
+
 	while(this->filetext[i] != 0)
 	{
 
