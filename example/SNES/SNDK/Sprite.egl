@@ -1,0 +1,292 @@
+
+func SNDK_Sprite:;
+{
+	uint16 oam;
+	
+	//init OAM	
+	idy = 32;
+	idx = 0;
+	oam = idx;
+	do
+	{
+		[SNDK_OAM0.y,idx] = 0xE0;
+		[SNDK_OAM1.y,idx] = acc;
+		[SNDK_OAM2.y,idx] = acc;
+		[SNDK_OAM3.y,idx] = acc;
+		
+		idx += 16;
+	}
+	loop idy == 0
+	
+	idy = 0x8;
+	idx = 0;
+	
+	MODE16
+	acc = 0;
+	do
+	{
+		
+		[SNDK_OAMH,idx] = acc;
+		[SNDK_OAMH,idx] = acc;
+		idx += 2;
+		[SNDK_OAMH,idx] = acc;
+		[SNDK_OAMH,idx] = acc;
+		idx += 2;
+	}
+	loop idy == 0
+	MODE8
+	
+	//SNDK_memset SNDK_OAM0.y,0x00,0x220
+
+	
+	
+}
+
+
+funclib SNDK_SpriteEngine:uint16 oam,uint16 n;
+{
+	//init	
+	lib uint16 posx,posy;
+	lib uint8 tile,attribute;
+	lib uint16 posxh,indexh;
+	MODE16
+	if n > 16
+	{
+		n = 16;
+	}
+	idy = n;
+	idx = 0;
+	SNDK_Sprite.oam = oam<<2;
+	
+	do
+	{			
+		[SNDK_SPRITE.x,idx]  +=  [SNDK_SPRITE.vx,idx];
+		posx = acc>>2;
+		
+		[SNDK_SPRITE.y,idx]  +=  [SNDK_SPRITE.vy,idx];
+		posy = acc>>2;
+		
+		tile = [SNDK_SPRITE.t,idx] ;
+		
+
+		
+		asm "phx";
+		
+		call SNDK_SpriteEngineDraw:;
+
+		SNDK_Sprite.oam += 0x10;
+		asm "plx";
+		
+		
+		if posxh == 0x3F00
+		{
+			
+		}else
+		{
+			
+		}
+		
+		idx+= 0x20;
+	}
+	loop idy == 0
+	
+	MODE8
+}
+
+
+funclib SNDK_SpriteEngineDraw:;
+{
+	
+	lib uint16 posx,posy;
+	lib uint8 tile,attribute;
+	lib uint16 posxh,indexh;
+	
+	
+	MODE16
+	acc = posy + 0xC020;
+	if acc & 0x3F00
+	{
+		return;
+	}
+	
+	posxh = 0;
+	idx = SNDK_Sprite.oam;
+	indexh = idx>>4;
+	
+	acc = posx + 0xC010;
+	if acc ?= 0
+	{
+		posxh = 0x11;
+	}else
+	{
+		acc += 0x10;
+		if acc ?= 0
+		{
+			posxh = 0x55;
+		}else
+		{
+			acc -= 0x20;
+			if acc & 0x3F00
+			{
+				return;
+			}
+			
+		}
+
+	}	
+
+	MODE8
+	/*
+	[SNDK_OAM0.x,idx] = posx;
+	[SNDK_OAM0.y,idx] = posy;
+	[SNDK_OAM0.t,idx] = tile;
+	[SNDK_OAM0.a,idx] = attribute;
+	*/
+	
+	
+	acc = posy;
+	[SNDK_OAM0.y,idx] = acc;
+	[SNDK_OAM1.y,idx] = acc;
+	[SNDK_OAM2.y,idx] = acc+SNDK_SPR_SIZE;
+	[SNDK_OAM3.y,idx] = acc;
+	
+	acc = posx;
+	[SNDK_OAM0.x,idx] = acc;
+	[SNDK_OAM2.x,idx] = acc;
+	
+	
+	acc += SNDK_SPR_SIZE;
+	if acc ?! 0
+	{
+		[SNDK_OAM1.x,idx] = acc;
+		[SNDK_OAM3.x,idx] = acc;
+	}else
+	{
+		if posxh == 0x11
+		{
+			[SNDK_OAM1.x,idx] = posx + SNDK_SPR_SIZE;
+			[SNDK_OAM3.x,idx] = acc;
+		}else
+		{
+			[SNDK_OAM1.y,idx] = 0xE0;
+			[SNDK_OAM3.y,idx] = 0xE0;
+		}
+	}
+	
+	
+	acc = tile;
+	[SNDK_OAM0.t,idx] = acc;
+	[SNDK_OAM1.t,idx] = acc+SNDK_SPR_SIZET;
+	[SNDK_OAM2.t,idx] = acc+0x1E;
+	[SNDK_OAM3.t,idx] = acc+SNDK_SPR_SIZET;
+	
+	acc = attribute;
+	[SNDK_OAM0.a,idx] = acc;
+	[SNDK_OAM1.a,idx] = acc;
+	[SNDK_OAM2.a,idx] = acc;
+	[SNDK_OAM3.a,idx] = acc;
+	
+	idx = indexh;
+	[SNDK_OAMH,idx] = posxh;
+	
+	MODE16
+	
+}
+
+funclib SNDK_SpriteEngineSetSpeed:uint16 index,uint16 mx,uint16 my;
+{
+	MODE16
+	idx =index;
+	[SNDK_SPRITE.vx,idx] = mx;
+	[SNDK_SPRITE.vy,idx] = my;
+	
+	MODE8
+	
+}
+
+funclib SNDK_SpriteEngineSetPosition:uint16 index,uint16 px,uint16 py;
+{
+	MODE16
+	idx =index;
+	[SNDK_SPRITE.x,idx] = px<<2;
+	[SNDK_SPRITE.y,idx] = py<<2;
+	MODE8
+}
+
+funclib SNDK_SpriteDraw:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
+{
+	idx = SNDK_Sprite.oam;
+	[SNDK_OAM0.x,idx] = position.x;
+	[SNDK_OAM0.y,idx] = position.y;
+	[SNDK_OAM0.t,idx] = tile;
+	[SNDK_OAM0.a,idx] = attribute;
+	
+	SNDK_Sprite.oam = idx + 4;
+}
+
+funclib CONTROL:uint16 a1,uint16 a2,uint16 a3,uint16 a4;
+{
+	lib uint16 b1,b2,b3,b4,b5,b6,b7;
+	spm uint16 c1,c2,c3,c4,c5,c6,c7;
+	MODE16
+	acc = 0xFFFF;
+	
+	a1 = acc;
+	a2 = acc;
+	a3 = acc;
+	a4 = acc;
+	
+	b1 = acc;
+	b2 = acc;
+	b3 = acc;
+	b4 = acc;
+	b5 = acc;
+	b6 = acc;
+	b7 = acc;
+	
+	c1 = acc;
+	c2 = acc;
+	c3 = acc;
+	c4 = acc;
+	c5 = acc;
+	c6 = acc;
+	c7 = acc;
+	
+	
+	MODE8
+}
+
+
+funclib SNDK_SpriteDrawMeta2x2:uint8 position.x,uint8 position.y,uint8 tile,uint8 attribute;
+{
+	idx = SNDK_Sprite.oam;
+	
+	
+	acc = position.x;
+	[SNDK_OAM0.x,idx] = acc;
+	[SNDK_OAM2.x,idx] = acc;
+	[SNDK_OAM1.x,idx] = acc+SNDK_SPR_SIZE;
+	[SNDK_OAM3.x,idx] = acc;
+	
+	acc = position.y;
+	[SNDK_OAM0.y,idx] = acc;
+	[SNDK_OAM1.y,idx] = acc;
+	[SNDK_OAM2.y,idx] = acc+SNDK_SPR_SIZE;
+	[SNDK_OAM3.y,idx] = acc;
+	
+	acc = tile;
+	[SNDK_OAM0.t,idx] = acc;
+	[SNDK_OAM1.t,idx] = acc+SNDK_SPR_SIZET;
+	[SNDK_OAM2.t,idx] = acc+0x1E;
+	[SNDK_OAM3.t,idx] = acc+SNDK_SPR_SIZET;
+	
+	acc = attribute;
+	[SNDK_OAM0.a,idx] = acc;
+	[SNDK_OAM1.a,idx] = acc;
+	[SNDK_OAM2.a,idx] = acc;
+	[SNDK_OAM3.a,idx] = acc;
+	
+	MODE16
+	SNDK_Sprite.oam = idx + 16;
+	MODE8
+}

@@ -60,6 +60,25 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 		}
 	}
 
+	if(operator1 == '?')
+	{
+		if( (src2.immediate == 1) && (src2.bimm == true) )
+		{
+			if(operator2 == '=')
+				this->text_code += "bvc " + label_adr +"\n";
+			else
+				this->text_code += "bvs " + label_adr +"\n";
+			return;
+		}
+
+
+		if(operator2 == '=')
+			this->text_code += "bcc " + label_adr +"\n";
+		else
+			this->text_code += "bcs " + label_adr +"\n";
+		return;
+	}
+
 
 	//----
 	if(optimize_zero == false)
@@ -93,13 +112,25 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 	if(operator1 == '&')
 	{
 		this->text_code += "and " + src2value +"\n";
+		if(operator2 == '!')
+		{
+			if(type == 2)
+				this->text_code += "bne " + label_adr +"\n";
+			else
+				this->text_code += "beq " + label_adr +"\n";
+			return;
+		}
+
 		if(type == 2)
 			this->text_code += "beq " + label_adr +"\n";
 		else
 			this->text_code += "bne " + label_adr +"\n";
 		return;
 	}
+
+
 	//----------------
+
 
 	if(optimize_zero == false)
 	{
@@ -581,7 +612,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				cptr1 = "[";
 				cptr2 = "]";
 			}
-			if(dst.token1 == '?')
+			if(dst.token2 == '@')
 			{
 				cptr1 = "(";
 				cptr2 = ")";
@@ -736,6 +767,6 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 	if(src.token1 == '@')
 		srcvalue = "[" + srcvalue + "]";
 
-	if(src.token1 == '?')
+	if(src.token2 == '@')
 		srcvalue = "(" + srcvalue + ")";
 }

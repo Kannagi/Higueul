@@ -128,8 +128,8 @@ func void test:;
 ```
 ## Operation
 Possible operations are `+ - * / % & ^ | << >>`  
-Possible comparisons are `== != > >= < <=`  
-Possible copy operation are `= += -= /= *= &= |= ^=`  
+Possible comparisons are `== != > >= < <= & ?= ?! &! ?? !!`  
+Possible copy operation are `= += -= %= /= *= &= |= ^=`  
 ```
 var += 5;
 var1 = var2 + var3;

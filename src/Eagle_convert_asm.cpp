@@ -442,6 +442,8 @@ void Eagle::out_asm()
 						{
 							int j = 0;
 
+
+
 							for(int l = 2;l < n2;l+=2)
 							{
 								if( (l+2) > n2)
@@ -504,6 +506,12 @@ void Eagle::out_asm()
 									j++;
 
 								}
+							}
+
+							if(n2 >= 2)
+							{
+								if(this->mode_alloc == ALLOC_FRAM)
+									this->func_address += 1;
 							}
 
 						}else

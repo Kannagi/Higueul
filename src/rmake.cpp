@@ -51,8 +51,8 @@ void listFilesRecursive(const char *path, char *entries[], int *entryCount)
 				//printf("konw format %s\n",fullPath);
                 rmake_add_file(fullPath);
 
-            }else
-                printf("unkonw format %s\n",fullPath);
+            }//else
+                //printf("unkonw format %s\n",fullPath);
         }
 
     }

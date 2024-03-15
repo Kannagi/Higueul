@@ -394,6 +394,8 @@ void Eagle::bin_65816()
 
 				}else if(inst_sp == false)
 				{
+					imm8 = false;
+
 					value = 0;
 					if(mnemonic[1].type == 0) //NUMBER
 					{
@@ -552,7 +554,10 @@ void Eagle::bin_65816()
 						if(mode_a816 == true)
 						{
 							if(imm8 == false)
+							{
+
 								this->offset +=3;
+							}
 							else
 								this->offset +=2;
 						}
@@ -562,9 +567,11 @@ void Eagle::bin_65816()
 						}
 
 					}
+					imm8 = false;
 
 				}else if(inst_sp == false)
 				{
+					imm8 = false;
 					value = 0;
 					if(mnemonic[1].type == 0) //NUMBER
 					{
@@ -807,6 +814,16 @@ void Eagle::bin_65816()
 						(mnemonic[0].item[0] == 'b')
 					)
 					{
+						int dif =  (mnemonic[1].value-this->offset);
+						if(dif >= 0x80)
+						{
+							std::cout << "error: branch if size :" <<  dif <<"\n";
+						}
+
+						if(dif <= -0x80)
+						{
+							std::cout << "error: branch while/loop size :" <<  dif <<"\n";
+						}
 						mnemonic[1].value  = (mnemonic[1].value-this->offset)&0xFF;
 					}
 				}
@@ -1392,6 +1409,23 @@ void Eagle::bin_65816()
 					this->filebin.push_back(0x82);
 					this->filebin.push_back(mnemonic[1].value);
 					this->filebin.push_back(mnemonic[1].value>>8);
+				}
+
+
+				if(instw == "brk")
+				{
+					format = -1;
+
+					this->filebin.push_back(0x00);
+					this->filebin.push_back(mnemonic[1].value);
+				}
+
+				if(instw == "cop")
+				{
+					format = -1;
+
+					this->filebin.push_back(0x02);
+					this->filebin.push_back(mnemonic[1].value);
 				}
 
 				//continue;
