@@ -123,6 +123,7 @@ Eagle::Eagle()
 
 	this->debug = false;
 	this->bout_asm = false;
+	this->bcycle = false;
 }
 
 int Eagle::alloc(EAGLE_keywords type,int n)
@@ -331,7 +332,6 @@ bool Eagle::isOperator_cmp(char c,char c2)
 	( (c == '<') && (c2 == '=') ) || ( (c == '>') && (c2 == '=') ) ||
 	( (c == '=') && (c2 == '=') ) || ( (c == '!') && (c2 == '=') ) ||
 	( (c == '?') && (c2 == '=') ) || ( (c == '?') && (c2 == '!') ) ||
-	( (c == '?') && (c2 == '?') ) || ( (c == '!') && (c2 == '!') ) ||
 	( (c == '&') && (c2 == '!') )
 	;
 }
@@ -340,4 +340,303 @@ bool Eagle::isOperator_calcul(char c,char c2)
 {
 	return (c == '+') || (c == '-') || (c == '/') || (c == '*') || (c == '&') || (c == '|') || (c == '^') || (c == '%')
 	|| ( (c == '<') && (c2 == '<') ) || ( (c == '>') && (c2 == '>') );
+}
+
+int Eagle::line_code_asm(int mode)
+{
+	std::string word;
+	char letter;
+	mnemonic.clear();
+	bool comment = false;
+	bool path = false;
+
+
+	EAGLE_MNEMONIQUE tmnemonic;
+
+	while(this->text_code[idf] != 0)
+	{
+		letter = this->text_code[idf];
+		idf++;
+
+		if(letter == ';')
+			comment = true;
+
+
+		if(path == true)
+		{
+			if(letter != '\n')
+				word += letter;
+		}else
+		if(comment == false)
+		{
+			if(isWord(letter))
+			{
+				word += letter;
+			}
+			else
+			{
+				if(word.size() != 0)
+				{
+					tmnemonic.token2 = letter;
+
+					if(isNumber(word[0]))
+					{
+						tmnemonic.value = std::stoi(word);
+						tmnemonic.type = 0;
+					}
+					else
+						tmnemonic.type = 1;
+
+					if(tmnemonic.token1 == '$')
+					{
+						tmnemonic.value = std::stoi(word, nullptr, 16);
+						tmnemonic.type = 0;
+					}
+
+					tmnemonic.item = word;
+
+
+					if(word == ".incbin")
+						path = true;
+
+					mnemonic.push_back(tmnemonic);
+					word = "";
+				}
+				if(idf-2 > 0)
+					tmnemonic.token0 = this->text_code[idf-2];
+				tmnemonic.token1 = letter;
+			}
+		}
+
+
+		if(letter == '\n')
+		{
+			bool keyl = false;
+			comment = false;
+			path = false;
+
+			if(mnemonic.size() > 0)
+			{
+				int n = mnemonic.size();
+				if(mnemonic[0].item == ".db")
+				{
+					if(mode == 1)
+					{
+						for(int i = 1;i < n;i++)
+						{
+							if(mnemonic[i].type == 0)
+							{
+								this->filebin.push_back(mnemonic[i].value);
+							}else
+							{
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
+							}
+						}
+					}
+					this->offset += mnemonic.size()-1;
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".dw")
+				{
+					if(mode == 1)
+					{
+						for(int i = 1;i < n;i++)
+						{
+							if(mnemonic[i].type == 0)
+							{
+								this->filebin.push_back(mnemonic[i].value);
+								this->filebin.push_back(mnemonic[i].value>>8);
+							}else
+							{
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
+							}
+						}
+
+					}
+					this->offset += (mnemonic.size()-1)*2;
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".dd")
+				{
+					if(mode == 1)
+					{
+						for(int i = 1;i < n;i++)
+						{
+							if(mnemonic[i].type == 0)
+							{
+								this->filebin.push_back(mnemonic[i].value);
+								this->filebin.push_back(mnemonic[i].value>>8);
+								this->filebin.push_back(mnemonic[i].value>>16);
+								this->filebin.push_back(mnemonic[i].value>>24);
+							}else
+							{
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>16);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>24);
+							}
+						}
+
+					}
+					this->offset += (mnemonic.size()-1)*4;
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".dq")
+				{
+					if(mode == 1)
+					{
+						for(int i = 1;i < n;i++)
+						{
+							if(mnemonic[i].type == 0)
+							{
+								this->filebin.push_back(mnemonic[i].value);
+								this->filebin.push_back(mnemonic[i].value>>8);
+								this->filebin.push_back(mnemonic[i].value>>16);
+								this->filebin.push_back(mnemonic[i].value>>24);
+
+								this->filebin.push_back(mnemonic[i].value>>32);
+								this->filebin.push_back(mnemonic[i].value>>40);
+								this->filebin.push_back(mnemonic[i].value>>48);
+								this->filebin.push_back(mnemonic[i].value>>56);
+							}else
+							{
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>16);
+								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>24);
+
+								this->filebin.push_back(0);
+								this->filebin.push_back(0);
+								this->filebin.push_back(0);
+								this->filebin.push_back(0);
+							}
+						}
+					}
+					this->offset += (mnemonic.size()-1)*8;
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".org")
+				{
+					if(mode == 1)
+					{
+						n = this->offset&0x7FFF;
+
+						if( (n != 0) && (n != 0x7FB0))
+						std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
+					}
+
+
+					if(mnemonic[1].token1 == '$')
+						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+					else
+						this->offset = std::stoi(mnemonic[1].item);
+
+					if(mode == 1)
+					{
+						n = this->offset - this->filebin.size();
+						for(int i = 0;i < n;i++)
+							this->filebin.push_back(0);
+
+					}
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".rodata")
+				{
+					if(mnemonic[1].token1 == '$')
+						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+					else
+						this->offset = std::stoi(mnemonic[1].item);
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".code")
+				{
+					if(mnemonic[1].token1 == '$')
+						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+					else
+						this->offset = std::stoi(mnemonic[1].item);
+
+					mnemonic.clear();
+					keyl = true;
+				}
+
+				if(mnemonic[0].item == ".incbin")
+				{
+					std::vector<char> data;
+
+					this->load_file_bin(word.c_str(),data);
+
+					this->offset += data.size();
+
+
+					if(mode == 1)
+					{
+						std::vector<char> data;
+
+						this->load_file_bin(word.c_str(),data);
+
+						if(data.size() > 0)
+						{
+							n = data.size();
+
+							for(int i = 0;i < n;i++)
+								this->filebin.push_back(data[i]);
+						}
+					}
+
+					mnemonic.clear();
+					keyl = true;
+					word = "";
+				}
+
+				if(mnemonic[0].item == "..begin")
+				{
+
+					if(mode == 1)
+					{
+						this->cyclew = mnemonic[1].item;
+						this->cycle = 0;
+					}
+
+					mnemonic.clear();
+					keyl = true;
+					word = "";
+				}
+
+				if(mnemonic[0].item == "..end")
+				{
+
+					if( (mode == 1) && (bcycle == true) )
+					{
+						std::cout << std::dec << "cycle estimate "<< this->cyclew << " : " << this->cycle << std::hex <<"\n";
+					}
+
+					mnemonic.clear();
+					keyl = true;
+					word = "";
+				}
+
+
+			}
+
+
+
+			if(keyl == false)
+				return 1;
+		}
+	}
+
+	return 0;
 }

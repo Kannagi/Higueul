@@ -50,6 +50,11 @@ void rmake_option(char *buf)
 		{
 			eagle.bout_asm = true;
 		}
+
+		if(word == "-cycle")
+		{
+			eagle.bcycle = true;
+		}
     }
 }
 

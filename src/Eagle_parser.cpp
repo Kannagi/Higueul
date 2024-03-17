@@ -26,14 +26,14 @@ bool Eagle::isOperator(char c,char c2,int &i)
 	( (c == '<') && (c2 == '<') ) || ( (c == '>') && (c2 == '>') ) || ( (c == '<') && (c2 == '=') ) || ( (c == '>') && (c2 == '=') ) ||
 	( (c == '+') && (c2 == '=') ) || ( (c == '-') && (c2 == '=') ) || ( (c == '=') && (c2 == '=') ) || ( (c == '!') && (c2 == '=') ) ||
 	( (c == '&') && (c2 == '=') ) || ( (c == '|') && (c2 == '=') ) || ( (c == '^') && (c2 == '=') ) || ( (c == '?') && (c2 == '!') ) ||
-	( (c == '/') && (c2 == '=') ) || ( (c == '*') && (c2 == '=') ) || ( (c == '%') && (c2 == '=') ) || ( (c == '&') && (c2 == '!') ) ||
+	( (c == '&') && (c2 == '!') ) || ( (c == '?') && (c2 == '=') )
 	)
 	{
 		i++;
 		return true;
 	}
 
-	return (c == '+') || (c == '-') || (c == '/') || (c == '*') || (c == '=') || (c == '&') || (c == '|') || (c == '^')  || (c == '<')  || (c == '>')  || (c == '?') || (c == '%');
+	return (c == '+') || (c == '-') || (c == '/') || (c == '*') || (c == '=') || (c == '&') || (c == '|') || (c == '^')  || (c == '<')  || (c == '>')  || (c == '?') || (c == '~');
 }
 
 bool Eagle::isNumber(char c)
@@ -498,39 +498,45 @@ void Eagle::parser_word()
 				bptr = false;
 			}
 
-
-			if(letter == '{')
-				scope++;
-
-			if(letter == '}')
+			if( (preproc != 2) && (preproc != 4) )
 			{
-				scope--;
-				if(scope >= 0)
+				if(letter == '{')
+					scope++;
+
+
+				if(letter == '}')
 				{
-					if(words.size() != 0)
+					scope--;
+					if(scope >= 0)
 					{
+						if(words.size() != 0)
+						{
+							this->instructions.push_back(words);
+							words.clear();
+						}
+
+						tword.item = ".end";
+						tword.type = TYPE_END;
+						tword.line = this->line;
+						tword.col  = this->col;
+
+						tword.scope = scope;
+						tword.label = label;
+						words.push_back(tword);
 						this->instructions.push_back(words);
 						words.clear();
+
+						endinst = false;
+					}else
+					{
+						std::cout << "error line " << this->line  << ": extra singleton }\n" ;
+						this->error++;
 					}
-
-					tword.item = ".end";
-					tword.type = TYPE_END;
-					tword.line = this->line;
-					tword.col  = this->col;
-
-					tword.scope = scope;
-					tword.label = label;
-					words.push_back(tword);
-					this->instructions.push_back(words);
-					words.clear();
-
-					endinst = false;
-				}else
-				{
-					std::cout << "error line " << this->line  << ": extra singleton }\n" ;
-					this->error++;
 				}
 			}
+
+
+
 
 			word = "";
 		}

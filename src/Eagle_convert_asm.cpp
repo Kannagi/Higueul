@@ -377,6 +377,7 @@ void Eagle::out_asm()
 						}
 						func.clear();
 						variable.clear();
+						this->text_code += "..end\n";
 					}else
 					{
 						this->text_code += ".label_"+std::to_string(this->scope_label[tword.scope&0x7F]) +":\n";
@@ -426,6 +427,9 @@ void Eagle::out_asm()
 					{
 						tmp = this->instructions[i][1].item;
 						ktype = this->keywords[tmp];
+
+						this->text_code += "..begin " + tmp +"\n";
+
 						text_code += tmp + ":\n";
 						func.name = tmp;
 
@@ -664,13 +668,10 @@ void Eagle::out_asm()
 								text_code += tmp + ",";
 							}
 							else
-							if(this->label[this->instructions[i][l].item] == true)
 							{
 								text_code += this->instructions[i][l].item + ",";
-							}else
-							{
-								out_error(instructions[i][l],"the argument is not a number ");
 							}
+
 						}
 						text_code += "\n";
 				break;

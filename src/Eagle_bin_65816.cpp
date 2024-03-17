@@ -9,277 +9,71 @@
 
 #include "Eagle.hpp"
 
-int Eagle::line_code_asm(int mode)
-{
-	std::string word;
-	char letter;
-	mnemonic.clear();
-	bool comment = false;
-	bool path = false;
+static const unsigned char icycle[256] = {
+//0x0x
+0x07,0x06,0x07,0x04, 0x04,0x03,0x05,0x06,
+0x03,0x02,0x02,0x04, 0x06,0x04,0x06,0x05,
 
+//0x1x
+0x02,0x05,0x05,0x07, 0x05,0x04,0x06,0x06,
+0x02,0x04,0x02,0x02, 0x06,0x04,0x07,0x05,
 
-	EAGLE_MNEMONIQUE tmnemonic;
+//0x2x
+0x06,0x06,0x08,0x04, 0x03,0x03,0x05,0x06,
+0x04,0x02,0x02,0x05, 0x04,0x04,0x06,0x05,
 
-	while(this->text_code[idf] != 0)
-	{
-		letter = this->text_code[idf];
-		idf++;
+//0x3x
+0x02,0x05,0x05,0x07, 0x04,0x04,0x06,0x06,
+0x02,0x04,0x02,0x02, 0x04,0x04,0x07,0x05,
 
-		if(letter == ';')
-			comment = true;
+//0x4x
+0x06,0x06,0x02,0x04, 0x03,0x03,0x05,0x06,
+0x03,0x02,0x02,0x03, 0x03,0x04,0x06,0x05,
 
+//0x5x
+0x02,0x05,0x05,0x07, 0x03,0x04,0x03,0x06,
+0x02,0x04,0x03,0x02, 0x04,0x04,0x07,0x05,
 
-		if(path == true)
-		{
-			if(letter != '\n')
-				word += letter;
-		}else
-		if(comment == false)
-		{
-			if(isWord(letter))
-			{
-				word += letter;
-			}
-			else
-			{
-				if(word.size() != 0)
-				{
-					tmnemonic.token2 = letter;
+//0x6x
+0x06,0x06,0x06,0x04, 0x03,0x03,0x05,0x06,
+0x04,0x02,0x02,0x06, 0x05,0x04,0x06,0x05,
 
-					if(isNumber(word[0]))
-					{
-						if(tmnemonic.token1 == '$')
-							tmnemonic.value = std::stoi(word, 0, 16);
-						else
-							tmnemonic.value = std::stoi(word);
+//0x7x
+0x02,0x05,0x05,0x07, 0x04,0x04,0x06,0x06,
+0x02,0x04,0x04,0x02, 0x06,0x04,0x07,0x05,
 
-						tmnemonic.type = 0;
-					}
-					else
-						tmnemonic.type = 1;
+//0x8x
+0x03,0x06,0x06,0x04, 0x03,0x03,0x03,0x06,
+0x02,0x02,0x02,0x03, 0x04,0x04,0x04,0x05,
 
-					tmnemonic.item = word;
+//0x9x
+0x02,0x05,0x05,0x07, 0x04,0x04,0x04,0x06,
+0x02,0x05,0x02,0x02, 0x04,0x04,0x05,0x05,
 
+//0xAx
+0x02,0x06,0x02,0x04, 0x03,0x03,0x03,0x06,
+0x02,0x02,0x02,0x06, 0x04,0x04,0x04,0x05,
 
-					if(word == ".incbin")
-						path = true;
+//0xBx
+0x02,0x05,0x05,0x07, 0x04,0x04,0x04,0x06,
+0x02,0x04,0x02,0x02, 0x04,0x04,0x04,0x05,
 
-					mnemonic.push_back(tmnemonic);
-					word = "";
-				}
-				if(idf-2 > 0)
-					tmnemonic.token0 = this->text_code[idf-2];
-				tmnemonic.token1 = letter;
-			}
-		}
+//0xCx
+0x02,0x06,0x03,0x04, 0x03,0x03,0x05,0x06,
+0x02,0x02,0x02,0x03, 0x04,0x04,0x06,0x05,
 
+//0xDx
+0x02,0x05,0x05,0x07, 0x06,0x04,0x06,0x06,
+0x02,0x04,0x03,0x03, 0x03,0x04,0x07,0x05,
 
-		if(letter == '\n')
-		{
-			bool keyl = false;
-			comment = false;
-			path = false;
+//0xEx
+0x02,0x06,0x03,0x04, 0x03,0x03,0x05,0x06,
+0x02,0x02,0x03,0x03, 0x04,0x04,0x06,0x05,
 
-			if(mnemonic.size() > 0)
-			{
-				int n = mnemonic.size();
-				if(mnemonic[0].item == ".db")
-				{
-					if(mode == 1)
-					{
-						for(int i = 1;i < n;i++)
-						{
-							if(mnemonic[i].type == 0)
-							{
-								this->filebin.push_back(mnemonic[i].value);
-							}else
-							{
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
-							}
-						}
-					}
-					this->offset += mnemonic.size()-1;
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".dw")
-				{
-					if(mode == 1)
-					{
-						for(int i = 1;i < n;i++)
-						{
-							if(mnemonic[i].type == 0)
-							{
-								this->filebin.push_back(mnemonic[i].value);
-								this->filebin.push_back(mnemonic[i].value>>8);
-							}else
-							{
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
-							}
-						}
-
-					}
-					this->offset += (mnemonic.size()-1)*2;
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".dd")
-				{
-					if(mode == 1)
-					{
-						for(int i = 1;i < n;i++)
-						{
-							if(mnemonic[i].type == 0)
-							{
-								this->filebin.push_back(mnemonic[i].value);
-								this->filebin.push_back(mnemonic[i].value>>8);
-								this->filebin.push_back(mnemonic[i].value>>16);
-								this->filebin.push_back(mnemonic[i].value>>24);
-							}else
-							{
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>16);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>24);
-							}
-						}
-
-					}
-					this->offset += (mnemonic.size()-1)*4;
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".dq")
-				{
-					if(mode == 1)
-					{
-						for(int i = 1;i < n;i++)
-						{
-							if(mnemonic[i].type == 0)
-							{
-								this->filebin.push_back(mnemonic[i].value);
-								this->filebin.push_back(mnemonic[i].value>>8);
-								this->filebin.push_back(mnemonic[i].value>>16);
-								this->filebin.push_back(mnemonic[i].value>>24);
-
-								this->filebin.push_back(mnemonic[i].value>>32);
-								this->filebin.push_back(mnemonic[i].value>>40);
-								this->filebin.push_back(mnemonic[i].value>>48);
-								this->filebin.push_back(mnemonic[i].value>>56);
-							}else
-							{
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>8);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>16);
-								this->filebin.push_back(this->labelbin[mnemonic[i].item]>>24);
-
-								this->filebin.push_back(0);
-								this->filebin.push_back(0);
-								this->filebin.push_back(0);
-								this->filebin.push_back(0);
-							}
-						}
-					}
-					this->offset += (mnemonic.size()-1)*8;
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".org")
-				{
-					if(mode == 1)
-					{
-						n = this->offset&0x7FFF;
-
-						if( (n != 0) && (n != 0x7FB0))
-						std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
-					}
-
-
-					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
-					else
-						this->offset = std::stoi(mnemonic[1].item);
-
-					if(mode == 1)
-					{
-						n = this->offset - this->filebin.size();
-						for(int i = 0;i < n;i++)
-							this->filebin.push_back(0);
-
-					}
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".rodata")
-				{
-					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
-					else
-						this->offset = std::stoi(mnemonic[1].item);
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".code")
-				{
-					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
-					else
-						this->offset = std::stoi(mnemonic[1].item);
-
-					mnemonic.clear();
-					keyl = true;
-				}
-
-				if(mnemonic[0].item == ".incbin")
-				{
-					std::vector<char> data;
-
-					this->load_file_bin(word.c_str(),data);
-
-					this->offset += data.size();
-
-
-					if(mode == 1)
-					{
-						std::vector<char> data;
-
-						this->load_file_bin(word.c_str(),data);
-
-						if(data.size() > 0)
-						{
-							n = data.size();
-
-							for(int i = 0;i < n;i++)
-								this->filebin.push_back(data[i]);
-						}
-					}
-
-					mnemonic.clear();
-					keyl = true;
-					word = "";
-				}
-
-
-			}
-
-
-
-			if(keyl == false)
-				return 1;
-		}
-	}
-
-	return 0;
-}
-
-
+//0xFx
+0x02,0x05,0x05,0x07, 0x05,0x04,0x06,0x06,
+0x02,0x04,0x04,0x02, 0x08,0x04,0x07,0x05,
+};
 
 void Eagle::bin_65816()
 {
@@ -300,6 +94,8 @@ void Eagle::bin_65816()
 	this->offset = 0;
 	this->idf = 0;
 	mnemonic.clear();
+
+	//---------------------------------------------------------------------
 
 	bool imm8 = false;
 
@@ -455,6 +251,8 @@ void Eagle::bin_65816()
 
 	}
 
+	//------------------------------------------------------------------
+
 	if(this->offset>>10)
 	{
 		std::cout << (this->offset>>10) << " kiB";
@@ -549,6 +347,7 @@ void Eagle::bin_65816()
 					{
 						this->offset +=3;
 						mode_xy16 = true;
+						this->cycle++;
 					}else
 					{
 						if(mode_a816 == true)
@@ -787,9 +586,14 @@ void Eagle::bin_65816()
 				if(instw == "xce")
 					this->filebin.push_back(0xFB);
 
+
+
+
 				int tmpnumber = this->filebin[filebin.size()-1]&0xFF;
 				if(this->debug == true)
 				std::cout  << "  (0x"<< std::hex << tmpnumber << ")\n";
+
+				this->cycle += icycle[tmpnumber&0xFF];
 
 				continue;
 			}
@@ -803,6 +607,10 @@ void Eagle::bin_65816()
 				}else
 				{
 					mnemonic[1].value = this->labelbin[mnemonic[1].item];
+					if(mnemonic[1].value == 0)
+					{
+						std::cout << "warning: label zero :" <<  mnemonic[1].item <<"\n";
+					}
 
 					if(mnemonic[0].item == "brl")
 					{
@@ -817,12 +625,12 @@ void Eagle::bin_65816()
 						int dif =  (mnemonic[1].value-this->offset);
 						if(dif >= 0x80)
 						{
-							std::cout << "error: branch if size :" <<  dif <<"\n";
+							std::cout << "warning : branch if size :" <<  dif <<"\n";
 						}
 
 						if(dif <= -0x80)
 						{
-							std::cout << "error: branch while/loop size :" <<  dif <<"\n";
+							std::cout << "warning: branch while/loop size :" <<  dif <<"\n";
 						}
 						mnemonic[1].value  = (mnemonic[1].value-this->offset)&0xFF;
 					}
@@ -871,6 +679,9 @@ void Eagle::bin_65816()
 
 			if(instw == "adc")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0x69; //IMM
 				tdata[1] = 0x72; //PTR
 				tdata[2] = 0x67; //PTR Long
@@ -892,6 +703,9 @@ void Eagle::bin_65816()
 
 			if(instw == "and")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0x29; //IMM
 				tdata[1] = 0x32; //PTR
 				tdata[2] = 0x27; //PTR Long
@@ -913,6 +727,9 @@ void Eagle::bin_65816()
 
 			if(instw == "cmp")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0xC9; //IMM
 				tdata[1] = 0xD2; //PTR
 				tdata[2] = 0xC7; //PTR Long
@@ -934,6 +751,9 @@ void Eagle::bin_65816()
 
 			if(instw == "eor")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0x49; //IMM
 				tdata[1] = 0x52; //PTR
 				tdata[2] = 0x47; //PTR Long
@@ -955,6 +775,9 @@ void Eagle::bin_65816()
 
 			if(instw == "lda")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0xA9; //IMM
 				tdata[1] = 0xB2; //PTR
 				tdata[2] = 0xA7; //PTR Long
@@ -976,6 +799,9 @@ void Eagle::bin_65816()
 
 			if(instw == "ora")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0x09; //IMM
 				tdata[1] = 0x12; //PTR
 				tdata[2] = 0x07; //PTR Long
@@ -997,6 +823,9 @@ void Eagle::bin_65816()
 
 			if(instw == "sbc")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0xE9; //IMM
 				tdata[1] = 0xF2; //PTR
 				tdata[2] = 0xE7; //PTR Long
@@ -1018,6 +847,9 @@ void Eagle::bin_65816()
 
 			if(instw == "sta")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
+
 				tdata[0] = 0x89; //IMM
 				tdata[1] = 0x92; //PTR
 				tdata[2] = 0x87; //PTR Long
@@ -1041,6 +873,8 @@ void Eagle::bin_65816()
 
 			if(instw == "asl")
 			{
+				if(mode_a816 == true)
+					this->cycle+=2;
 				format = 1;
 				tdata[0] = 0x0A; //IMM
 				tdata[1] = 0x06; //dp
@@ -1052,6 +886,8 @@ void Eagle::bin_65816()
 
 			if(instw == "dec")
 			{
+				if(mode_a816 == true)
+					this->cycle+=2;
 				format = 1;
 				tdata[0] = 0x3A; //IMM
 				tdata[1] = 0xC6; //dp
@@ -1063,6 +899,8 @@ void Eagle::bin_65816()
 
 			if(instw == "inc")
 			{
+				if(mode_a816 == true)
+					this->cycle+=2;
 				format = 1;
 				tdata[0] = 0x1A; //IMM
 				tdata[1] = 0xE6; //dp
@@ -1074,6 +912,8 @@ void Eagle::bin_65816()
 
 			if(instw == "bit")
 			{
+				if(mode_a816 == true)
+					this->cycle+=1;
 				format = 1;
 				tdata[0] = 0x89; //IMM
 				tdata[1] = 0x24; //dp
@@ -1123,6 +963,8 @@ void Eagle::bin_65816()
 
 			if(instw == "lsr")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
 				format = 1;
 				tdata[0] = 0x4A; //IMM
 				tdata[1] = 0x46; //dp
@@ -1134,6 +976,8 @@ void Eagle::bin_65816()
 
 			if(instw == "rol")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
 				format = 1;
 				tdata[0] = 0x2A; //IMM
 				tdata[1] = 0x26; //dp
@@ -1145,6 +989,8 @@ void Eagle::bin_65816()
 
 			if(instw == "ror")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
 				format = 1;
 				tdata[0] = 0x6A; //IMM
 				tdata[1] = 0x66; //dp
@@ -1178,6 +1024,8 @@ void Eagle::bin_65816()
 
 			if(instw == "stz")
 			{
+				if(mode_a816 == true)
+					this->cycle++;
 				format = 1;
 				tdata[0] = 0x64; //IMM
 				tdata[1] = 0x64; //dp
@@ -1458,14 +1306,16 @@ void Eagle::bin_65816()
 			//-----
 			if(format < 0)
 			{
+				int fi = format;
+				int tmpnumber = this->filebin[filebin.size()-1+fi]&0xFF;
 				if(this->debug == true)
 				{
-					int fi = format;
-					std::cout <<  " 0x" << mnemonic[1].value;
 
-					int tmpnumber = this->filebin[filebin.size()-1+fi]&0xFF;
+					std::cout <<  " 0x" << mnemonic[1].value;
 					std::cout  << "  (f:0x"<< std::hex << tmpnumber << ") \n";
 				}
+
+				this->cycle += icycle[tmpnumber&0xFF];
 
 
 				continue;
@@ -1621,6 +1471,8 @@ void Eagle::bin_65816()
 			if(this->debug == true)
 			std::cout  << "  (0x"<< std::hex << tmpnumber << ") " << immz;
 
+			this->cycle += icycle[tmpnumber&0xFF];
+
 			this->filebin.push_back(mnemonic[1].value);
 			if(immz == 1)
 			{
@@ -1642,14 +1494,14 @@ void Eagle::bin_65816()
 
 
 	uint16_t checksum1 = 0;
-	uint16_t checksum2 = 0;
+	//uint16_t checksum2 = 0;
 
 	for(int i = 0;i < n;i++)
 	{
 		checksum1 += this->filebin[i];
 	}
 
-	checksum2 = -checksum1;
+	//checksum2 = -checksum1;
 	/*
 	this->filebin[0x7FDC] = checksum1;
 	this->filebin[0x7FDD] = checksum1>>8;

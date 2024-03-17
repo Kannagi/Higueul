@@ -1,0 +1,97 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "Higueul language",
+	"patterns": [
+		{
+			"include": "#comment"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#labels"
+		},
+		{
+			"include": "#directives"	
+		},
+		{
+			"include": "#mnemonics"
+		},
+		{
+			"include": "#registers"
+		},
+		{
+			"include": "#numeric"
+		}
+	],
+	"repository": {
+		"mnemonics": {
+			"patterns": [
+				{
+					"name": "keyword.control",
+					"match": "\\b(bne|beq|bl|ble|bg|bge|bls|bles|bgs|bges|bra|loop|jump|call|jumpbr|callbr|ret|reti|syscall|int)\\b"
+				},
+				{
+					"name": "keyword.other.fixed",
+					"match": "\\b(nop|moveix|ext|ins|movei|moven|umove|move)\\b"
+				},
+				{
+					"name": "keyword.other.sized",
+					"match": "\\b(add|sub|xor|or|and|lsl|asr|lsr|se|slts|sltu|sand|hadd|hsub|hmul|hto|cmp|test|cmpfr|testfr|cmove|sext|rtl|rtr|adc|sbc|ld|st|ldv|stv|lds|sts|ldvs|stvs|div|divu|mul|mulu)((\\.[b|w|d|q])|)\\b"
+				},
+				{
+					"name": "keyword.operator",
+					"match": ","
+				}
+			]
+		},
+		"registers": { 
+			"patterns": [
+				{
+					"name": "variable.other",
+					"match": "\\b(r|a|t|n|s|S|R|A|T|N|sp|SP)\\d*\\b"
+				},
+				{
+					"name": "variable.language",
+					"match": "\\b(LR|lr|BR|br|LC|lc|FR|fr|PC|pc|IR|ir|CC|cc|IC|ic|PL|pl|PH|ph|PQ|pq|PR|pr)\\b"
+				}
+			]
+		},
+		"comment":{
+			"patterns": [{
+				"name": "comment.line",
+				"match": ";.*"
+			}]
+		},
+		"strings": {
+			"name": "string.quoted.double",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape",
+					"match": "\\\\."
+				}
+			]
+		},
+		"numeric": {
+			"patterns": [{
+				"name": "constant.numeric",
+				"match": "(0x|0X|0b|0B|0o|0O|\\d)[\\dA-Fa-f]*(\\.\\d*(f|)|)"
+			}]
+		},
+		"labels": {
+			"patterns": [{
+				"name": "entity.name.function",
+				"match": "[\\w\\._-]*:"
+			}]
+		},
+		"directives": {
+			"patterns": [{
+				"name": "constant.other",
+				"match": "\\.\\w*"
+			}]
+		}
+	},
+	"scopeName": "source.higueul"
+}

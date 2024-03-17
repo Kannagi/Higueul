@@ -1,0 +1,28 @@
+{
+  "name": "higueul-language",
+  "displayName": "Higueul language",
+  "description": "Basic Syntax Highlighting for Higueul language",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "repository": {
+    "url": "https://github.com/Alairion/AltairX-ASM-VSC.git"
+  },
+  "contributes": {
+    "languages": [{
+      "id": "higueullanguage",
+      "aliases": ["Higueul language", "higueullanguage"],
+      "extensions": [".egl"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "higueullanguage",
+      "scopeName": "source.higueul",
+      "path": "./syntaxes/higueul.tmLanguage.json"
+    }]
+  }
+}

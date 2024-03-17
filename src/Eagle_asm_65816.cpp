@@ -10,6 +10,11 @@
 #include <stdint.h>
 
 #include "Eagle.hpp"
+
+#define TYPE_LOOP 0
+#define TYPE_WHILE 1
+#define TYPE_IF 2
+
 static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);
 
 void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel)
@@ -18,7 +23,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 	std::string src2value;
 	std::string label_adr = ".label_b"+std::to_string(clabel);
 
-	if(type == 2) //if
+	if(type == TYPE_IF) //if
 	{
 		label_adr = ".label_"+std::to_string(this->ilabel);
 		this->ilabel++;
@@ -33,7 +38,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	//--- loop dec
 	bool optimize_zero = false;
-	if(type == 0)
+	if(type == TYPE_LOOP)
 	{
 		if(src1.type == EAGLE_keywords::IDX)
 		{
@@ -79,6 +84,15 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 		return;
 	}
 
+	if( (src1.bimm == true) && (src2.bimm == true) )
+	{
+		if(src1.immediate != 0)
+		{
+			this->text_code += "\njmp " + label_adr +"\n";
+		}
+		return;
+	}
+
 
 	//----
 	if(optimize_zero == false)
@@ -114,14 +128,14 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 		this->text_code += "and " + src2value +"\n";
 		if(operator2 == '!')
 		{
-			if(type == 2)
+			if(type == TYPE_IF)
 				this->text_code += "bne " + label_adr +"\n";
 			else
 				this->text_code += "beq " + label_adr +"\n";
 			return;
 		}
 
-		if(type == 2)
+		if(type == TYPE_IF)
 			this->text_code += "beq " + label_adr +"\n";
 		else
 			this->text_code += "bne " + label_adr +"\n";
@@ -130,7 +144,10 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 
 	//----------------
+	std::string mne1 = "bcc";
+	std::string mne2 = "bcs";
 
+	//if( (var.type == EAGLE_keywords::INT8) || (var.type == EAGLE_keywords::INT16))
 
 	if(optimize_zero == false)
 	{
@@ -139,7 +156,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if(operator1 == '=')
 	{
-		if(type == 1)
+		if(type == TYPE_WHILE)
 			this->text_code += "beq " + label_adr +"\n";
 		else
 			this->text_code += "bne " + label_adr +"\n";
@@ -148,7 +165,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if( (operator1 == '!') && (operator2 == '=') )
 	{
-		if(type == 1)
+		if(type == TYPE_WHILE)
 			this->text_code += "bne " + label_adr +"\n";
 		else
 			this->text_code += "beq " + label_adr +"\n";
@@ -156,31 +173,40 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if( (operator1 == '<') && (operator2 == '=') )
 	{
-		if(type == 2)
+		if(type == TYPE_IF)
+		{
+			this->text_code += "beq .label_a" + std::to_string(this->ilabel) +":\n";
+			this->text_code += "cmp " + src2value  +"\n";
 			this->text_code += "bcs " + label_adr +"\n";
+			this->text_code += ".label_a"+std::to_string(this->ilabel)+":\n";
+		}
 		else
 			this->text_code += "bcc " + label_adr +"\n";
 	}else
 	if(operator1 == '<')
 	{
-		if(type == 2)
+		if(type == TYPE_IF)
+		{
 			this->text_code += "bcs " + label_adr +"\n";
+		}
 		else
 			this->text_code += "bcc " + label_adr +"\n";
 	}
 
 	if( (operator1 == '>') && (operator2 == '=') )
 	{
-		if(type == 2)
+		if(type == TYPE_IF)
 			this->text_code += "bcc " + label_adr +"\n";
 		else
 			this->text_code += "bcs " + label_adr +"\n";
 	}else
 	if(operator1 == '>')
 	{
-		if(type == 2)
+		if(type == TYPE_IF)
 		{
 			this->text_code += "bcc " + label_adr +"\n";
+			this->text_code += "cmp " + src2value  +"\n";
+			this->text_code += "beq " + label_adr +"\n";
 		}
 		else
 			this->text_code += "bcs " + label_adr +"\n";
@@ -582,10 +608,11 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 			//arg2
 			if(dst.ptr2.bimm == true)
 			{
-				this->text_code  += "ldx #" + std::to_string(src1.ptr2.value&0xFFFF) +"\n";
+				this->text_code  += "ldx #" + std::to_string(dst.ptr2.value&0xFFFF) +"\n";
 				px = true;
 			}else
 			{
+
 				if(dst.ptr2.type == EAGLE_keywords::IDX)
 				{
 					px = true;
@@ -594,14 +621,8 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				{
 					py = true;
 				}else
-				if(dst.ptr2.type == EAGLE_keywords::ACC)
 				{
-					this->text_code  += "tax\n";
-					px = true;
-				}else
-				{
-					this->text_code  += "lda " + std::to_string(dst.ptr2.value) +"\n";
-					this->text_code  += "tax\n";
+					this->text_code  += "ldx " + std::to_string(dst.ptr2.value&0xFFFF) +"\n";
 					px = true;
 				}
 			}

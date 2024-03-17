@@ -112,7 +112,7 @@ class Eagle
 		void bin_z80(void);
 
 		std::string text_code;
-		bool debug,bout_asm;
+		bool debug,bout_asm,bcycle;
 		int error;
 		int target;
 
@@ -211,10 +211,11 @@ class Eagle
 		std::vector<char> filebin;
 		std::map<std::string, int> labelbin;
 
-		std::string label0,label1,label2,labelarg[8];
+		std::string label0,label1,label2,labelarg[8],cyclew;
 
 		EAGLE_VARIABLE arg[8];
 		int mmap;
+		int cycle;
 		EAGLE_DEFINE tmacro;
 
 
