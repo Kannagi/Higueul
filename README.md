@@ -7,6 +7,8 @@ But don't think of it exactly as a C-like, but as a macro-assembler-like.
 There is no "stable" version yet, the language is currently being tested. 
 I will release it when it is functional and bug-free.
 
+Wiki: https://github.com/Kannagi/Higueul/wiki
+
 Discord : https://discord.gg/cWa37SRgYU
 
 # Example
