@@ -27,7 +27,7 @@ int main()
 
 	std::cout << "Time compilation: " << duration.count() << " millisecondes" << std::endl;
 
-    return 0;
+	return 0;
 }
 
 void rmake_option(char *buf)
@@ -35,13 +35,13 @@ void rmake_option(char *buf)
 	std::string str = buf;
 
 	std::istringstream iss(str);
-    std::string word;
+	std::string word;
 
-    // Parcourir chaque mot dans la chaîne
-    while (iss >> word)
-    {
+	// Parcourir chaque mot dans la chaîne
+	while (iss >> word)
+	{
 		std::cout << word << "\n";
-        if(word == "-debug")
+		if(word == "-debug")
 		{
 			eagle.debug = true;
 		}
@@ -55,7 +55,7 @@ void rmake_option(char *buf)
 		{
 			eagle.bcycle = true;
 		}
-    }
+	}
 }
 
 
