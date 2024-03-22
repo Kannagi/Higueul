@@ -70,12 +70,16 @@ enum class EAGLE_keywords : unsigned char
     //extra
     ASM,
     ACC,
+    BACC,
     IDX,
     IDY,
     FACC,
 
     //preproc
     DEFINE,
+	MACRO,
+    ENDMACRO,
+
     INCBIN,
     CODE,
     RODATA,
@@ -86,8 +90,7 @@ enum class EAGLE_keywords : unsigned char
     SPMMAP,
     LIBMAP,
     ORG,
-    MACRO,
-    ENDMACRO,
+
 
     //DATA ROW
     DATAB,

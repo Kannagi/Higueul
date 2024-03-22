@@ -669,7 +669,10 @@ void Eagle::out_asm()
 							}
 							else
 							{
-								text_code += this->instructions[i][l].item + ",";
+								char token = ' ';
+								if(this->instructions[i][l].token1 != ':')
+									token = '@';
+								text_code += token + this->instructions[i][l].item + ",";
 							}
 
 						}
@@ -814,8 +817,17 @@ void Eagle::out_asm()
 							if(var.type != EAGLE_keywords::UNKNOW)
 								exist = true;
 
+							if(mode == ALLOC_WRAM)
+							{
+								var = this->gvariable[tmp];
+								if(var.type != EAGLE_keywords::UNKNOW)
+									exist = true;
+							}
+
+
 							if(exist == false)
 							{
+
 								int n = 1;
 								if( (l+1) < n2)
 								{
@@ -847,6 +859,8 @@ void Eagle::out_asm()
 								else
 								{
 									this->gvariable[tmp] = var1;
+
+									//std::cout << this->instructions[i][1].item  << std::hex << " " << var1.address  << "\n";
 								}
 
 
@@ -977,7 +991,6 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 							var.ptr1.type = tvar.type;
 						}else
 						{
-							std::cout << "ok " << this->label1 << "\n";
 							if(var.ptr1.token2 != ':')
 								return false;
 						}

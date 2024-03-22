@@ -28,7 +28,7 @@ bool Eagle::isOperator(char c,char c2,int &i)
 	( (c == '<') && (c2 == '=') ) || ( (c == '>') && (c2 == '=') ) ||
 	( (c == '=') && (c2 == '=') ) || ( (c == '!') && (c2 == '=') ) ||
 
-	( (c == '&') && (c2 == '!') ) ||
+	( (c == '&') && (c2 == '!') ) || ( (c == '=') && (c2 == '?') ) || ( (c == '=') && (c2 == '+') ) ||
 	( (c == '?') && (c2 == '=') ) || ( (c == '?') && (c2 == '!') ) ||
 
 	( (c == '*') && (c2 == '=') ) || ( (c == '/') && (c2 == '=') ) || ( (c == '%') && (c2 == '=') ) ||
@@ -217,7 +217,7 @@ void Eagle::parser_word()
 
 	std::string word = "";
 
-	bool label = false,endinst = false,bptr = false;
+	bool label = false,endinst = true,bptr = false;
 
 	int i = 0,iptr = 0;
 	int preproc = 0;
@@ -359,7 +359,6 @@ void Eagle::parser_word()
 					if(letter == ':')
 					{
 						tword.type = TYPE_LABEL;
-						endinst = true;
 						label = true;
 					}
 				}
@@ -382,11 +381,6 @@ void Eagle::parser_word()
 				//----
 
 				EAGLE_keywords tmp = this->keywords[word];
-				if( (tmp >= EAGLE_keywords::DEFINE) && (tmp <= EAGLE_keywords::ORG))
-					endinst = true;
-
-				if( (tmp >= EAGLE_keywords::IF) && (tmp <= EAGLE_keywords::RETURN))
-					endinst = true;
 
 				if(tmp == EAGLE_keywords::DEFINE)
 					preproc = 1;
@@ -475,34 +469,37 @@ void Eagle::parser_word()
 					words.clear();
 				}
 
-				endinst = false;
+				endinst = true;
 			}
 
-			if(letter == '[')
+			if( (preproc == 0) || (preproc == 6) )
 			{
-				ptword.line = this->line;
-				ptword.col  = this->col;
-				ptword.type = TYPE_PTR;
-				ptword.scope = scope;
-				ptword.label = false;
-				iptr = 0;
+				if(letter == '[')
+				{
+					ptword.line = this->line;
+					ptword.col  = this->col;
+					ptword.type = TYPE_PTR;
+					ptword.scope = scope;
+					ptword.label = false;
+					iptr = 0;
 
-				ptword.ptype[0] = TYPE_UNK;
-				ptword.ptype[1] = TYPE_UNK;
-				ptword.ptype[2] = TYPE_UNK;
-				ptword.ptype[3] = TYPE_UNK;
+					ptword.ptype[0] = TYPE_UNK;
+					ptword.ptype[1] = TYPE_UNK;
+					ptword.ptype[2] = TYPE_UNK;
+					ptword.ptype[3] = TYPE_UNK;
 
-				ptword.ktype = EAGLE_keywords::UINT8;
-				ptword.pn = 0;
+					ptword.ktype = EAGLE_keywords::UINT8;
+					ptword.pn = 0;
 
-				bptr = true;
-			}
+					bptr = true;
+				}
 
-			if(letter == ']')
-			{
-				ptword.item = ".ptr";
-				words.push_back(ptword);
-				bptr = false;
+				if(letter == ']')
+				{
+					ptword.item = ".ptr";
+					words.push_back(ptword);
+					bptr = false;
+				}
 			}
 
 			if( (preproc != 2) && (preproc != 4) )
@@ -533,7 +530,8 @@ void Eagle::parser_word()
 						this->instructions.push_back(words);
 						words.clear();
 
-						endinst = false;
+						//endinst = false;
+						endinst = true;
 					}else
 					{
 						std::cout << "error line " << this->line  << ": extra singleton }\n" ;

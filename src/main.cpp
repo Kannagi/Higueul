@@ -111,9 +111,9 @@ void rmake_compile_run(char *target)
 		eagle.target = TARGET_AltairX;
 	}
 
-	if(str == "-x86-64")
+	if(str == "-lc")
 	{
-		eagle.target = TARGET_x64;
+		eagle.target = TARGET_C;
 	}
 
 	if(str == "-RV32")

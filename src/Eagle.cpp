@@ -107,6 +107,7 @@ Eagle::Eagle()
 	this->target = TARGET_65816;
 
 	this->gvariable["acc"].type  = EAGLE_keywords::ACC;
+	this->gvariable["bacc"].type = EAGLE_keywords::BACC;
 	this->gvariable["facc"].type = EAGLE_keywords::FACC;
 	this->gvariable["idx"].type  = EAGLE_keywords::IDX;
 	this->gvariable["idy"].type  = EAGLE_keywords::IDY;
@@ -321,7 +322,7 @@ void Eagle::load_file_bin(const char *path,std::vector<char> &data)
 bool Eagle::isOperator_move(char c,char c2)
 {
 	return (c == '=') ||
-	( (c == '+') && (c2 == '=') ) || ( (c == '-') && (c2 == '=') ) ||
+	( (c == '+') && (c2 == '=') ) || ( (c == '-') && (c2 == '=') ) || ( (c == '=') && (c2 == '?') ) ||  ( (c == '=') && (c2 == '+') ) ||
 	( (c == '*') && (c2 == '=') ) || ( (c == '/') && (c2 == '=') ) || ( (c == '%') && (c2 == '=') ) ||
 	( (c == '&') && (c2 == '=') ) || ( (c == '|') && (c2 == '=') ) || ( (c == '^') && (c2 == '=') );
 }

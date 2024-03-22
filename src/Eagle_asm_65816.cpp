@@ -260,7 +260,11 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 					saddress = this->labelarg[i];
 			}
 			else if(var.token1 == '$')
+			{
+				mne1 = "ldx ";
+				mne2 = "stx @";
 				saddress = "#" + std::to_string(var.address&0xFFFF);
+			}
 			else if(var.token1 == '#')
 				saddress = "#" + std::to_string(var.address>>16);
 			else if(var.bimm == false)
@@ -390,6 +394,22 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 	{
 		if(optimize == true)
 		{
+			if(operator2 == '?')
+			{
+				this->text_code  += "ldy " + src2value +"\n";
+				this->text_code  += "sty " + src1value +"\n";
+				return;
+			}
+
+			if(operator2 == '+')
+			{
+				this->text_code  += "rep #$20\n";
+				this->text_code  += "lda " + src2value +"\n";
+				this->text_code  += "sta " + src1value +"\n";
+				this->text_code  += "sep #$20\n";
+				return;
+			}
+
 			if(dst.type == EAGLE_keywords::IDX)
 			{
 				this->text_code  += "ldx " + src2value +"\n";
@@ -760,8 +780,6 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 
 					if(src.ptr1.token1 == '#')
 						srcvalue = "#:" + labelp;
-
-					std::cout << labelp << "\n";
 				}else
 				{
 					srcvalue = std::to_string(src.ptr1.value);

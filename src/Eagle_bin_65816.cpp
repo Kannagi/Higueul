@@ -1491,30 +1491,32 @@ void Eagle::bin_65816()
 
 	int n = this->filebin.size();
 
+	std::cout << n << "\n";
 
 
-	uint16_t checksum1 = 0;
+
+	uint16_t checksum1 = 0,checksum2;
 	//uint16_t checksum2 = 0;
 
 	for(int i = 0;i < n;i++)
 	{
-		checksum1 += this->filebin[i];
+		checksum1 += (uint16_t)this->filebin[i];
 	}
 
-	//checksum2 = -checksum1;
-	/*
-	this->filebin[0x7FDC] = checksum1;
-	this->filebin[0x7FDD] = checksum1>>8;
-	this->filebin[0x7FDE] = checksum2;
-	this->filebin[0x7FDF] = checksum2>>8;
+	checksum2 = -checksum1;
 
-	this->filebin[0xFFDC] = checksum1;
-	this->filebin[0xFFDD] = checksum1>>8;
-	this->filebin[0xFFDE] = checksum2;
-	this->filebin[0xFFDF] = checksum2>>8;
-*/
+	this->filebin[0x7FDC] = checksum2;
+	this->filebin[0x7FDD] = checksum2>>8;
+	this->filebin[0x7FDE] = checksum1;
+	this->filebin[0x7FDF] = checksum1>>8;
 
-	//std::cout << checksum1 << " " << checksum2 << "\n";
+	this->filebin[0xFFDC] = checksum2;
+	this->filebin[0xFFDD] = checksum2>>8;
+	this->filebin[0xFFDE] = checksum1;
+	this->filebin[0xFFDF] = checksum1>>8;
+
+
+	std::cout << checksum1 << " " << checksum2 << "\n";
 
 	std::cout << "func used :"<< func_address << "\n";
 	std::cout << "wram used :"<< wram_address << "\n";
