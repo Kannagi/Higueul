@@ -18,6 +18,7 @@ Eagle eagle;
 
 int main()
 {
+	eagle.target = TARGET_UNK;
 	auto timer_start = std::chrono::high_resolution_clock::now();
 
 	rmakeLoad("higueul_make.txt");
@@ -55,6 +56,46 @@ void rmake_option(char *buf)
 		{
 			eagle.bcycle = true;
 		}
+
+		if(word == "-65816")
+		{
+			eagle.target = TARGET_65816;
+		}
+
+		if(word == "-6502")
+		{
+			eagle.target = TARGET_6502;
+		}
+
+		if(word == "-huc6280")
+		{
+			eagle.target = TARGET_HuC6520;
+		}
+
+		if(word == "-z80")
+		{
+			eagle.target = TARGET_Z80;
+		}
+
+		if(word == "-80186")
+		{
+			eagle.target = TARGET_80286;
+		}
+
+		if(word == "-AltairX")
+		{
+			eagle.target = TARGET_AltairX;
+		}
+
+		if(word == "-lc")
+		{
+			eagle.target = TARGET_C;
+		}
+
+		if(word == "-RV32")
+		{
+			eagle.target = TARGET_RV32;
+		}
 	}
 }
 
@@ -77,48 +118,44 @@ void rmake_compile_run(char *target)
 	std::string str = target;
 	str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
 
-	eagle.target = TARGET_UNK;
-
-	if(str == "-65816")
+	if(eagle.target == TARGET_65816)
 	{
 		eagle.bin_65816();
-		eagle.target = TARGET_65816;
 	}
 
-
-	if(str == "-6502")
+	if(eagle.target == TARGET_6502)
 	{
-		eagle.target = TARGET_6502;
+
 	}
 
-	if(str == "-huc6280")
+	if(eagle.target == TARGET_HuC6520)
 	{
-		eagle.target = TARGET_HuC6520;
+
 	}
 
-	if(str == "-z80")
+	if(eagle.target == TARGET_Z80)
 	{
-		eagle.target = TARGET_Z80;
+
 	}
 
-	if(str == "-80186")
+	if(eagle.target == TARGET_80286)
 	{
-		eagle.target = TARGET_80286;
+
 	}
 
-	if(str == "-AltairX")
+	if(eagle.target == TARGET_AltairX)
 	{
-		eagle.target = TARGET_AltairX;
+		eagle.bin_AltairX();
 	}
 
-	if(str == "-lc")
+	if(eagle.target == TARGET_C)
 	{
-		eagle.target = TARGET_C;
+
 	}
 
-	if(str == "-RV32")
+	if(eagle.target == TARGET_RV32)
 	{
-		eagle.target = TARGET_RV32;
+
 	}
 
 	if(eagle.target == TARGET_UNK)
@@ -131,5 +168,5 @@ void rmake_compile_run(char *target)
 		eagle.write_file("out.asm",eagle.text_code);
 
 
-	eagle.write_file_bin("out.smc");
+	eagle.write_file_bin(target);
 }

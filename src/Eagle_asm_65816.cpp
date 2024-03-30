@@ -625,11 +625,12 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 			bool py = false;
 			bool px = false;
 
+			uint64_t value = 0;
+
 			//arg2
 			if(dst.ptr2.bimm == true)
 			{
-				this->text_code  += "ldx #" + std::to_string(dst.ptr2.value&0xFFFF) +"\n";
-				px = true;
+				value = dst.ptr2.value&0xFFFF;
 			}else
 			{
 
@@ -662,13 +663,13 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 			//arg1
 			if(dst.ptr1.bimm == true)
 			{
-				this->text_code += "sta " + cptr1 + std::to_string(dst.ptr1.value) + cptr2;
+				this->text_code += "sta " + cptr1 + std::to_string(value+dst.ptr1.value) + cptr2;
 			}else
 			{
 				if(dst.ptr1.token2 == ':')
 					this->text_code += "sta " + this->label0;
 				else
-					this->text_code += "sta " + cptr1 + std::to_string(dst.ptr1.value)+ cptr2;
+					this->text_code += "sta " + cptr1 + std::to_string(value+dst.ptr1.value)+ cptr2;
 			}
 
 			if(dst.ptr2_exist == true)
@@ -721,12 +722,12 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 	{
 		bool py = false;
 		bool px = false;
+		uint64_t value = 0;
 
 		//arg2
 		if(src.ptr2.bimm == true)
 		{
-			str_code += "ldx #" + std::to_string(src.ptr2.value&0xFFFF) +"\n";
-			px = true;
+			value = src.ptr2.value&0xFFFF;
 		}else
 		{
 			if(src.ptr2.type == EAGLE_keywords::IDX)
@@ -753,7 +754,7 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 		//arg1
 		if(src.ptr1.bimm == true)
 		{
-			srcvalue  = std::to_string(src.ptr1.value);
+			srcvalue  = std::to_string(src.ptr1.value+value);
 
 		}else
 		{
@@ -782,7 +783,7 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 						srcvalue = "#:" + labelp;
 				}else
 				{
-					srcvalue = std::to_string(src.ptr1.value);
+					srcvalue = std::to_string(src.ptr1.value+value);
 
 					if(src.ptr1.token1 == '$')
 						srcvalue = "#" + std::to_string(src.ptr1.value&0xFFFF);

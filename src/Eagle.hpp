@@ -17,8 +17,8 @@ typedef struct
 {
 	int64_t immediate;
 	double dimmediate;
-	int address;
-	EAGLE_keywords type;
+	uint64_t address;
+	EAGLE_keywords type,type2;
 	char token1,token2;
 	bool bimm;
 	bool blabel;
@@ -54,7 +54,7 @@ class Eagle_func
 		EAGLE_keywords type;
 		int narg;
 		int alloc;
-		int address;
+		uint64_t address;
 
 		int begid;
 		int endid;
@@ -106,7 +106,7 @@ class Eagle
 		void bin_6502(void);
 		void bin_65816(void);
 		void bin_HuC6280(void);
-		void bin_Altaitx(void);
+		void bin_AltairX(void);
 		void bin_80286(void);
 		void bin_x86_64(void);
 		void bin_z80(void);
@@ -132,7 +132,7 @@ class Eagle
 		void out_error(const EAGLE_WORDS tword,const std::string text);
 		void load_file_bin(const char *path,std::vector<char> &data);
 
-		int alloc(EAGLE_keywords type,int n);
+		uint64_t alloc(EAGLE_keywords type,int n);
 
 		//---------ALL--------------
 		void asm_return(const EAGLE_VARIABLE &ret,bool retvoid);
@@ -209,7 +209,7 @@ class Eagle
 
 		std::string filetext;
 		std::vector<char> filebin;
-		std::map<std::string, int> labelbin;
+		std::map<std::string, uint64_t> labelbin;
 
 		std::string label0,label1,label2,labelarg[8],cyclew;
 
@@ -219,28 +219,28 @@ class Eagle
 		EAGLE_DEFINE tmacro;
 
 
-		int idf,sizebin,offset;
+		uint64_t idf,sizebin,offset;
 
 		int line,col;
 		int func_alloc;
 		int mode_alloc;
 		int ilabel;
 
-		int func_address;
-		int wram_address;
+		uint64_t func_address;
+		uint64_t wram_address;
 
-		int spm_address;
-		int lib_address;
-		int funcspm_address;
-		int funclib_address;
+		uint64_t spm_address;
+		uint64_t lib_address;
+		uint64_t funcspm_address;
+		uint64_t funclib_address;
 
-		int spm_init;
-		int lib_init;
-		int funcspm_init;
-		int funclib_init;
+		uint64_t spm_init;
+		uint64_t lib_init;
+		uint64_t funcspm_init;
+		uint64_t funclib_init;
 
 		int register_address;
-		int stack_address;
+		uint64_t stack_address;
 
 		int scope_label[128];
 };

@@ -127,7 +127,7 @@ Eagle::Eagle()
 	this->bcycle = false;
 }
 
-int Eagle::alloc(EAGLE_keywords type,int n)
+uint64_t Eagle::alloc(EAGLE_keywords type,int n)
 {
 	int value;
 	switch(type)
@@ -183,7 +183,7 @@ int Eagle::alloc(EAGLE_keywords type,int n)
 
 	}
 
-	int tmp = 0;
+	uint64_t tmp = 0;
 
 	if(this->mode_alloc == ALLOC_FRAM)
 	{
@@ -382,7 +382,7 @@ int Eagle::line_code_asm(int mode)
 
 					if(isNumber(word[0]))
 					{
-						tmnemonic.value = std::stoi(word);
+						tmnemonic.value = std::stoll(word);
 						tmnemonic.type = 0;
 					}
 					else
@@ -390,7 +390,7 @@ int Eagle::line_code_asm(int mode)
 
 					if(tmnemonic.token1 == '$')
 					{
-						tmnemonic.value = std::stoi(word, nullptr, 16);
+						tmnemonic.value = std::stoll(word, nullptr, 16);
 						tmnemonic.type = 0;
 					}
 
@@ -537,9 +537,9 @@ int Eagle::line_code_asm(int mode)
 
 
 					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+						this->offset = std::stoll(mnemonic[1].item, 0, 16);
 					else
-						this->offset = std::stoi(mnemonic[1].item);
+						this->offset = std::stoll(mnemonic[1].item);
 
 					if(mode == 1)
 					{
@@ -555,9 +555,9 @@ int Eagle::line_code_asm(int mode)
 				if(mnemonic[0].item == ".rodata")
 				{
 					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+						this->offset = std::stoll(mnemonic[1].item, 0, 16);
 					else
-						this->offset = std::stoi(mnemonic[1].item);
+						this->offset = std::stoll(mnemonic[1].item);
 					mnemonic.clear();
 					keyl = true;
 				}
@@ -565,9 +565,9 @@ int Eagle::line_code_asm(int mode)
 				if(mnemonic[0].item == ".code")
 				{
 					if(mnemonic[1].token1 == '$')
-						this->offset = std::stoi(mnemonic[1].item, 0, 16);
+						this->offset = std::stoll(mnemonic[1].item, 0, 16);
 					else
-						this->offset = std::stoi(mnemonic[1].item);
+						this->offset = std::stoll(mnemonic[1].item);
 
 					mnemonic.clear();
 					keyl = true;

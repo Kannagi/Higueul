@@ -565,10 +565,10 @@ void Eagle::out_asm()
 							convertNumber(tmp);
 							if( (tmap[0] == '0') && (tmap[1] == 'x') )
 							{
-								this->mmap = std::stoi(tmap, nullptr, 16);
+								this->mmap = std::stoll(tmap, nullptr, 16);
 							}
 							else
-								this->mmap = std::stoi(tmap);
+								this->mmap = std::stoll(tmap);
 						}
 					}
 
@@ -592,14 +592,14 @@ void Eagle::out_asm()
 
 					if(n2 == 2)
 					{
-						int address = 0;
+						uint64_t address = 0;
 						tmp = this->instructions[i][1].item;
 						if( (tmp[0] == '0') && (tmp[1] == 'x') )
 						{
-							 address = std::stoi(tmp, nullptr, 16);
+							 address = std::stoll(tmp, nullptr, 16);
 						}
 						else
-							address = std::stoi(tmp);
+							address = std::stoll(tmp);
 
 						if(inst == EAGLE_keywords::FUNCMAP)
 							this->func_address = address;
@@ -769,6 +769,8 @@ void Eagle::out_asm()
 						mode = ALLOC_WRAM;
 				}
 
+				EAGLE_keywords type2 = inst;
+
 
 				this->mode_alloc = mode;
 
@@ -785,7 +787,7 @@ void Eagle::out_asm()
 						inst = this->keywords[instructions[i][0+ib].item];
 						if( (inst >= EAGLE_keywords::INT8) && (inst < EAGLE_keywords::VOID) )
 						{
-
+							var1.type2 = type2;
 							var1.type = inst;
 							var1.bimm = false;
 							var1.blabel = false;
@@ -894,14 +896,14 @@ void Eagle::convertStringToNumber(std::string str,int64_t &result,double &dresul
 	if( (str[0] == '0') && (str[1] == 'x') )
 	{
 		 str.substr(2);
-		 result = std::stoi(str, 0, 16);
+		 result = std::stoll(str, 0, 16);
 		 dresult = result;
 
 	}else
 	if( (str[0] == '0') && (str[1] == 'b') )
 	{
 		str.substr(2);
-		result = std::stoi(str, 0, 2);
+		result = std::stoll(str, 0, 2);
 		dresult = result;
 	}else
 	{
