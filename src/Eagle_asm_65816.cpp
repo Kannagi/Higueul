@@ -15,7 +15,7 @@
 #define TYPE_WHILE 1
 #define TYPE_IF 2
 
-static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);
+static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);
 
 void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel)
 {
@@ -125,7 +125,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 	//----------------
 	if(operator1 == '&')
 	{
-		this->text_code += "and " + src2value +"\n";
+		this->text_code += "bit " + src2value +"\n";
 		if(operator2 == '!')
 		{
 			if(type == TYPE_IF)
@@ -217,10 +217,12 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 {
-	std::string src1value = this->label1,tmp;
+	std::string src1value = this->labelcall,tmp;
 	std::string mnemonic = "jmp ",mne1,mne2,saddress;
 	if(type >= 1)
 		mnemonic = "jsr ";
+
+	std::string srcvalue;
 
 	for(int i = 0;i < ninst;i++)
 	{
@@ -249,7 +251,10 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 				mne1 = "ldx ";
 				mne2 = "stx @";
 			}
-
+			if(var.bptr == true)
+			{
+				asm_address(var,this->labelarg[i],"218",saddress,this->text_code);
+			}else
 			if(var.blabel == true)
 			{
 				if(var.token1 == '$')
@@ -353,14 +358,19 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 	std::string str_code1,str_code2;
 
+	int adr1size,adr2size;
+
 	bool optimize = true;
 	bool operation = false;
 
 	if( (src1.bptr == true) || (src2.bptr == true) )
 		optimize = false;
 
-	asm_address(src1,this->label1,"218",src1value,this->text_code);
-	asm_address(src2,this->label2,"220",src2value,this->text_code);
+	if( (src1.token1 == '@') || (src2.token1 == '@') )
+		optimize = false;
+
+	adr1size = asm_address(src1,this->label1,"218",src1value,this->text_code);
+	adr2size = asm_address(src2,this->label2,"220",src2value,this->text_code);
 
 	if(operator1 == '+')
 	{
@@ -410,17 +420,47 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				return;
 			}
 
-			if(dst.type == EAGLE_keywords::IDX)
+
+			if( (dst.type == EAGLE_keywords::IDX) && (src2.type == EAGLE_keywords::ACC) )
 			{
-				this->text_code  += "ldx " + src2value +"\n";
+				this->text_code  += "tax\n";
 				return;
 			}
 
-			if(dst.type == EAGLE_keywords::IDY)
+			if( (dst.type == EAGLE_keywords::IDX) && (src2.type == EAGLE_keywords::ACC) )
 			{
-				this->text_code  += "ldy " + src2value +"\n";
+				this->text_code  += "tay\n";
 				return;
 			}
+
+			if( (dst.type == EAGLE_keywords::ACC) && (src2.type == EAGLE_keywords::IDX) )
+			{
+				this->text_code  += "txa\n";
+				return;
+			}
+
+			if( (dst.type == EAGLE_keywords::ACC) && (src2.type == EAGLE_keywords::IDY) )
+			{
+				this->text_code  += "tya\n";
+				return;
+			}
+
+
+			if( adr2size < 0x10000 )
+			{
+				if(dst.type == EAGLE_keywords::IDX)
+				{
+					this->text_code  += "ldx " + src2value +"\n";
+					return;
+				}
+
+				if(dst.type == EAGLE_keywords::IDY)
+				{
+					this->text_code  += "ldy " + src2value +"\n";
+					return;
+				}
+			}
+
 
 			if(dst.type != EAGLE_keywords::ACC)
 			if( (src2.bimm == true) && (src2.immediate == 0) && (dst.address < 0x10000))
@@ -432,16 +472,19 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				}
 			}
 
-			if(src2.type == EAGLE_keywords::IDX)
+			if( adr1size < 0x10000 )
 			{
-				this->text_code  += "stx " + src1value +"\n";
-				return;
-			}
+				if(src2.type == EAGLE_keywords::IDX)
+				{
+					this->text_code  += "stx " + src1value +"\n";
+					return;
+				}
 
-			if(src2.type == EAGLE_keywords::IDY)
-			{
-				this->text_code  += "sty " + src1value +"\n";
-				return;
+				if(src2.type == EAGLE_keywords::IDY)
+				{
+					this->text_code  += "sty " + src1value +"\n";
+					return;
+				}
 			}
 		}
 
@@ -516,7 +559,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		}else
 		{
 			if(src1.address < 0x10000)
-			if(src2.immediate < 3)
+			if( (src2.immediate < 3) && ( (dst.address == src1.address) ) )
 			{
 				if(operator1 == '+')
 				{
@@ -692,11 +735,21 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 }
 
-static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code)
+static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code)
 {
+	int adr = src.address;
+
+	if(src.token1 == '$')
+		adr &= 0xFFFF;
+
+	if(src.token1 == '#')
+		adr &= 0xFF;
+
 	if(src.bimm == true)
 	{
 		srcvalue = "#" + std::to_string(src.immediate&0xFFFF);
+
+		adr = 0;
 	}else if(src.bptr == false)
 	{
 		if(src.blabel == true)
@@ -723,6 +776,7 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 		bool py = false;
 		bool px = false;
 		uint64_t value = 0;
+		adr = 0;
 
 		//arg2
 		if(src.ptr2.bimm == true)
@@ -809,4 +863,6 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 
 	if(src.token2 == '@')
 		srcvalue = "(" + srcvalue + ")";
+
+	return adr;
 }

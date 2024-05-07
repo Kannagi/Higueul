@@ -211,7 +211,7 @@ class Eagle
 		std::vector<char> filebin;
 		std::map<std::string, uint64_t> labelbin;
 
-		std::string label0,label1,label2,labelarg[8],cyclew;
+		std::string label0,label1,label2,labelarg[8],cyclew,labelcall;
 
 		EAGLE_VARIABLE arg[8];
 		int mmap;

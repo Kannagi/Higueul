@@ -545,7 +545,7 @@ void Eagle::bin_65816()
 					this->filebin.push_back(0xAA);
 
 				if(instw == "tay")
-					this->filebin.push_back(0xAB);
+					this->filebin.push_back(0xA8);
 
 				if(instw == "tcd")
 					this->filebin.push_back(0x5B);
@@ -1436,7 +1436,10 @@ void Eagle::bin_65816()
 								immz = 1;
 							}
 							else
+							{
 								this->filebin.push_back(tdata[9]);
+							}
+
 						}
 
 						if(immz == 1)
@@ -1491,7 +1494,7 @@ void Eagle::bin_65816()
 
 	int n = this->filebin.size();
 
-	std::cout << n << "\n";
+	//std::cout << n << "\n";
 
 
 
@@ -1508,7 +1511,7 @@ void Eagle::bin_65816()
 	this->filebin[0x7FDF] = checksum1>>8;
 
 
-	std::cout << checksum1 << " " << checksum2 << "\n";
+	//std::cout << checksum1 << " " << checksum2 << "\n";
 
 	std::cout << "func used :"<< func_address << "\n";
 	std::cout << "wram used :"<< wram_address << "\n";

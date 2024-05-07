@@ -269,7 +269,7 @@ void Eagle::out_asm()
 					//comment asm
 					this->text_code += ";" + this->instructions[i][0].item+ " " + this->instructions[i][1].item + "\n";
 
-					this->label1 = this->instructions[i][1].item;
+					this->labelcall = this->instructions[i][1].item;
 
 					if(variable_exist(this->instructions[i][1],var1,1) == false)
 						out_error(this->instructions[i][1],"variable not exist ! ");
@@ -285,7 +285,7 @@ void Eagle::out_asm()
 				{
 					//comment asm
 					this->text_code += ";" + this->instructions[i][0].item+ " " + this->instructions[i][1].item + "\n";
-					this->label1 = this->instructions[i][1].item;
+					this->labelcall = this->instructions[i][1].item;
 
 					if(variable_exist(this->instructions[i][1],var1,1) == false)
 						out_error(this->instructions[i][1],"variable not exist ! ");
