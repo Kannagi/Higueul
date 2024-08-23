@@ -829,6 +829,11 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 			{
 				if(src.ptr1.token2 == ':')
 				{
+					if(value != 0)
+					{
+						str_code += "ldx #"+ std::to_string(value) +"\n";
+						px = true;
+					}
 					srcvalue = labelp;
 					if(src.ptr1.token1 == '$')
 						srcvalue = "#" + labelp;
@@ -840,7 +845,7 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 					srcvalue = std::to_string(src.ptr1.value+value);
 
 					if(src.ptr1.token1 == '$')
-						srcvalue = "#" + std::to_string(src.ptr1.value&0xFFFF);
+						srcvalue = "#" + std::to_string( (src.ptr1.value+value)&0xFFFF);
 
 					if(src.ptr1.token1 == '#')
 						srcvalue = "#:" + std::to_string(src.ptr1.value>>16);
