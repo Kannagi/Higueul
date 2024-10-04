@@ -10,6 +10,41 @@
 
 #include "Eagle.hpp"
 
+
+inline bool Eagle::gvariable_exist(std::string &tmp,EAGLE_VARIABLE &var)
+{
+	auto it = this->gvariable.find(tmp);
+
+	if (it != this->gvariable.end())
+	{
+		var = this->gvariable[tmp];
+		if(var.type != EAGLE_keywords::UNKNOW)
+			return true;
+	}else
+	{
+		var.type = EAGLE_keywords::UNKNOW;
+	}
+
+	return false;
+}
+
+inline bool Eagle::variable_exist(std::string &tmp,EAGLE_VARIABLE &var)
+{
+	auto it = this->variable.find(tmp);
+
+	if (it != this->variable.end())
+	{
+		var = this->variable[tmp];
+		if(var.type != EAGLE_keywords::UNKNOW)
+			return true;
+	}else
+	{
+		var.type = EAGLE_keywords::UNKNOW;
+	}
+
+	return false;
+}
+
 static void convertNumber(std::string &tmp)
 {
 	if( (tmp[0] == '0') && (tmp[1] == 'x') )
@@ -37,6 +72,12 @@ void Eagle::out_asm()
 	EAGLE_keywords ktype;
 	Eagle_func func;
 	func.clear();
+	func.name = "...";
+
+	this->str_bra = "\n;else\nbra .label_";
+
+	if(this->target == TARGET_6502)
+		this->str_bra = "\n;else\njmp .label_";
 
 	int n = this->instructions.size();
 	for(int i = 0;i < n;i++)
@@ -347,7 +388,7 @@ void Eagle::out_asm()
 						l--;
 					}
 
-					this->text_code.insert(l-1,"\n;else\nbra .label_"+std::to_string(this->ilabel) );
+					this->text_code.insert(l-1,this->str_bra+std::to_string(this->ilabel) );
 
 					int scope = (tword.scope)&0x7F;
 					this->scope_label[scope] = this->ilabel;
@@ -377,6 +418,7 @@ void Eagle::out_asm()
 						}
 						func.clear();
 						variable.clear();
+						func.name = "...";
 						this->text_code += "..end\n";
 					}else
 					{
@@ -407,11 +449,14 @@ void Eagle::out_asm()
 					this->mode_alloc = ALLOC_FRAM;
 
 					if(inst == EAGLE_keywords::FUNCSPM)
+					{
 						this->mode_alloc = ALLOC_FSPM;
+					}
 
 					if(inst == EAGLE_keywords::FUNCLIB)
+					{
 						this->mode_alloc = ALLOC_FLIB;
-
+					}
 
 					func.clear();
 
@@ -467,21 +512,14 @@ void Eagle::out_asm()
 									}
 
 									tmp = this->instructions[i][l+1].item;
+									tmp2 = func.name + "." + tmp;
 									ktype = this->keywords[tmp];
 
 									if( (ktype == EAGLE_keywords::UNKNOW) && (this->instructions[i][l+1].type == TYPE_WORD) )
 									{
-										bool exist = false;
-										tmp2 = func.name + "." + tmp;
+										bool exist = this->gvariable_exist(tmp,var);
 
-										var = this->gvariable[tmp];
-
-										if(var.type != EAGLE_keywords::UNKNOW)
-											exist = true;
-
-										var = this->gvariable[tmp2];
-										if(var.type != EAGLE_keywords::UNKNOW)
-											exist = true;
+										exist |= this->gvariable_exist(tmp2,var);
 
 										if(exist == false)
 										{
@@ -491,11 +529,18 @@ void Eagle::out_asm()
 
 											var.type = ktype2;
 											var.address = alloc(ktype2,1);
+											var.nsize = this->varsize;
 											this->variable[tmp] = var;
+
 											this->gvariable[tmp2] = var;
 
 											tmp2 = func.name + "..arg" + std::to_string(j);
 											this->gvariable[tmp2] = var;
+
+											var.address += 1;
+											tmp2 = func.name + "..b16arg" + std::to_string(j);
+											this->gvariable[tmp2] = var;
+
 										}
 										else
 										{
@@ -512,7 +557,7 @@ void Eagle::out_asm()
 								}
 							}
 
-							if(n2 >= 2)
+							if(n2 > 2)
 							{
 								if(this->mode_alloc == ALLOC_FRAM)
 									this->func_address += 1;
@@ -751,12 +796,20 @@ void Eagle::out_asm()
 
 			default:
 				int mode = ALLOC_UNK;
+				bool spm_enable = false;
 				this->mode_alloc =0;
 
 				if(inst == EAGLE_keywords::LIB)
+				{
 					mode = ALLOC_LIB;
+					spm_enable = true;
+				}
+
 				if(inst == EAGLE_keywords::SPM)
+				{
 					mode = ALLOC_SPM;
+					spm_enable = true;
+				}
 				if(inst == EAGLE_keywords::REGISTER)
 					mode = ALLOC_REGISTER;
 				if(inst == EAGLE_keywords::STACK)
@@ -807,25 +860,20 @@ void Eagle::out_asm()
 						if(inst == EAGLE_keywords::UNKNOW)
 						{
 							exist = false;
+							int look = 0;
 							tmp = tword.item;
 							tmp2 = func.name + "." + tmp;
 
-							var = this->variable[tmp];
-
-							if(var.type != EAGLE_keywords::UNKNOW)
-								exist = true;
-
-							var = this->gvariable[tmp2];
-							if(var.type != EAGLE_keywords::UNKNOW)
-								exist = true;
+							exist = this->variable_exist(tmp,var);
+							look = exist;
+							exist |= this->gvariable_exist(tmp2,var);
+							look += exist<<1;
 
 							if(mode == ALLOC_WRAM)
 							{
-								var = this->gvariable[tmp];
-								if(var.type != EAGLE_keywords::UNKNOW)
-									exist = true;
+								exist |= this->gvariable_exist(tmp,var);
+								look += exist<<2;
 							}
-
 
 							if(exist == false)
 							{
@@ -850,17 +898,29 @@ void Eagle::out_asm()
 								}
 
 								var1.address = alloc(var1.type,n);
+								var1.nsize = this->varsize;
 								if(tword.scope != 0)
 								{
 									this->variable[tmp] = var1;
 									if(mode == ALLOC_FRAM)
 									{
+										//if (spm_enable == false)
+										tmp2 = func.name + "." + tmp;
+										//tmp2 = func.name + "." + this->instructions[i][1].item;
+
 										this->gvariable[tmp2] = var1;
+
+
+
+										//std::cout << tmp2  << std::hex << " " << var1.address  << "\n";
 									}
 								}
 								else
 								{
-									this->gvariable[tmp] = var1;
+									if (spm_enable == false)
+										this->gvariable[tmp] = var1;
+									else
+										out_error(instructions[i][l],"spm or lib don't variable global ! ");
 
 									//std::cout << this->instructions[i][1].item  << std::hex << " " << var1.address  << "\n";
 								}
@@ -868,7 +928,10 @@ void Eagle::out_asm()
 
 
 							}else
+							{
 								out_error(instructions[i][l],"variable exist ! ");
+							}
+
 						}else
 						{
 							out_error(instructions[i][l],"variable is incorrect ");
@@ -914,7 +977,9 @@ void Eagle::convertStringToNumber(std::string str,int64_t &result,double &dresul
 
 bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 {
-	var = this->variable[tword.item];
+	EAGLE_VARIABLE tvar;
+
+	this->variable_exist(tword.item,var);
 	if(var.type != EAGLE_keywords::UNKNOW)
 	{
 		var.token1 = tword.token1;
@@ -922,7 +987,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 		return true;
 	}else
 	{
-		var = this->gvariable[tword.item];
+		this->gvariable_exist(tword.item,var);
 		if(var.type != EAGLE_keywords::UNKNOW)
 		{
 			var.token1 = tword.token1;
@@ -951,7 +1016,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 				var.bptr = true;
 
 				var.immediate = 0;
-				var.ptr_type = tword.ktype;
+				var.ptr_type = EAGLE_keywords::UINT8;
 
 				if(tword.pn == 0)
 					return false;
@@ -979,14 +1044,14 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 				{
 					var.ptr1.bimm = false;
 
-					EAGLE_VARIABLE tvar = this->variable[tword.ptr[0]];
+					this->variable_exist(tword.ptr[0],tvar);
 					if(tvar.type != EAGLE_keywords::UNKNOW)
 					{
 						var.ptr1.value = tvar.address;
 						var.ptr1.type = tvar.type;
 					}else
 					{
-						EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[0]];
+						this->gvariable_exist(tword.ptr[0],tvar);
 						if(tvar.type != EAGLE_keywords::UNKNOW)
 						{
 							var.ptr1.value = tvar.address;
@@ -1012,14 +1077,15 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 					{
 						var.ptr2.bimm = false;
 
-						EAGLE_VARIABLE tvar = this->variable[tword.ptr[1]];
+
+						this->variable_exist(tword.ptr[1],tvar);
 						if(tvar.type != EAGLE_keywords::UNKNOW)
 						{
 							var.ptr2.value = tvar.address;
 							var.ptr2.type = tvar.type;
 						}else
 						{
-							EAGLE_VARIABLE tvar = this->gvariable[tword.ptr[1]];
+							this->gvariable_exist(tword.ptr[1],tvar);
 							if(tvar.type != EAGLE_keywords::UNKNOW)
 							{
 								var.ptr2.value = tvar.address;
@@ -1034,7 +1100,12 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 
 
 				if(tword.pn > 2)
-					convertStringToNumber(tword.ptr[2],var.immediate,var.dimmediate);
+				{
+					var.ptr_type = this->keywords[ tword.ptr[2] ];
+				}
+
+				if(tword.pn > 3)
+					convertStringToNumber(tword.ptr[3],var.immediate,var.dimmediate);
 
 				var.token1 = tword.token1;
 				var.token2 = tword.token2;

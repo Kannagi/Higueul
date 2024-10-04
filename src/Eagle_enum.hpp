@@ -19,6 +19,9 @@ enum class EAGLE_keywords : unsigned char
     FLOAT32,
     FLOAT64,
 
+    VFLOAT,
+    VINT,
+
     VINT8x2,
     VINT16x2,
     VINT32x2,

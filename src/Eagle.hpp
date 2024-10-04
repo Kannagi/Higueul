@@ -18,6 +18,7 @@ typedef struct
 	int64_t immediate;
 	double dimmediate;
 	uint64_t address;
+	uint64_t nsize;
 	EAGLE_keywords type,type2;
 	char token1,token2;
 	bool bimm;
@@ -112,7 +113,8 @@ class Eagle
 		void bin_z80(void);
 
 		std::string text_code;
-		bool debug,bout_asm,bcycle;
+		std::string filename,mesen_ram,mesen_rom,str_bra;
+		bool debug,bout_asm,bcycle,bmesen;
 		int error;
 		int target;
 
@@ -133,6 +135,9 @@ class Eagle
 		void load_file_bin(const char *path,std::vector<char> &data);
 
 		uint64_t alloc(EAGLE_keywords type,int n);
+
+		bool gvariable_exist(std::string &tmp,EAGLE_VARIABLE &var);
+		bool variable_exist(std::string &tmp,EAGLE_VARIABLE &var);
 
 		//---------ALL--------------
 		void asm_return(const EAGLE_VARIABLE &ret,bool retvoid);
@@ -212,9 +217,10 @@ class Eagle
 		std::map<std::string, uint64_t> labelbin;
 
 		std::string label0,label1,label2,labelarg[8],cyclew,labelcall;
+		std::string mesen;
 
 		EAGLE_VARIABLE arg[8];
-		int mmap;
+		int mmap,varsize;
 		int cycle;
 		EAGLE_DEFINE tmacro;
 
@@ -315,8 +321,9 @@ enum
 	TARGET_AltairX,
 
 	TARGET_6502,
-	TARGET_65816,
+	TARGET_65C02,
 	TARGET_HuC6520,
+	TARGET_65816,
 
 	TARGET_Z80,
 

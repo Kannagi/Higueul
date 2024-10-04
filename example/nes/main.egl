@@ -1,0 +1,221 @@
+
+
+
+
+.map.func 0x200
+.map.funcspm 0xF0
+.map.funclib 0xE0
+.map.spm 0x00
+.map.lib 0x80
+
+
+//--------header--------
+.org 0
+.data.b 0x4E,0x45,0x53,0x1A
+.data.b 0x1 //PRG 16K*
+.data.b 0x4 //CHR 8K*
+.data.b 0x40
+.data.b 0x00,0x00
+
+.data.b 0x00,0x00,0x00,0x00,0x00,0x00,0x00
+//-----------------------
+.bss 0x2000
+uint8 PPU_CTRL1
+uint8 PPU_CTRL2
+uint8 PPU_STATUS
+uint8 SPR_ADD
+uint8 SPR_DATA
+uint8 PPU_SCROLL
+uint8 VRAM_ADD
+uint8 VRAM_DATA
+
+
+.bss 0x4014
+uint8 SPR_DMA
+//-----------------------
+
+.bss 0x600
+
+.code 0x8000
+proc _start:
+{
+	asm "
+	sei
+	cld
+	ldx #$FE
+	txs
+
+	";
+	PPU_CTRL1 = 0x88
+	PPU_CTRL2 = 0x1E
+
+	jump main:
+}
+
+proc VBlank:
+{
+	acc = PPU_STATUS
+
+	VRAM_ADD = 0x3F
+	VRAM_ADD = 0x00
+
+	idx = 0
+	idy = 4
+	do
+	{
+		VRAM_DATA = [Pal1:,idx]
+		idx += 1
+	}
+	loop idy == 0
+
+
+	VRAM_ADD = 0x3F
+	VRAM_ADD = 0x10
+
+	idx = 0
+	idy = 4
+	do
+	{
+		VRAM_DATA = [Pal2:,idx]
+		idx += 1
+	}
+	loop idy == 0
+
+	VRAM_ADD = 0x20
+	VRAM_ADD = 0x00
+
+
+	idx = 0
+	idy = 11
+	do
+	{
+		VRAM_DATA = [STR_HELLO:,idx]
+		idx += 1
+	}
+	loop idy == 0
+
+
+
+	SPR_ADD = 16
+
+	SPR_DATA = 120
+	SPR_DATA = 0
+	SPR_DATA = 0
+	SPR_DATA = 120
+
+	SPR_DATA = 120
+	SPR_DATA = 1
+	SPR_DATA = 0
+	SPR_DATA = 128
+
+	SPR_DATA = 128
+	SPR_DATA = 2
+	SPR_DATA = 0
+	SPR_DATA = 120
+
+	SPR_DATA = 128
+	SPR_DATA = 3
+	SPR_DATA = 0
+	SPR_DATA = 128
+
+	PPU_SCROLL = 0
+	PPU_SCROLL = (-8)
+
+	acc = 0
+	asm "rti"
+}
+
+proc IRQ:
+{
+
+	asm "rti"
+}
+
+
+
+proc main:
+{
+
+
+/*
+	uint16 testa,testb,res
+	uint8 test8
+
+	[res,idx,uint16] = 0x1234
+
+	[res,idx,uint16] = testb + 0x1001
+
+	[res,idx,uint16] = [res,idx,uint16] + 0x1003
+
+	res = testb
+
+	res = 0x1234
+
+	res = [STR_HELLO:,idx,uint16]
+
+
+	res = [STR_HELLO:,idx,uint16] + testb
+
+
+	[res,idx,uint16] = [STR_HELLO:,idx,uint16] + 5
+
+	res = 0x211
+
+	res = testb +2
+	res+=1
+
+
+	res = testb >> 8
+	res = testb << 8
+
+
+	uint8 test
+	if test & 3
+	{
+
+	}
+	else
+	{
+
+	}
+*/
+	do
+	{
+		call waitVBlank:
+	}while 1 == 1
+
+}
+
+func waitVBlank:
+{
+	acc = 1;
+	do
+	{ }
+	while acc == 1
+
+}
+
+STR_HELLO:
+.data.s "HELLO_WORLD"
+
+
+Pal1:
+.incbin "font.pal"
+
+Pal2:
+.incbin "mario.pal"
+
+.org 0x400A
+.data.w VBlank
+.data.w _start
+.data.w IRQ
+
+.rodata 0x0000
+
+.incbin "font.spr"
+.org 0x5010
+.incbin "mario.spr"
+
+
+.org 0xC010
+

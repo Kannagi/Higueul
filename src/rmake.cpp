@@ -233,7 +233,7 @@ void rmakeInit(char *buffer,int n)
 									listFiles(filename);
 								}
 
-								if(kcmd == 4) //add_folder
+								if(kcmd == 4) //add_file
 								{
 									rmake_add_file(filename);
 								}

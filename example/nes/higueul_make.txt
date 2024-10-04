@@ -1,0 +1,14 @@
+
+
+#options:-debug -asm
+#options:-cycle
+#cmd_execute: pwd
+options:-6502 -asm -mesen
+
+
+#file game
+add_file:main.egl;
+
+
+compiler_run:demo.nes
+

@@ -650,7 +650,7 @@ void Eagle::bin_65816()
 			int immz;
 			int format = 0;
 			int tval = mnemonic[1].value;
-			char tdata[16];
+			char tdata[16] = {};
 
 			if(tval < 0x100)
 				immz = 0;
@@ -1510,6 +1510,57 @@ void Eagle::bin_65816()
 	this->filebin[0x7FDE] = checksum1;
 	this->filebin[0x7FDF] = checksum1>>8;
 
+
+	if(this->bmesen == true)
+	{
+		std::ofstream outfile(this->filename);
+
+		if (!outfile.is_open())
+		{
+			std::cerr << "Error write file: .mlb" << std::endl;
+			return;
+		}
+
+		outfile << this->mesen;
+
+		for (const auto& pair : this->gvariable)
+		{
+			EAGLE_VARIABLE var = pair.second ;
+			if ( ( (var.address >= 0x100) && (var.address < 0x2000) ) || (var.address > 0x7E0200) )
+			{
+				std::string tstrf = pair.first;
+
+				for (char &c : tstrf) {
+					if (c == '.')
+						c = '_';
+				}
+
+				char shex[32];
+
+				if(var.nsize < 2)
+					sprintf(shex,"%x",(int)var.address&0x1FFFF);
+				else
+					sprintf(shex,"%x-%x",(int)var.address&0x1FFFF,(int)(var.address+var.nsize-1)&0x1FFFF);
+
+				for(int i = 0;i < 32;i++)
+				{
+					if( (shex[i] >= 'a') && (shex[i] <= 'z') )
+					{
+						shex[i] -= 32;
+					}
+				}
+
+				outfile << "SnesWorkRam:" << shex << ":"<< tstrf << std::endl;
+			}
+		}
+
+		outfile << "SnesWorkRam:00-7F:SPM" << std::endl;
+		outfile << "SnesWorkRam:80-D0:LIB" << std::endl;
+		outfile << "SnesWorkRam:E0-EF:FUNCLIB" << std::endl;
+		outfile << "SnesWorkRam:F0-FF:FUNCSPM" << std::endl;
+
+		outfile.close();
+	}
 
 	//std::cout << checksum1 << " " << checksum2 << "\n";
 

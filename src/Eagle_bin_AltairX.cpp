@@ -352,14 +352,13 @@ void Eagle::bin_AltairX()
 				this->filebin.push_back(imm24>>16);
 			}
 
-			if(instw == "cop")
+			if(instw == "movei")
 			{
 				this->filebin.push_back(0x02|pairing);
-				this->filebin.push_back(imm24);
-				this->filebin.push_back(imm24>>8);
-				this->filebin.push_back(imm24>>16);
+				this->filebin.push_back(opcode2);
+				this->filebin.push_back(opcode2>>8);
+				this->filebin.push_back(opcode2>>16);
 			}
-
 			if(instw == "ext")
 			{
 				this->filebin.push_back(0x04|pairing);
@@ -376,25 +375,9 @@ void Eagle::bin_AltairX()
 				this->filebin.push_back(opcode1>>16);
 			}
 
-			if(instw == "movei")
+			if(instw == "min")
 			{
 				this->filebin.push_back(0x08|pairing);
-				this->filebin.push_back(opcode2);
-				this->filebin.push_back(opcode2>>8);
-				this->filebin.push_back(opcode2>>16);
-			}
-
-			if(instw == "moven")
-			{
-				this->filebin.push_back(0x0A|pairing);
-				this->filebin.push_back(opcode2);
-				this->filebin.push_back(opcode2>>8);
-				this->filebin.push_back(opcode2>>16);
-			}
-
-			if(instw == "moveup")
-			{
-				this->filebin.push_back(0x0C|pairing);
 				this->filebin.push_back(opcode2);
 				this->filebin.push_back(opcode2>>8);
 				this->filebin.push_back(opcode2>>16);

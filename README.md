@@ -28,30 +28,10 @@ Higueul is not a portable language, it may have specificities depending on the p
 Its purpose is not "old machine" oriented, nor even oriented for the SNES (since that is its primary use).  
 But it is also made to be able to program on exotic processors like the Emotion Engine (PS2), the CELL (PS3), or GPU programming.  
 
-# Example
-```
-.code 0x0000
+## Target
 
-func main:uint8 arg1,uint8 arg2,uint8 arg3;
-{
-	uint8 test;
-	uint16 test2;
-	spm uint8 var,var2 8,var3;
-	
-	if [test2,idx] == 5
-	{
-		return 0;
-	}
+- 6502
+- 65C02
+- Huc6280
+- 65816
 
-	call print:0;
-
-	return 0;
-}
-
-
-func print:uint8 ap;
-{
-	spm int8 var;
-	return;
-}
-```

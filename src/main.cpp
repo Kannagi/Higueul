@@ -26,6 +26,8 @@ int main()
 	auto timer_end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(timer_end - timer_start);
 
+	std::cout << "version 0.4" << std::dec << std::endl;
+
 	std::cout << "Time compilation: " << duration.count() << " millisecondes" << std::endl;
 
 	return 0;
@@ -55,6 +57,16 @@ void rmake_option(char *buf)
 		if(word == "-cycle")
 		{
 			eagle.bcycle = true;
+		}
+
+		if(word == "-mesen")
+		{
+			eagle.bmesen = true;
+		}
+
+		if(word == "-noheader")
+		{
+			//eagle.debug = true;
 		}
 
 		if(word == "-65816")
@@ -116,21 +128,39 @@ void rmake_add_file(char *filename)
 void rmake_compile_run(char *target)
 {
 	std::string str = target;
+	eagle.filename = str;
+
+	if (eagle.filename.length() >= 3)
+        eagle.filename.replace(eagle.filename.length() - 3, 3, "mlb");
+
 	str.erase(std::remove_if(str.begin(), str.end(), ::isspace), str.end());
 
 	if(eagle.target == TARGET_65816)
 	{
+		eagle.mesen_ram = "SnesWorkRam:";
+		eagle.mesen_rom = "SnesPrgRom";
 		eagle.bin_65816();
 	}
 
 	if(eagle.target == TARGET_6502)
 	{
-
+		eagle.mesen_ram = "NesWorkRam:";
+		eagle.mesen_rom = "NesPrgRom";
+		eagle.bin_6502();
 	}
 
 	if(eagle.target == TARGET_HuC6520)
 	{
+		eagle.mesen_ram = "PceWorkRam:";
+		eagle.mesen_rom = "PcePrgRom";
+		eagle.bin_6502();
+	}
 
+	if(eagle.target == TARGET_65C02)
+	{
+		eagle.mesen_ram = "PceWorkRam:";
+		eagle.mesen_rom = "PcePrgRom";
+		eagle.bin_6502();
 	}
 
 	if(eagle.target == TARGET_Z80)

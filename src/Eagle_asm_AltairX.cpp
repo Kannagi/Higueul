@@ -71,7 +71,6 @@ void Eagle::asm_alu_AltairX(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1
 
 	std::string str_code1,str_code2;
 
-	bool optimize = true;
 	bool PQope = false;
 
 	uint64_t adrl;
@@ -81,9 +80,6 @@ void Eagle::asm_alu_AltairX(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1
 	asm_address(src1,this->label1,"t1",src1value,this->text_code);
 	asm_address(src2,this->label2,"t2",src2value,this->text_code);
 
-
-	if( (src1.bptr == true) || (src2.bptr == true) )
-		optimize = false;
 
 	if(operator1 == '+')
 		mnemonic = "add";

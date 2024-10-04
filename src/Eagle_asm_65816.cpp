@@ -76,6 +76,33 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 			return;
 		}
 
+		if( (src2.immediate == 0) && (src2.bimm == true) )
+		{
+			if(operator2 == '=')
+				this->text_code += "bcc " + label_adr +"\n";
+			else
+				this->text_code += "bcs " + label_adr +"\n";
+			return;
+		}
+
+		if( (src2.immediate == 2) && (src2.bimm == true) )
+		{
+			if(operator2 == '=')
+				this->text_code += "bpl " + label_adr +"\n";
+			else
+				this->text_code += "bmi " + label_adr +"\n";
+			return;
+		}
+
+		if( (src2.immediate == 3) && (src2.bimm == true) )
+		{
+			if(operator2 == '=')
+				this->text_code += "beq " + label_adr +"\n";
+			else
+				this->text_code += "bne " + label_adr +"\n";
+			return;
+		}
+
 
 		if(operator2 == '=')
 			this->text_code += "bcc " + label_adr +"\n";
@@ -134,6 +161,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 				this->text_code += "beq " + label_adr +"\n";
 			return;
 		}
+
 
 		if(type == TYPE_IF)
 			this->text_code += "beq " + label_adr +"\n";
@@ -222,7 +250,7 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 	if(type >= 1)
 		mnemonic = "jsr ";
 
-	std::string srcvalue;
+	std::string srcvalue,pbeg,pend;
 
 	for(int i = 0;i < ninst;i++)
 	{
@@ -307,11 +335,15 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 			}
 			src1value =  "(" + tmp + ")";
 			if(type >= 1)
-				this->text_code += "ldx #0\n";
+			{
+				this->text_code += "phx\nldx #0\n";
+				pend = "plx\n";
+			}
+
 		}
 	}
 
-	this->text_code += mnemonic + src1value +"\n";
+	this->text_code += mnemonic + src1value +"\n" + pend;
 }
 
 void Eagle::asm_return_65816(const EAGLE_VARIABLE &ret,bool retvoid)
@@ -427,7 +459,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 				return;
 			}
 
-			if( (dst.type == EAGLE_keywords::IDX) && (src2.type == EAGLE_keywords::ACC) )
+			if( (dst.type == EAGLE_keywords::IDY) && (src2.type == EAGLE_keywords::ACC) )
 			{
 				this->text_code  += "tay\n";
 				return;
@@ -623,27 +655,120 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		}else
 		{
 			if(operator1 == '>')
-				this->text_code += "jsr higueul_stdlib_lsr\n";
+				this->text_code += "jsl higueul_stdlib_lsr\n";
 			else
-				this->text_code += "jsr higueul_stdlib_asl\n";
+				this->text_code += "jsl higueul_stdlib_asl\n";
 		}
 
 		operation = true;
 	}
 
-	//mul
+		//mul
 	if(operator1 == '*')
 	{
-
 		if(src2.bimm == true)
 		{
+			switch(src2.immediate)
+			{
+				case 0:
+					this->text_code += "lda #0\n";
+				break;
 
-			for(int i = 0;i < src2.immediate;i++)
-				this->text_code  += "asl\n";
+				case 1:
+					//this->text_code += "lda #0\n";
+				break;
+
+
+				case 2:
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+				case 3:
+					this->text_code += "asl\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+
+				case 4:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+				break;
+
+				case 5:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+				case 6:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+				case 7:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "sec\n";
+					this->text_code += "sbc " + src1value +"\n";
+				break;
+
+				case 8:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+				break;
+
+				case 9:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+				case 10:
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "asl\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+					this->text_code += "clc\n";
+					this->text_code += "adc " + src1value +"\n";
+				break;
+
+
+				default:
+
+				break;
+
+			}
+
 
 		}else
 		{
+			this->text_code += "jsl higueul_stdlib_mul\n";
+		}
 
+		operation = true;
+	}
+
+	//div
+	if(operator1 == '/')
+	{
+		if(src2.bimm == true)
+		{
+
+		}else
+		{
+			this->text_code += "jsl higueul_stdlib_div\n";
 		}
 
 		operation = true;

@@ -25,6 +25,9 @@ Eagle::Eagle()
 	this->keywords["float32"] = EAGLE_keywords::FLOAT32;
 	this->keywords["float64"] = EAGLE_keywords::FLOAT64;
 
+	//this->keywords["vfloat"] = EAGLE_keywords::VFLOAT;
+	//this->keywords["vint"] = EAGLE_keywords::VINT;
+
 	this->keywords["void"]    = EAGLE_keywords::VOID;
 
 	this->keywords["register"] = EAGLE_keywords::REGISTER;
@@ -122,9 +125,11 @@ Eagle::Eagle()
 	this->kmacro[6] = ".arg7";
 	this->kmacro[7] = ".arg8";
 
+
 	this->debug = false;
 	this->bout_asm = false;
 	this->bcycle = false;
+	this->bmesen = false;
 }
 
 uint64_t Eagle::alloc(EAGLE_keywords type,int n)
@@ -182,6 +187,8 @@ uint64_t Eagle::alloc(EAGLE_keywords type,int n)
 			break;
 
 	}
+
+	this->varsize = value;
 
 	uint64_t tmp = 0;
 
@@ -350,7 +357,8 @@ int Eagle::line_code_asm(int mode)
 	mnemonic.clear();
 	bool comment = false;
 	bool path = false;
-
+	static uint64_t moffset;
+	static std::string mstr;
 
 	EAGLE_MNEMONIQUE tmnemonic;
 
@@ -609,6 +617,17 @@ int Eagle::line_code_asm(int mode)
 					{
 						this->cyclew = mnemonic[1].item;
 						this->cycle = 0;
+
+						if(this->bmesen == true)
+						{
+							moffset = this->offset;
+							mstr = mnemonic[1].item ;
+
+							for (char &c : mstr) {
+								if (c == '.')
+									c = '_';
+							}
+						}
 					}
 
 					mnemonic.clear();
@@ -619,9 +638,39 @@ int Eagle::line_code_asm(int mode)
 				if(mnemonic[0].item == "..end")
 				{
 
-					if( (mode == 1) && (bcycle == true) )
+					if(mode == 1)
 					{
-						std::cout << std::dec << "cycle estimate "<< this->cyclew << " : " << this->cycle << std::hex <<"\n";
+						if(this->bmesen == true)
+						{
+							char sline[512],shex[32];
+
+							uint64_t toff = moffset&0x10000;
+
+
+							uint64_t off = moffset&0xFFFFF;
+							uint64_t dif = (this->offset-1) - moffset;
+
+							if(toff == 0)
+								off -= 0x8000;
+							else
+								off -= 0x10000;
+
+							sprintf(shex,"%x-%x",(int)off,(int)(off+dif));
+
+							for(int i = 0;i < 32;i++)
+							{
+								if( (shex[i] >= 'a') && (shex[i] <= 'z') )
+								{
+									shex[i] -= 32;
+								}
+							}
+
+							sprintf(sline,"%s:%s:%s\n",this->mesen_rom.c_str(),shex, mstr.c_str());
+							this->mesen += sline;
+						}
+
+						if(bcycle == true)
+							std::cout << std::dec << "cycle estimate "<< this->cyclew << " : " << this->cycle << std::hex <<"\n";
 					}
 
 					mnemonic.clear();
