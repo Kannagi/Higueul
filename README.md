@@ -2,9 +2,7 @@
 Higueul is a low-level programming language
 
 It has a syntax inspired by C and assembler.  
-But don't think of it exactly as a C-like, but as a macro-assembler-like. 
-
-There is no "stable" version yet, the language is currently being tested.  
+But don't think of it exactly as a C-like, It seems to be a bit C-like, but it has specificities, and can in some ways be close to a very advanced macro assembler. 
 
 Wiki: https://github.com/Kannagi/Higueul/wiki
 
