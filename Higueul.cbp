@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Higueul" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="bin">
+				<Option output="bin/higueulc" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="bin/" />
+				<Option object_output="obj/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add directory="src" />
+				</Compiler>
+			</Target>
+			<Target title="bin windows">
+				<Option output="bin/higueulc" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="bin/" />
+				<Option object_output="obj/mingw/" />
+				<Option type="1" />
+				<Option compiler="mingw__compiler" />
+				<Compiler>
+					<Add directory="src" />
+				</Compiler>
+				<Linker>
+					<Add option="--static" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-fomit-frame-pointer" />
+			<Add option="-fexpensive-optimizations" />
+			<Add option="-Os" />
+			<Add option="-Wextra" />
+			<Add option="-Wall" />
+			<Add option="-std=c++11" />
+			<Add option="-fexceptions" />
+			<Add option="-Wno-unused-parameter" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+		</Linker>
+		<Unit filename="src/Eagle.cpp" />
+		<Unit filename="src/Eagle.hpp" />
+		<Unit filename="src/Eagle_asm.cpp" />
+		<Unit filename="src/Eagle_asm_6502.cpp" />
+		<Unit filename="src/Eagle_asm_65816.cpp" />
+		<Unit filename="src/Eagle_asm_80286.cpp" />
+		<Unit filename="src/Eagle_asm_AltairX.cpp" />
+		<Unit filename="src/Eagle_asm_HuC6280.cpp" />
+		<Unit filename="src/Eagle_bin_6502.cpp" />
+		<Unit filename="src/Eagle_bin_65816.cpp" />
+		<Unit filename="src/Eagle_bin_80286.cpp" />
+		<Unit filename="src/Eagle_bin_AltairX.cpp" />
+		<Unit filename="src/Eagle_bin_HuC6280.cpp" />
+		<Unit filename="src/Eagle_convert_asm.cpp" />
+		<Unit filename="src/Eagle_enum.hpp" />
+		<Unit filename="src/Eagle_parser.cpp" />
+		<Unit filename="src/constant_folding.cpp" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/rmake.cpp" />
+		<Extensions />
+	</Project>
+</CodeBlocks_project_file>
