@@ -21,7 +21,7 @@
 				<Option working_dir="bin/" />
 				<Option object_output="obj/mingw/" />
 				<Option type="1" />
-				<Option compiler="mingw__compiler" />
+				<Option compiler="mingw64" />
 				<Compiler>
 					<Add directory="src" />
 				</Compiler>
