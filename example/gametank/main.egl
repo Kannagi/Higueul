@@ -1,0 +1,145 @@
+.map.func 0x200
+.map.funcspm 0xF0
+.map.funclib 0xE0
+.map.spm 0x00
+.map.lib 0x80
+
+.bss 0x2000
+uint8 AUDIO_RESET
+uint8 AUDIO_NMI
+.bss 0x2005
+uint8 BANK_CTRL
+uint8 AUDIO_RATE
+uint8 VIDEO_CTRL
+uint8 GAMEPAD_1
+uint8 GAMEPAD_2
+
+.bss 0x4000
+uint8 BLIT_DSTX
+uint8 BLIT_DSTY
+uint8 BLIT_SRCX
+uint8 BLIT_SRCY
+uint8 BLIT_WIDTH
+uint8 BLIT_HEIGHT
+uint8 BLIT_START
+uint8 BLIT_COLOR
+
+//-----------------------
+
+.bss 0x600
+uint8 FRAME_FLAG
+uint8 rectX
+uint8 rectY
+uint8 velX
+uint8 velY
+.org 0x0000
+.code 0xC000
+proc _start:
+{
+	asm "
+	sei
+	cld
+	ldx #$FE
+	txs
+
+	";
+	AUDIO_RATE = 0x00;
+	FRAME_FLAG = 0;
+	rectX = 30;
+	rectY = 10;
+	velX = 1;
+	velY = 1;
+	jump main:
+}
+
+proc VBlank:
+{
+	FRAME_FLAG = 0;
+	asm "rti"
+}
+
+proc IRQ:
+{
+	asm "rti"
+}
+
+
+
+proc main:
+{
+	do
+	{
+		
+		call BlitRectangle: rectX, rectY, 16, 16, (~28)
+		
+		VIDEO_CTRL = 77;
+
+		BLIT_DSTX = 0;
+		BLIT_DSTY = 0;
+		BLIT_WIDTH = 127;
+		BLIT_HEIGHT = 127;
+		BLIT_COLOR = 252;
+		BLIT_START = 1;
+		.data.b 0xCB
+
+		BLIT_DSTX = rectX;
+		BLIT_DSTY = rectY;
+		BLIT_WIDTH = 16;
+		BLIT_HEIGHT = 16;
+		BLIT_COLOR = 228;
+		BLIT_START = 1;
+		.data.b 0xCB
+
+		rectX = rectX + velX;
+		rectY = rectY + velY;
+		if rectX == 111
+		{
+			velX = 255;
+		}
+		if rectX == 0
+		{
+			velX = 1;
+		}
+		if rectY == 111
+		{
+			velY = 255;
+		}
+		if rectY == 0
+		{
+			velY = 1;
+		}
+
+		call waitVBlank:
+	}while 1 == 1
+
+}
+
+func waitVBlank:
+{
+	FRAME_FLAG = 1;
+	do
+	{ }
+	while FRAME_FLAG == 1
+
+}
+
+funclib BlitRectangle:uint8 x, uint8 y, uint8 w, uint8 h, uint8 color;
+{
+	VIDEO_CTRL = 73;
+	BLIT_DSTX = x;
+	BLIT_DSTY = y;
+	BLIT_WIDTH = w;
+	BLIT_HEIGHT = h;
+	BLIT_COLOR = color;
+	BLIT_START = 1;
+	.data.b 0xCB
+}
+
+.org 0x1FFA
+.data.w VBlank
+.data.w _start
+.data.w IRQ
+
+.rodata 0x0000
+
+.org 0x2000

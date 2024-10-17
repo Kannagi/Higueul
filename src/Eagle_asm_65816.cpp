@@ -16,6 +16,7 @@
 #define TYPE_IF 2
 
 static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);
+int asm65XX_mul(int64_t immediate,std::string &src1value,std::string &text_code);
 
 void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel)
 {
@@ -246,7 +247,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 {
 	std::string src1value = this->labelcall,tmp;
-	std::string mnemonic = "jmp ",mne1,mne2,saddress;
+	std::string mnemonic = "jmp ",mne1,mne2,saddress,saddress2;
 	if(type >= 1)
 		mnemonic = "jsr ";
 
@@ -269,6 +270,7 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 			this->text_code += "sta @" + src1value + "..arg" + std::to_string(i) +"\n";
 		}else
 		{
+			bool mode16 = false;
 			if( (var.type == EAGLE_keywords::UINT8) || (var.type == EAGLE_keywords::INT8))
 			{
 				mne1 = "lda ";
@@ -279,6 +281,7 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 				mne1 = "ldx ";
 				mne2 = "stx @";
 			}
+
 			if(var.bptr == true)
 			{
 				asm_address(var,this->labelarg[i],"218",saddress,this->text_code);
@@ -301,7 +304,22 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 			else if(var.token1 == '#')
 				saddress = "#" + std::to_string(var.address>>16);
 			else if(var.bimm == false)
+			{
 				saddress = std::to_string(var.address);
+
+				if( (var.address&0xFF0000) != 0)
+				{
+					mne1 = "lda ";
+					mne2 = "sta @";
+
+					if( (var.type == EAGLE_keywords::UINT16) || (var.type == EAGLE_keywords::INT16))
+					{
+						saddress2 = std::to_string(var.address+1);
+						mode16 = true;
+					}
+				}
+
+			}
 			else
 				saddress = "#" + std::to_string(var.immediate&0xFFFF);
 
@@ -310,6 +328,12 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 
 			this->text_code += mne1 + saddress + "\n";
 			this->text_code += mne2 + src1value + "..arg" + std::to_string(i) + "\n";
+
+			if(mode16 == true)
+			{
+				this->text_code += mne1 + saddress2 + "\n";
+				this->text_code += mne2 + src1value + "..arg" + std::to_string(i) + "+\n";
+			}
 
 
 		}
@@ -497,7 +521,8 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 			if(dst.type != EAGLE_keywords::ACC)
 			if( (src2.bimm == true) && (src2.immediate == 0) && (dst.address < 0x10000))
 			{
-				if( (dst.type == EAGLE_keywords::UINT8) || (dst.type == EAGLE_keywords::INT8) )
+				if( (dst.type == EAGLE_keywords::UINT8) || (dst.type == EAGLE_keywords::INT8) ||
+				(dst.type == EAGLE_keywords::UINT16) || (dst.type == EAGLE_keywords::INT16) )
 				{
 					this->text_code  += "stz " + src1value +"\n";
 					return;
@@ -668,93 +693,25 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 	{
 		if(src2.bimm == true)
 		{
-			switch(src2.immediate)
+			if ( asm65XX_mul(src2.immediate,src1value,this->text_code) == 0)
 			{
-				case 0:
-					this->text_code += "lda #0\n";
-				break;
+				this->text_code += "sta 214\n";
+				this->text_code += "lda " + src2value  + "\n";
+				this->text_code += "sta 216\n";
 
-				case 1:
-					//this->text_code += "lda #0\n";
-				break;
-
-
-				case 2:
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 3:
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-
-				case 4:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-				break;
-
-				case 5:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 6:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 7:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "sec\n";
-					this->text_code += "sbc " + src1value +"\n";
-				break;
-
-				case 8:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-				break;
-
-				case 9:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 10:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-
-				default:
-
-				break;
-
+				this->text_code += "lda #0\n";
+				this->text_code += "jsl higueul_mul\n";
 			}
 
 
 		}else
 		{
-			this->text_code += "jsl higueul_stdlib_mul\n";
+			this->text_code += "sta 214\n";
+			this->text_code += "lda " + src2value  + "\n";
+			this->text_code += "sta 216\n";
+
+			this->text_code += "lda #0\n";
+			this->text_code += "jsl higueul_mul\n";
 		}
 
 		operation = true;
@@ -763,13 +720,14 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 	//div
 	if(operator1 == '/')
 	{
-		if(src2.bimm == true)
-		{
+		//this->text_code += "lda " + src1value + "\n";
+		this->text_code += "sta 216\n";
+		this->text_code += "lda " + src2value  + "\n";
+		this->text_code += "sta 214\n";
 
-		}else
-		{
-			this->text_code += "jsl higueul_stdlib_div\n";
-		}
+		this->text_code += "lda #0\n";
+		this->text_code += "jsl higueul_div\n";
+
 
 		operation = true;
 	}
@@ -858,6 +816,107 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 	}
 
+}
+
+int asm65XX_mul(int64_t immediate,std::string &src1value,std::string &text_code)
+{
+	switch(immediate)
+	{
+		case 0:
+			text_code += "lda #0\n";
+			return 1;
+		break;
+
+		case 1:
+			return 1;
+		break;
+
+
+		case 2:
+			text_code += "clc\n";
+			text_code += "adc " + src1value +"\n";
+			return 1;
+		break;
+
+		case 3:
+			text_code += "asl\n";
+			text_code += "clc\n";
+			text_code += "adc " + src1value +"\n";
+			return 1;
+		break;
+
+
+		case 4:
+			text_code += "asl\n";
+			text_code += "asl\n";
+			return 1;
+		break;
+
+		case 5:
+			text_code += "asl\n";
+			text_code += "asl\n";
+			text_code += "clc\n";
+			text_code += "adc " + src1value +"\n";
+			return 1;
+		break;
+
+		default:
+		break;
+	}
+
+	std::string tstr;
+	tstr = "asl\n";
+	tstr += "asl\n";
+	tstr += "asl\n";
+
+	for(int i = 8;i < 0x10000;i = i<<1)
+	{
+		//text_code += "; " +std::to_string(i) + " " + std::to_string(immediate);
+		if(immediate == i)
+		{
+			text_code += tstr;
+			return 1;
+		}
+
+		if(immediate == i+1)
+		{
+			tstr += "clc\n";
+			tstr += "adc " + src1value +"\n";
+			text_code += tstr;
+			return 1;
+		}
+
+		if(immediate == i+2)
+		{
+			tstr += "clc\n";
+			tstr += "adc " + src1value +"\n";
+			tstr += "clc\n";
+			tstr += "adc " + src1value +"\n";
+			text_code += tstr;
+			return 1;
+		}
+
+		if(immediate == i-1)
+		{
+			tstr += "sec\n";
+			tstr += "sbc " + src1value +"\n";
+			text_code += tstr;
+			return 1;
+		}
+
+		if(immediate == i-2)
+		{
+			tstr += "sec\n";
+			tstr += "sbc " + src1value +"\n";
+			tstr += "sec\n";
+			tstr += "sbc " + src1value +"\n";
+			text_code += tstr;
+			return 1;
+		}
+
+		tstr += "asl\n";
+	}
+	return 0;
 }
 
 static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code)

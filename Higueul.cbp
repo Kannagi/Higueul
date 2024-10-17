@@ -32,8 +32,6 @@
 		</Build>
 		<Compiler>
 			<Add option="-fomit-frame-pointer" />
-			<Add option="-fexpensive-optimizations" />
-			<Add option="-Os" />
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-std=c++11" />
@@ -41,6 +39,7 @@
 			<Add option="-Wno-unused-parameter" />
 		</Compiler>
 		<Linker>
+			<Add option="-O1" />
 			<Add option="-s" />
 		</Linker>
 		<Unit filename="src/Eagle.cpp" />
@@ -50,12 +49,11 @@
 		<Unit filename="src/Eagle_asm_65816.cpp" />
 		<Unit filename="src/Eagle_asm_80286.cpp" />
 		<Unit filename="src/Eagle_asm_AltairX.cpp" />
-		<Unit filename="src/Eagle_asm_HuC6280.cpp" />
+		<Unit filename="src/Eagle_asm_z80.cpp" />
 		<Unit filename="src/Eagle_bin_6502.cpp" />
 		<Unit filename="src/Eagle_bin_65816.cpp" />
 		<Unit filename="src/Eagle_bin_80286.cpp" />
 		<Unit filename="src/Eagle_bin_AltairX.cpp" />
-		<Unit filename="src/Eagle_bin_HuC6280.cpp" />
 		<Unit filename="src/Eagle_convert_asm.cpp" />
 		<Unit filename="src/Eagle_enum.hpp" />
 		<Unit filename="src/Eagle_parser.cpp" />

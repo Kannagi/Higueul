@@ -106,15 +106,13 @@ class Eagle
 
 		void bin_6502(void);
 		void bin_65816(void);
-		void bin_HuC6280(void);
 		void bin_AltairX(void);
 		void bin_80286(void);
-		void bin_x86_64(void);
 		void bin_z80(void);
 
 		std::string text_code;
 		std::string filename,mesen_ram,mesen_rom,str_bra;
-		bool debug,bout_asm,bcycle,bmesen;
+		bool debug,bout_asm,bcycle,bmesen,snes_checksum;
 		int error;
 		int target;
 
@@ -167,13 +165,6 @@ class Eagle
 
 		void asm_bru_80186(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
 		void asm_call_jump_80186(const EAGLE_VARIABLE &var,int narg,int type);
-
-		//---------Huc6280--------------
-		void asm_return_Huc6280(const EAGLE_VARIABLE &ret,bool retvoid);
-		void asm_alu_Huc6280(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
-
-		void asm_bru_Huc6280(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
-		void asm_call_jump_Huc6280(const EAGLE_VARIABLE &var,int narg,int type);
 
 		//---------z80--------------
 		void asm_return_z80(const EAGLE_VARIABLE &ret,bool retvoid);

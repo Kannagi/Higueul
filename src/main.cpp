@@ -64,15 +64,21 @@ void rmake_option(char *buf)
 			eagle.bmesen = true;
 		}
 
-		if(word == "-noheader")
+		if(word == "-snes-checksum")
 		{
-			//eagle.debug = true;
+			eagle.snes_checksum = true;
 		}
 
 		if(word == "-65816")
 		{
 			eagle.target = TARGET_65816;
 		}
+
+		if(word == "-65C02")
+		{
+			eagle.target = TARGET_65C02;
+		}
+
 
 		if(word == "-6502")
 		{
@@ -170,7 +176,7 @@ void rmake_compile_run(char *target)
 
 	if(eagle.target == TARGET_80286)
 	{
-
+		eagle.bin_80286();
 	}
 
 	if(eagle.target == TARGET_AltairX)

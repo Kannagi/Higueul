@@ -216,18 +216,16 @@ void Eagle::bin_6502()
 						value = mnemonic[1].value;
 					}else
 					{
+						int plus_label = 0;
+						if(mnemonic[1].token2 == '+')
+							plus_label = 1;
 
 						if(mnemonic[1].token1 == '@')
 						{
-							value = this->gvariable[mnemonic[1].item].address;
+							value = this->gvariable[mnemonic[1].item].address + plus_label;
 
 						}else
 						{
-							int plus_label = 0;
-							if(mnemonic[1].token2 == '+')
-								plus_label = 1;
-
-
 							value = this->labelbin[mnemonic[1].item] + plus_label;
 							if
 							(
@@ -405,16 +403,16 @@ void Eagle::bin_6502()
 
 			if(mnemonic[1].type == 1) //WORD
 			{
+				int plus_label = 0;
+				if(mnemonic[1].token2 == '+')
+					plus_label = 1;
+
 				if(mnemonic[1].token1 == '@')
 				{
-					mnemonic[1].value = this->gvariable[mnemonic[1].item].address;
+					mnemonic[1].value = this->gvariable[mnemonic[1].item].address + plus_label;
 
 				}else
 				{
-					int plus_label = 0;
-					if(mnemonic[1].token2 == '+')
-						plus_label = 1;
-
 					mnemonic[1].value = this->labelbin[mnemonic[1].item] + plus_label;
 					if(mnemonic[1].value == 0)
 					{

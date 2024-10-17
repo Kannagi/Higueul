@@ -1,0 +1,15 @@
+PcePrgRom:4000-4021:_start
+PcePrgRom:4022-4025:VBlank
+PcePrgRom:4026-4026:IRQ
+PcePrgRom:4027-40CA:main
+PcePrgRom:40CB-40D7:waitVBlank
+PcePrgRom:40D8-40FC:BlitRectangle
+PceWorkRam:600:FRAME_FLAG
+PceWorkRam:601:rectX
+PceWorkRam:602:rectY
+PceWorkRam:603:velX
+PceWorkRam:604:velY
+PceWorkRam:00-7F:SPM
+PceWorkRam:80-D0:LIB
+PceWorkRam:E0-EF:FUNCLIB
+PceWorkRam:F0-FF:FUNCSPM

@@ -378,8 +378,11 @@ void Eagle::asm_call_jump_6502(const EAGLE_VARIABLE &src,int ninst,int type)
 
 	std::string srcvalue;
 
+
+
 	for(int i = 0;i < ninst;i++)
 	{
+		bool mode16 = false;
 		EAGLE_VARIABLE var = this->arg[i];
 
 		if(var.type == EAGLE_keywords::IDX)
@@ -411,12 +414,15 @@ void Eagle::asm_call_jump_6502(const EAGLE_VARIABLE &src,int ninst,int type)
 				else
 					saddress = this->labelarg[i];
 
-				saddress2 = saddress;
+				saddress2 = saddress + "+";
 			}
 			else if(var.token1 == '$')
 			{
-				saddress = "#" + std::to_string(var.address&0xFFFF);
-				saddress2 = "#" + std::to_string((var.address+1)&0xFFFF);
+				saddress = "#" + std::to_string(var.address&0xFF);
+				saddress2 = "#" + std::to_string((var.address>>8)&0xFF);
+
+				if(var.address>>8)
+					mode16 = true;
 			}
 			else if(var.bimm == false)
 			{
@@ -425,8 +431,11 @@ void Eagle::asm_call_jump_6502(const EAGLE_VARIABLE &src,int ninst,int type)
 			}
 			else
 			{
-				saddress = "#" + std::to_string(var.address&0xFFFF);
-				saddress2 = "#" + std::to_string((var.address+1)&0xFFFF);
+				saddress = "#" + std::to_string(var.immediate&0xFF);
+				saddress2 = "#" + std::to_string((var.immediate>>8)&0xFF);
+
+				if(var.immediate>>8)
+					mode16 = true;
 			}
 
 			if(var.token1 == '@')
@@ -438,10 +447,10 @@ void Eagle::asm_call_jump_6502(const EAGLE_VARIABLE &src,int ninst,int type)
 			this->text_code += mne1 + saddress + "\n";
 			this->text_code += mne2 + src1value + "..arg" + std::to_string(i) + "\n";
 
-			if( (var.type == EAGLE_keywords::UINT16) || (var.type == EAGLE_keywords::INT16) )
+			if( (var.type == EAGLE_keywords::UINT16) || (var.type == EAGLE_keywords::INT16) || mode16 == true )
 			{
 				this->text_code += mne1 + saddress2 + "\n";
-				this->text_code += mne2 + src1value + "..b16arg" + std::to_string(i) + "\n";
+				this->text_code += mne2 + src1value + "..arg" + std::to_string(i) + "+\n";
 			}
 		}
 	}
@@ -666,9 +675,6 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 				strmd16 = "lda " + srcvalue16b +"\n";
 			}
 		}
-
-
-
 
 		operation = true;
 	}
@@ -1142,6 +1148,8 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 	if(src.token1 == '$')
 		adr &= 0xFFFF;
 
+
+
 	if(src.bimm == true)
 	{
 		srcvalue = "#" + std::to_string(src.immediate&0xFF);
@@ -1157,7 +1165,7 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 			if(src.token1 == '$')
 				srcvalue = "#" + labelp;
 
-			srcvalue16 = srcvalue;
+			srcvalue16 = srcvalue + "+";
 
 		}else
 		{

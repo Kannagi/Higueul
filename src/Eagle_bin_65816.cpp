@@ -600,13 +600,17 @@ void Eagle::bin_65816()
 
 			if(mnemonic[1].type == 1) //WORD
 			{
+				int plus_label = 0;
+				if(mnemonic[1].token2 == '+')
+					plus_label = 1;
+
 				if(mnemonic[1].token1 == '@')
 				{
-					mnemonic[1].value = this->gvariable[mnemonic[1].item].address;
+					mnemonic[1].value = this->gvariable[mnemonic[1].item].address + plus_label;
 
 				}else
 				{
-					mnemonic[1].value = this->labelbin[mnemonic[1].item];
+					mnemonic[1].value = this->labelbin[mnemonic[1].item] + plus_label;
 					if(mnemonic[1].value == 0)
 					{
 						std::cout << "warning: label zero :" <<  mnemonic[1].item <<"\n";
@@ -1498,17 +1502,24 @@ void Eagle::bin_65816()
 
 
 
-	uint16_t checksum1 = 0x1FE,checksum2;
 
-	for(int i = 0;i < n;i++)
-		checksum1 += (uint8_t)this->filebin[i];
 
-	checksum2 = -(checksum1+1);
 
-	this->filebin[0x7FDC] = checksum2;
-	this->filebin[0x7FDD] = checksum2>>8;
-	this->filebin[0x7FDE] = checksum1;
-	this->filebin[0x7FDF] = checksum1>>8;
+
+	if(this->snes_checksum == true)
+	{
+		uint16_t checksum1 = 0x1FE,checksum2;
+
+		for(int i = 0;i < n;i++)
+			checksum1 += (uint8_t)this->filebin[i];
+
+		checksum2 = -(checksum1+1);
+
+		this->filebin[0x7FDC] = checksum2;
+		this->filebin[0x7FDD] = checksum2>>8;
+		this->filebin[0x7FDE] = checksum1;
+		this->filebin[0x7FDF] = checksum1>>8;
+	}
 
 
 	if(this->bmesen == true)

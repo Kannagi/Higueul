@@ -130,6 +130,7 @@ Eagle::Eagle()
 	this->bout_asm = false;
 	this->bcycle = false;
 	this->bmesen = false;
+	this->snes_checksum = false;
 }
 
 uint64_t Eagle::alloc(EAGLE_keywords type,int n)

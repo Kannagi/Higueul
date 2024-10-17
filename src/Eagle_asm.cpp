@@ -59,11 +59,6 @@ void Eagle::asm_alu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const E
 		asm_alu_AltairX(dst,src1,src2,operator1,operator2);
 }
 
-void Eagle::asm_falu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2)
-{
-	if(this->target == TARGET_AltairX)
-		asm_falu_AltairX(dst,src1,src2,operator1,operator2);
-}
 
 
 
