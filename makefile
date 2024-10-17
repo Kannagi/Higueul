@@ -12,11 +12,11 @@ LD = g++
 WINDRES = windres
 
 INC = 
-CFLAGS = -fomit-frame-pointer -fexpensive-optimizations -Os -Wextra -Wall -std=c++11 -fexceptions -Wno-unused-parameter
+CFLAGS = -fomit-frame-pointer -Wextra -Wall -std=c++11 -fexceptions -Wno-unused-parameter
 RESINC = 
 LIBDIR = 
 LIB = 
-LDFLAGS = -s
+LDFLAGS = -O1 -s
 
 INC_BIN = $(INC) -Isrc
 CFLAGS_BIN = $(CFLAGS)
@@ -29,7 +29,7 @@ OBJDIR_BIN = obj
 DEP_BIN = 
 OUT_BIN = bin/higueulc
 
-OBJ_BIN = $(OBJDIR_BIN)/src/Eagle_bin_65816.o $(OBJDIR_BIN)/src/rmake.o $(OBJDIR_BIN)/src/main.o $(OBJDIR_BIN)/src/constant_folding.o $(OBJDIR_BIN)/src/Eagle_parser.o $(OBJDIR_BIN)/src/Eagle_convert_asm.o $(OBJDIR_BIN)/src/Eagle_bin_HuC6280.o $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o $(OBJDIR_BIN)/src/Eagle_bin_80286.o $(OBJDIR_BIN)/src/Eagle.o $(OBJDIR_BIN)/src/Eagle_bin_6502.o $(OBJDIR_BIN)/src/Eagle_asm_HuC6280.o $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o $(OBJDIR_BIN)/src/Eagle_asm_80286.o $(OBJDIR_BIN)/src/Eagle_asm_65816.o $(OBJDIR_BIN)/src/Eagle_asm_6502.o $(OBJDIR_BIN)/src/Eagle_asm.o
+OBJ_BIN = $(OBJDIR_BIN)/src/Eagle_bin_65816.o $(OBJDIR_BIN)/src/rmake.o $(OBJDIR_BIN)/src/main.o $(OBJDIR_BIN)/src/constant_folding.o $(OBJDIR_BIN)/src/Eagle_parser.o $(OBJDIR_BIN)/src/Eagle_convert_asm.o $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o $(OBJDIR_BIN)/src/Eagle_bin_80286.o $(OBJDIR_BIN)/src/Eagle.o $(OBJDIR_BIN)/src/Eagle_bin_6502.o $(OBJDIR_BIN)/src/Eagle_asm_z80.o $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o $(OBJDIR_BIN)/src/Eagle_asm_80286.o $(OBJDIR_BIN)/src/Eagle_asm_65816.o $(OBJDIR_BIN)/src/Eagle_asm_6502.o $(OBJDIR_BIN)/src/Eagle_asm.o
 
 all: bin bin_windows
 
@@ -64,9 +64,6 @@ $(OBJDIR_BIN)/src/Eagle_parser.o: src/Eagle_parser.cpp
 $(OBJDIR_BIN)/src/Eagle_convert_asm.o: src/Eagle_convert_asm.cpp
 	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_convert_asm.cpp -o $(OBJDIR_BIN)/src/Eagle_convert_asm.o
 
-$(OBJDIR_BIN)/src/Eagle_bin_HuC6280.o: src/Eagle_bin_HuC6280.cpp
-	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_bin_HuC6280.cpp -o $(OBJDIR_BIN)/src/Eagle_bin_HuC6280.o
-
 $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o: src/Eagle_bin_AltairX.cpp
 	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_bin_AltairX.cpp -o $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o
 
@@ -79,8 +76,8 @@ $(OBJDIR_BIN)/src/Eagle.o: src/Eagle.cpp
 $(OBJDIR_BIN)/src/Eagle_bin_6502.o: src/Eagle_bin_6502.cpp
 	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_bin_6502.cpp -o $(OBJDIR_BIN)/src/Eagle_bin_6502.o
 
-$(OBJDIR_BIN)/src/Eagle_asm_HuC6280.o: src/Eagle_asm_HuC6280.cpp
-	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_asm_HuC6280.cpp -o $(OBJDIR_BIN)/src/Eagle_asm_HuC6280.o
+$(OBJDIR_BIN)/src/Eagle_asm_z80.o: src/Eagle_asm_z80.cpp
+	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_asm_z80.cpp -o $(OBJDIR_BIN)/src/Eagle_asm_z80.o
 
 $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o: src/Eagle_asm_AltairX.cpp
 	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/Eagle_asm_AltairX.cpp -o $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o
