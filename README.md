@@ -38,3 +38,8 @@ But it is also made to be able to program on exotic processors like the Emotion 
 - Huc6280
 - 65816
 
+## Next Target
+
+- z80
+- 8086/80186/80286
+- VU (PS2)
