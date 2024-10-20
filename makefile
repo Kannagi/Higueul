@@ -31,9 +31,9 @@ OUT_BIN = bin/higueulc
 
 OBJ_BIN = $(OBJDIR_BIN)/src/Eagle_bin_65816.o $(OBJDIR_BIN)/src/rmake.o $(OBJDIR_BIN)/src/main.o $(OBJDIR_BIN)/src/constant_folding.o $(OBJDIR_BIN)/src/Eagle_parser.o $(OBJDIR_BIN)/src/Eagle_convert_asm.o $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o $(OBJDIR_BIN)/src/Eagle_bin_80286.o $(OBJDIR_BIN)/src/Eagle.o $(OBJDIR_BIN)/src/Eagle_bin_6502.o $(OBJDIR_BIN)/src/Eagle_asm_z80.o $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o $(OBJDIR_BIN)/src/Eagle_asm_80286.o $(OBJDIR_BIN)/src/Eagle_asm_65816.o $(OBJDIR_BIN)/src/Eagle_asm_6502.o $(OBJDIR_BIN)/src/Eagle_asm.o
 
-all: bin
+all: bin bin_windows
 
-clean: clean_bin
+clean: clean_bin clean_bin_windows
 
 before_bin: 
 	test -d bin || mkdir -p bin
