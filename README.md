@@ -8,6 +8,11 @@ Wiki: https://github.com/Kannagi/Higueul/wiki
 
 Discord : https://discord.gg/cWa37SRgYU
 
+### Who uses Higueul?
+
+- GameTank : https://github.com/clydeshaffer/GameTankHigueul
+- SNDK : https://github.com/Kannagi/SNDK
+
 ### Why did you create this language?
 
 If this is the question you are asking yourself, it is normal.  
