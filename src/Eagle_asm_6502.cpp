@@ -15,6 +15,8 @@
 #define TYPE_WHILE 1
 #define TYPE_IF 2
 
+int asm65XX_mul(int64_t immediate,std::string &src1value,std::string &text_code);
+
 static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);
 
 static std::string srcvalue16a;
@@ -24,8 +26,7 @@ static int tsrc;
 
 void Eagle::asm_bru_6502(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel)
 {
-	std::string src1value;
-	std::string src2value;
+	std::string src1value,src2value;
 	std::string label_adr = ".label_b"+std::to_string(clabel);
 	std::string str_md16;
 
@@ -62,12 +63,31 @@ void Eagle::asm_bru_6502(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,c
 				this->text_code += "sec \nsbc #1\n";
 			}else
 			{
-				this->text_code += "dec " + src1value +"\n";
+				if( (src1.type == EAGLE_keywords::INT16) || (src1.type == EAGLE_keywords::UINT16) )
+				{
+					this->text_code += "lda " + src1value +"\n";
+					this->text_code += "sec\n";
+					this->text_code += "sbc #1\n";
+					this->text_code += "sta " + src1value +"\n";
+
+					this->text_code += "lda " + srcvalue16a +"\n";
+					this->text_code += "sbc #0\n";
+					this->text_code += "sta " + srcvalue16a +"\n";
+				}else
+				{
+					this->text_code += "dec " + src1value +"\n";
+				}
+
 			}
 		}
 
+
 		if(src2.bimm == true)
 		{
+			if( (src1.type == EAGLE_keywords::INT16) || (src1.type == EAGLE_keywords::UINT16) )
+			{
+
+			}else
 			if( (src2.immediate == 0) && ( (operator1 == '=') || (operator1 == '!') ) )
 				optimize_zero = true;
 		}
@@ -414,7 +434,9 @@ void Eagle::asm_call_jump_6502(const EAGLE_VARIABLE &src,int ninst,int type)
 				else
 					saddress = this->labelarg[i];
 
-				saddress2 = saddress + "+";
+				saddress2 = saddress + ">";
+
+				mode16 = true;
 			}
 			else if(var.token1 == '$')
 			{
@@ -627,6 +649,13 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 					this->text_code  += "stz " + src1value +"\n";
 					return;
 				}
+
+				if( (dst.type == EAGLE_keywords::UINT16) || (dst.type == EAGLE_keywords::INT16) )
+				{
+					this->text_code  += "stz " + src1value +"\n";
+					this->text_code  += "stz " + srcvalue16a +"\n";
+					return;
+				}
 			}
 
 			if(src2.type == EAGLE_keywords::IDX)
@@ -655,6 +684,11 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 
 		}
 
+		if( (src2.bimm == true) && (src2.immediate == 0) )
+		{
+			flag = "";
+		}
+
 		if(src2.type != EAGLE_keywords::ACC)
 		{
 			this->text_code  += "lda " + src2value +"\n";
@@ -671,6 +705,11 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 			}
 
 			if(src2.bimm == true)
+			{
+				strmd16 = "lda " + srcvalue16b +"\n";
+			}
+
+			if(src2.blabel == true)
 			{
 				strmd16 = "lda " + srcvalue16b +"\n";
 			}
@@ -780,8 +819,13 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 			{
 					mode16 = true;
 			}else
-			if(src2.bimm == true)
-				mode16 = true;
+			{
+				if(src2.type == EAGLE_keywords::ACC)
+					mode16 = true;
+				else
+				if(src2.bimm == true)
+					mode16 = true;
+			}
 		}
 	}
 
@@ -801,6 +845,9 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 				mode16 = true;
 		}
 	}
+
+	if( (src1.blabel == true) || (src2.blabel == true) )
+		mode16 = true;
 
 
 	//------------------
@@ -893,96 +940,27 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 	//mul
 	if(operator1 == '*')
 	{
-
 		if(src2.bimm == true)
 		{
-			switch(src2.immediate)
+			if ( asm65XX_mul(src2.immediate,src1value,this->text_code) == 0)
 			{
-				case 0:
-					this->text_code += "lda #0\n";
-				break;
+				this->text_code += "sta 214\n";
+				this->text_code += "lda " + src2value  + "\n";
+				this->text_code += "sta 216\n";
 
-				case 1:
-					//this->text_code += "lda #0\n";
-				break;
-
-
-				case 2:
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 3:
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-
-				case 4:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-				break;
-
-				case 5:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 6:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 7:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "sec\n";
-					this->text_code += "sbc " + src1value +"\n";
-				break;
-
-				case 8:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-				break;
-
-				case 9:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-				case 10:
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "asl\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-					this->text_code += "clc\n";
-					this->text_code += "adc " + src1value +"\n";
-				break;
-
-
-				default:
-
-				break;
-
+				this->text_code += "lda #0\n";
+				this->text_code += "jsl higueul_mul\n";
 			}
 
 
 		}else
 		{
-			this->text_code += "jsr higueul_stdlib_mul\n";
+			this->text_code += "sta 214\n";
+			this->text_code += "lda " + src2value  + "\n";
+			this->text_code += "sta 216\n";
+
+			this->text_code += "lda #0\n";
+			this->text_code += "jsl higueul_mul\n";
 		}
 
 		operation = true;
@@ -991,13 +969,13 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 	//div
 	if(operator1 == '/')
 	{
-		if(src2.bimm == true)
-		{
+		this->text_code += "sta 214\n";
+		this->text_code += "lda " + src2value  + "\n";
+		this->text_code += "sta 216\n";
 
-		}else
-		{
-			this->text_code += "jsr higueul_stdlib_div\n";
-		}
+		this->text_code += "lda #0\n";
+		this->text_code += "jsl higueul_div\n";
+
 
 		operation = true;
 	}
@@ -1052,21 +1030,21 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 					py = true;
 				}else
 				{
-					this->text_code  += "ldx " + std::to_string(dst.ptr2.value&0xFFFF) +"\n";
-					px = true;
+					if(dst.ptr2_exist == true)
+					{
+						this->text_code  += "ldx " + std::to_string(dst.ptr2.value&0xFFFF) +"\n";
+						px = true;
+					}
+
 				}
 			}
 
 			std::string cptr1,cptr2;
 			if(dst.token1 == '@')
 			{
-				cptr1 = "[";
-				cptr2 = "]";
-			}
-			if(dst.token2 == '@')
-			{
 				cptr1 = "(";
 				cptr2 = ")";
+				mode16 = false;
 			}
 
 			//arg1
@@ -1115,13 +1093,21 @@ void Eagle::asm_alu_6502(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,co
 		}else
 		if(dst.type != EAGLE_keywords::ACC)
 		{
+			std::string cptr1,cptr2;
+			if(dst.token1 == '@')
+			{
+				cptr1 = "(";
+				cptr2 = ")";
+				mode16 = false;
+			}
+
 			if(mode16i == 0)
 			{
-				this->text_code += "sta "+ std::to_string(dst.address) +"\n";
+				this->text_code += "sta " + cptr1 + std::to_string(dst.address) + cptr2 +"\n";
 
 				if( (dst.type == EAGLE_keywords::UINT16) || (dst.type == EAGLE_keywords::INT16))
 				{
-					strmd16 += "sta "+ std::to_string(dst.address+1) +"\n";
+					strmd16 += "sta " + std::to_string(dst.address+1) +"\n";
 
 					if(mode16 == true)
 						this->text_code += strmd16;
@@ -1165,7 +1151,7 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 			if(src.token1 == '$')
 				srcvalue = "#" + labelp;
 
-			srcvalue16 = srcvalue + "+";
+			srcvalue16 = srcvalue + ">";
 
 		}else
 		{

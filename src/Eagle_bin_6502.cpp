@@ -407,13 +407,18 @@ void Eagle::bin_6502()
 				if(mnemonic[1].token2 == '+')
 					plus_label = 1;
 
+
+				int shl_label = 0;
+				if(mnemonic[1].token2 == '>')
+					shl_label = 8;
+
 				if(mnemonic[1].token1 == '@')
 				{
-					mnemonic[1].value = this->gvariable[mnemonic[1].item].address + plus_label;
+					mnemonic[1].value = (this->gvariable[mnemonic[1].item].address + plus_label)>>shl_label;
 
 				}else
 				{
-					mnemonic[1].value = this->labelbin[mnemonic[1].item] + plus_label;
+					mnemonic[1].value = (this->labelbin[mnemonic[1].item] + plus_label)>>shl_label;
 					if(mnemonic[1].value == 0)
 					{
 						std::cout << "warning: label zero :" <<  mnemonic[1].item <<"\n";
@@ -1130,6 +1135,7 @@ void Eagle::bin_6502()
 					if(imm == true)
 					{
 						this->filebin.push_back(tdata[0]);
+						immz = 0;
 					}
 					else
 					{
@@ -1286,7 +1292,7 @@ void Eagle::bin_6502()
 		for (const auto& pair : this->gvariable)
 		{
 			EAGLE_VARIABLE var = pair.second ;
-			if( (var.address >= 0x200) && (var.address < 0x2000) )
+			if( (var.address >= 0x200) && (var.address < 0x4000) )
 			{
 				std::string tstrf = pair.first;
 

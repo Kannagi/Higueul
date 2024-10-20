@@ -688,7 +688,7 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 		operation = true;
 	}
 
-		//mul
+	//mul
 	if(operator1 == '*')
 	{
 		if(src2.bimm == true)
@@ -811,7 +811,22 @@ void Eagle::asm_alu_65816(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,c
 
 		}else
 		if(dst.type != EAGLE_keywords::ACC)
-			this->text_code += "sta "+ std::to_string(dst.address) +"\n";
+		{
+			std::string cptr1,cptr2;
+			if(dst.token1 == '@')
+			{
+				cptr1 = "[";
+				cptr2 = "]";
+			}
+			if(dst.token2 == '@')
+			{
+				cptr1 = "(";
+				cptr2 = ")";
+			}
+
+			this->text_code += "sta " + cptr1 + std::to_string(dst.address) + cptr2 +"\n";
+		}
+
 
 
 	}

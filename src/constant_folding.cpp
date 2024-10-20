@@ -253,8 +253,29 @@ void Constant_folding::apply_operation()
 
 //-----------------------
 
+static std::string formatExpression(const std::string& expression)
+{
+    std::string result;
+    for (char c : expression)
+    {
+        if(c == '-')
+        {
+            result += " ";
+            result += c;
+            result += " ";
+        }
+        else
+        {
+            result += c;
+        }
+    }
+    return result;
+}
+
 void Constant_folding::evaluate(const std::string &expression)
 {
+	//std::string expression = formatExpression(in_expression);
+
     int n = expression.size();
     char str_float[64];
     bool hexadecimal,binary;
@@ -333,6 +354,8 @@ void Constant_folding::evaluate(const std::string &expression)
                 }
                 i--;
                 str_float[l] = 0;
+
+
 
                 fnumber = atof(str_float);
             }
@@ -420,22 +443,21 @@ void Constant_folding::display()
 }
 
 
-//-----------------------
-/*
-static int test_constant()
+//---------------------
+
+void test_constant()
 {
     Constant_folding cfold;
 
-    cfold.evaluate("5 + 5 + (-10*3)");
+    cfold.evaluate("5-2");
     cfold.display();
-
+/*
     cfold.evaluate("(-10 * 2) + (6/2))");
     cfold.display();
 
     cfold.evaluate("(0x10*1.5)|1");
     cfold.display();
-
-    return 0;
+    */
 }
-*/
+
 

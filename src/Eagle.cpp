@@ -538,10 +538,18 @@ int Eagle::line_code_asm(int mode)
 				{
 					if(mode == 1)
 					{
-						n = this->offset&0x7FFF;
+						if(this->target == TARGET_65816)
+						{
+							n = this->offset&0x7FFF;
 
-						if( (n != 0) && (n != 0x7FB0))
-						std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
+							if( (n != 0) && (n != 0x7FB0))
+							std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
+						}
+						else
+						{
+							std::cout << "bloc size "<< this->offset << "\n";
+						}
+
 					}
 
 
@@ -645,6 +653,7 @@ int Eagle::line_code_asm(int mode)
 						{
 							char sline[512],shex[32];
 
+
 							uint64_t toff = moffset&0x10000;
 
 
@@ -655,6 +664,18 @@ int Eagle::line_code_asm(int mode)
 								off -= 0x8000;
 							else
 								off -= 0x10000;
+
+
+							if(this->target != TARGET_65816)
+							{
+								off = moffset&0xFFFFF;
+								uint64_t stoff = off&0xE000;
+
+								dif = (this->offset) - off;
+							}
+
+
+
 
 							sprintf(shex,"%x-%x",(int)off,(int)(off+dif));
 

@@ -15,9 +15,11 @@
 int rmakeLoad(const char *filename);
 
 Eagle eagle;
-
+void test_constant();
 int main()
 {
+	//test_constant();
+	//return 0;
 	eagle.target = TARGET_UNK;
 	auto timer_start = std::chrono::high_resolution_clock::now();
 
@@ -185,11 +187,6 @@ void rmake_compile_run(char *target)
 	}
 
 	if(eagle.target == TARGET_C)
-	{
-
-	}
-
-	if(eagle.target == TARGET_RV32)
 	{
 
 	}
