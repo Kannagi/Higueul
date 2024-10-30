@@ -1,0 +1,52 @@
+{
+  "name": "Higueul Color Theme",
+  "type": "dark",
+  "colors": {
+    "editor.foreground": "#FFFFFF",
+    "editor.background": "#1E1E1E",
+    "editorCursor.foreground": "#FFFFFF",
+    "editor.lineHighlightBackground": "#2A2A2A",
+    "editorLineNumber.foreground": "#5A5A5A",
+    "editor.selectionBackground": "#007ACC",
+    "editor.selectionHighlightBackground": "#A6D3E0"
+  },
+  "tokenColors": [
+    {
+      "scope": "keyword.primary.higueul",
+      "settings": {
+        "foreground": "#151b6b",
+        "fontStyle": "bold"  
+      }
+    },
+    {
+      "scope": "keyword.secondary.higueul",
+      "settings": {
+        "foreground": "#a33f2d"
+      }
+    },
+    {
+      "scope": "keyword.third.higueul",
+      "settings": {
+        "foreground": "#8db82a" 
+      }
+    },
+    {
+      "scope": "keyword.quad.higueul",
+      "settings": {
+        "foreground": "#8b703d"
+      }
+    },
+    {
+      "scope": "comment.block.higueul",
+      "settings": {
+        "foreground": "#234628" 
+      }
+    },
+    {
+      "scope": "comment.line.double-slash.higueul",
+      "settings": {
+        "foreground": "#234628" 
+      }
+    }
+  ]
+}

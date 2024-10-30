@@ -1,0 +1,7 @@
+#!/bin/sh
+vsce package
+
+
+
+
+

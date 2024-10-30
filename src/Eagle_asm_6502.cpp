@@ -1236,6 +1236,12 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 					srcvalue16 = srcvalue + "+";
 
 				}else
+				if(src.ptr1.token1 == '@')
+				{
+					srcvalue = "(" + std::to_string(src.ptr1.value+value) + ")";
+					srcvalue16 = "(" + std::to_string(src.ptr1.value+value+1) + ")";
+				}
+				else
 				{
 					srcvalue = std::to_string(src.ptr1.value+value);
 					srcvalue16 = std::to_string(src.ptr1.value+value+1);
@@ -1245,7 +1251,6 @@ static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::
 						srcvalue = "#" + std::to_string( (src.ptr1.value+value)&0xFFFF);
 						srcvalue16 = "#" + std::to_string( (src.ptr1.value+value+1)&0xFFFF);
 					}
-
 				}
 			}
 		}

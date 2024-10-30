@@ -1,0 +1,102 @@
+{
+  "name": "higueul-highlighter",
+  "displayName": "Higueul Highlighter",
+  "description": "Extension pour surligner la syntaxe du langage Higueul",
+  "version": "1.0.0",
+  "publisher": "Kannagi",
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "higueul",
+        "aliases": ["Higueul", "higueul"],
+        "extensions": [".egl"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "higueul",
+        "scopeName": "source.higueul",
+        "path": "./syntaxes/higueul.tmLanguage.json"
+      }
+    ],
+    "tokenColorCustomizations": {
+      "[Default Dark]": {
+        "textMateRules": [
+          {
+            "scope": "keyword.primary.higueul",
+            "settings": {
+              "foreground": "#151b6b", 
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "keyword.secondary.higueul",
+            "settings": {
+              "foreground": "#a33f2d"
+            }
+          },
+          {
+            "scope": "keyword.third.higueul",
+            "settings": {
+              "foreground": "#8db82a"
+            }
+          },
+          {
+            "scope": "keyword.quad.higueul",
+            "settings": {
+              "foreground": "#8b703d"
+            }
+          },
+          {
+            "scope": "comment.line.double-slash.higueul",
+            "settings": {
+              "foreground": "#234628"
+            }
+          }
+        ]
+      },
+      "[Default Light]": {
+        "textMateRules": [
+          {
+            "scope": "keyword.primary.higueul",
+            "settings": {
+              "foreground": "#151b6b", 
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "keyword.secondary.higueul",
+            "settings": {
+              "foreground": "#a33f2d"
+            }
+          },
+          {
+            "scope": "keyword.third.higueul",
+            "settings": {
+              "foreground": "#8db82a"
+            }
+          },
+          {
+            "scope": "keyword.quad.higueul",
+            "settings": {
+              "foreground": "#8b703d"
+            }
+          },
+          {
+            "scope": "comment.line.double-slash.higueul",
+            "settings": {
+              "foreground": "#234628"
+            }
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "scopeName": "source.higueul",
+  "patterns": [
+    {
+      "name": "keyword.primary.higueul",
+      "match": "\\b(uint8|uint16|uint32|uint64|int8|int16|int32|int64|float16|float32|float64|void|register|spm|stack|lib)\\b"
+    },
+    {
+      "name": "keyword.secondary.higueul",
+      "match": "\\b(if|else|do|while|loop|jump|call|return|proc|func|funcreg|funcspm|funclib|asm)\\b"
+    },
+    {
+      "name": "keyword.third.higueul",
+      "match": "\\b(\\.define|\\.include|\\.incbin|\\.endmacro|\\.data\\.s|\\.data\\.b|\\.data\\.w|\\.data\\.l|\\.data\\.q|\\.map\\.func|\\.map\\.funclib|\\.map\\.funcspm|\\.map\\.spm|\\.map\\.lib|\\.org|\\.rodata|\\.code)\\b"
+    },
+    {
+      "name": "keyword.quad.higueul",
+      "match": "\\b(acc|bacc|facc|idx|idy)\\b"
+    },
+    {
+      "name": "comment.line.double-slash.higueul",
+      "begin": "//",
+      "end": "$",
+      "name": "comment.line.double-slash.higueul"
+    },
+    {
+      "name": "comment.block.higueul",
+      "begin": "/\\*",
+      "end": "\\*/"
+    }
+  ],
+  "repository": {},
+  "fileTypes": [
+    "egl"
+  ]
+}
+

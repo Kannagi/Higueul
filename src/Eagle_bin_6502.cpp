@@ -1292,7 +1292,7 @@ void Eagle::bin_6502()
 		for (const auto& pair : this->gvariable)
 		{
 			EAGLE_VARIABLE var = pair.second ;
-			if( (var.address >= 0x200) && (var.address < 0x4000) )
+			if(var.address >= 0x200)
 			{
 				std::string tstrf = pair.first;
 
@@ -1300,6 +1300,14 @@ void Eagle::bin_6502()
 					if (c == '.')
 						c = '_';
 				}
+
+				if(this->target == TARGET_HuC6520)
+				{
+					if(var.address >= 0x2000)
+						var.address -= 0x2000;
+				}
+
+
 
 				char shex[32];
 

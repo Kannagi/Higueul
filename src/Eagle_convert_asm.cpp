@@ -1049,6 +1049,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 					{
 						var.ptr1.value = tvar.address;
 						var.ptr1.type = tvar.type;
+						var.ptr_type = tvar.type;
 					}else
 					{
 						this->gvariable_exist(tword.ptr[0],tvar);
@@ -1056,6 +1057,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 						{
 							var.ptr1.value = tvar.address;
 							var.ptr1.type = tvar.type;
+							var.ptr_type = tvar.type;
 						}else
 						{
 							if(var.ptr1.token2 != ':')
