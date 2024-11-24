@@ -115,6 +115,9 @@ Eagle::Eagle()
 	this->gvariable["idx"].type  = EAGLE_keywords::IDX;
 	this->gvariable["idy"].type  = EAGLE_keywords::IDY;
 
+	this->gvariable["cacc"].type = EAGLE_keywords::CACC;
+	this->gvariable["idhl"].type  = EAGLE_keywords::IDHL;
+
 	this->kmacro[0] = ".arg1";
 	this->kmacro[1] = ".arg2";
 	this->kmacro[2] = ".arg3";
@@ -669,7 +672,7 @@ int Eagle::line_code_asm(int mode)
 							if(this->target != TARGET_65816)
 							{
 								off = moffset&0xFFFFF;
-								uint64_t stoff = off&0xE000;
+								//uint64_t stoff = off&0xE000;
 
 								dif = (this->offset) - off;
 							}

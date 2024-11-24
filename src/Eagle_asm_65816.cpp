@@ -121,7 +121,7 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 		return;
 	}
 
-
+	int cmp = 0;
 	//----
 	if(optimize_zero == false)
 	{
@@ -140,13 +140,15 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 		}
 
 		if(src1.type == EAGLE_keywords::IDX)
-		this->text_code += "txa \n";
+			cmp = 1;
 		else
 		if(src1.type == EAGLE_keywords::IDY)
-			this->text_code += "tya \n";
+			cmp = 2;
 		else
 		if(src1.type != EAGLE_keywords::ACC)
 			this->text_code += "lda " + src1value +"\n";
+
+
 	}
 
 
@@ -180,7 +182,14 @@ void Eagle::asm_bru_65816(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,
 
 	if(optimize_zero == false)
 	{
-		this->text_code += "cmp " + src2value  +"\n";
+		if(cmp == 0)
+			this->text_code += "cmp " + src2value  +"\n";
+
+		if(cmp == 1)
+			this->text_code += "cpx " + src2value  +"\n";
+
+		if(cmp == 2)
+			this->text_code += "cpy " + src2value  +"\n";
 	}
 
 	if(operator1 == '=')

@@ -54,6 +54,7 @@
 		<Unit filename="src/Eagle_bin_65816.cpp" />
 		<Unit filename="src/Eagle_bin_80286.cpp" />
 		<Unit filename="src/Eagle_bin_AltairX.cpp" />
+		<Unit filename="src/Eagle_bin_z80.cpp" />
 		<Unit filename="src/Eagle_convert_asm.cpp" />
 		<Unit filename="src/Eagle_enum.hpp" />
 		<Unit filename="src/Eagle_parser.cpp" />

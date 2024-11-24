@@ -1,0 +1,96 @@
+
+
+
+
+.map.func 0x200
+.map.funcspm 0xF0
+.map.funclib 0xE0
+.map.spm 0x00
+.map.lib 0x80
+
+
+//-----------------------
+.bss 0x2000
+uint8 PPU_CTRL1
+uint8 PPU_CTRL2
+uint8 PPU_STATUS
+uint8 SPR_ADD
+uint8 SPR_DATA
+uint8 PPU_SCROLL
+uint8 VRAM_ADD
+uint8 VRAM_DATA
+
+
+.bss 0x4014
+uint8 SPR_DMA
+//-----------------------
+
+.bss 0x600
+
+.code 0x8000
+proc _start:
+{
+	asm "
+	
+
+	";
+	PPU_CTRL1 = 0x88
+	PPU_CTRL2 = 0x1E
+
+	jump main:
+}
+
+
+proc main:
+{
+
+	uint16 testa,testb,res
+	uint8 test8
+
+	[res,idx,uint16] = 0x1234
+
+	[res,idx,uint16] = testb + 0x1001
+
+	[res,idx,uint16] = [res,idx,uint16] + 0x1003
+
+	res = testb
+
+	res = 0x1234
+
+	res = [STR_HELLO:,idx,uint16]
+
+
+	res = [STR_HELLO:,idx,uint16] + testb
+
+
+	[res,idx,uint16] = [STR_HELLO:,idx,uint16] + 5
+
+	res = 0x211
+
+	res = testb +2
+	res+=1
+
+
+	res = testb >> 8
+	res = testb << 8
+
+
+	uint8 test
+	if test & 3
+	{
+
+	}
+	else
+	{
+
+	}
+
+	do
+	{
+	}while 1 == 1
+
+}
+
+
+.org 0x800
+

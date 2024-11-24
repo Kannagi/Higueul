@@ -433,12 +433,12 @@ void Eagle::bin_6502()
 						int dif =  (mnemonic[1].value-this->offset);
 						if(dif >= 0x80)
 						{
-							std::cout << "warning : branch if size :" <<  dif <<"\n";
+							std::cout << "warning : branch if size :" <<  dif << " :" <<  mnemonic[1].item <<"\n";
 						}
 
 						if(dif <= -0x80)
 						{
-							std::cout << "warning: branch while/loop size :" <<  dif <<"\n";
+							std::cout << "warning: branch while/loop size :" <<  dif << " :" <<  mnemonic[1].item <<"\n";
 						}
 						mnemonic[1].value  = (mnemonic[1].value-this->offset)&0xFF;
 					}

@@ -173,7 +173,7 @@ void rmake_compile_run(char *target)
 
 	if(eagle.target == TARGET_Z80)
 	{
-
+		eagle.bin_z80();
 	}
 
 	if(eagle.target == TARGET_80286)

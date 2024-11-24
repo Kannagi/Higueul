@@ -74,6 +74,8 @@ enum class EAGLE_keywords : unsigned char
     ASM,
     ACC,
     BACC,
+    CACC,
+    IDHL,
     IDX,
     IDY,
     FACC,

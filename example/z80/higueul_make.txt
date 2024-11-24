@@ -1,0 +1,14 @@
+
+
+#options:-debug -asm
+#options:-cycle
+#cmd_execute: pwd
+options:-z80 -asm -mesen
+
+
+#file game
+add_file:main.egl;
+
+
+compiler_run:demo.bin
+

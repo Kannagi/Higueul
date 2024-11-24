@@ -82,7 +82,6 @@ void Eagle::bin_65816()
 	uint64_t value;
 	bool mode_a816 = false;
 
-
 	while(this->line_code_asm(0) != 0)
 	{
 		if(mnemonic.size() > 0)
@@ -270,6 +269,8 @@ void Eagle::bin_65816()
 	mode_a816 = false;
 	bool mode_xy16 = false;
 	imm8 = false;
+
+
 
 	while(this->line_code_asm(1) != 0)
 	{
@@ -587,8 +588,6 @@ void Eagle::bin_65816()
 					this->filebin.push_back(0xFB);
 
 
-
-
 				int tmpnumber = this->filebin[filebin.size()-1]&0xFF;
 				if(this->debug == true)
 				std::cout  << "  (0x"<< std::hex << tmpnumber << ")\n";
@@ -627,14 +626,16 @@ void Eagle::bin_65816()
 					)
 					{
 						int dif =  (mnemonic[1].value-this->offset);
+
+
 						if(dif >= 0x80)
 						{
-							std::cout << "warning : branch if size :" <<  dif <<"\n";
+							std::cout << "warning : branch if size :" <<  dif << " :" <<  mnemonic[1].item <<"\n";
 						}
 
 						if(dif <= -0x80)
 						{
-							std::cout << "warning: branch while/loop size :" <<  dif <<"\n";
+							std::cout << "warning: branch while/loop size :" <<  dif << " :" <<  mnemonic[1].item <<"\n";
 						}
 						mnemonic[1].value  = (mnemonic[1].value-this->offset)&0xFF;
 					}
