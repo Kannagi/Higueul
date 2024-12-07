@@ -35,9 +35,8 @@ void Eagle::asm_call_jump(const EAGLE_VARIABLE &src,int ninst,int type)
 	if( (this->target == TARGET_6502) | (this->target == TARGET_65C02) | (this->target == TARGET_HuC6520) )
 		asm_call_jump_6502(src,ninst,type);
 
-	if(this->target == TARGET_Z80) {
+	if(this->target == TARGET_Z80)
 		this->asm_z80->asm_call_jump(src, ninst, type, this->labelcall);
-	}
 
 	if(this->target == TARGET_AltairX)
 		asm_call_jump_AltairX(src,ninst,type);
