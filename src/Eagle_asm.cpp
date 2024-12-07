@@ -52,7 +52,7 @@ void Eagle::asm_return(const EAGLE_VARIABLE &ret,bool retvoid)
 		asm_return_6502(ret,retvoid);
 
 	if(this->target == TARGET_Z80)
-	    this->asm_z80->asm_return(ret,retvoid);
+		this->asm_z80->asm_return(ret,retvoid);
 
 	if(this->target == TARGET_AltairX)
 		asm_return_AltairX(ret,retvoid);
@@ -67,7 +67,7 @@ void Eagle::asm_alu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const E
 		asm_alu_6502(dst,src1,src2,operator1,operator2);
 
 	if(this->target == TARGET_Z80)
-	    this->asm_z80->asm_alu(dst,src1,src2,operator1,operator2);
+		this->asm_z80->asm_alu(dst,src1,src2,operator1,operator2);
 
 	if(this->target == TARGET_AltairX)
 		asm_alu_AltairX(dst,src1,src2,operator1,operator2);

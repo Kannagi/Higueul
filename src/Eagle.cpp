@@ -79,6 +79,7 @@ Eagle::Eagle()
 	this->keywords[".data.d"]	= EAGLE_keywords::DATAD;
 
 	this->asm_z80 = new EagleAsmZ80(*this, this->ilabel);
+
 	this->asm_z80->initialize();
 
 	this->filetext.reserve(0x200000);
