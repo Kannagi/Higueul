@@ -1,0 +1,11 @@
+# GCC/G++ related
+
+obj/
+bin/
+
+*.o
+*.a
+*.lib
+
+# Editors/IDE related
+.vscode/

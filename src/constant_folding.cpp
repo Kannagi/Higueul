@@ -253,6 +253,7 @@ void Constant_folding::apply_operation()
 
 //-----------------------
 
+__attribute__((unused))
 static std::string formatExpression(const std::string& expression)
 {
     std::string result;
