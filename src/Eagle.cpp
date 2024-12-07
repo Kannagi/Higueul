@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 
+#include "Eagle_asm_z80.hpp"
 #include "Eagle.hpp"
 
 Eagle::Eagle()
@@ -77,6 +78,8 @@ Eagle::Eagle()
 	this->keywords[".data.f"]	= EAGLE_keywords::DATAF;
 	this->keywords[".data.d"]	= EAGLE_keywords::DATAD;
 
+	this->asm_z80 = new EagleAsmZ80(*this, this->ilabel);
+	this->asm_z80->initialize();
 
 	this->filetext.reserve(0x200000);
 	this->text_code.reserve(0x200000);
@@ -134,6 +137,11 @@ Eagle::Eagle()
 	this->bcycle = false;
 	this->bmesen = false;
 	this->snes_checksum = false;
+}
+
+Eagle::~Eagle() {
+	delete this->asm_z80;
+	this->asm_z80 = nullptr;
 }
 
 uint64_t Eagle::alloc(EAGLE_keywords type,int n)

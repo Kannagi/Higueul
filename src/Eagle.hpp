@@ -16,7 +16,7 @@ typedef struct
 
 
 //Variable
-typedef struct
+typedef struct EagleVariable
 {
 	int64_t immediate; // valeur immediate (si bimm == true)
 	double dimmediate; // pareil mais en type double
@@ -99,10 +99,13 @@ typedef struct
 
 }EAGLE_MNEMONIQUE;
 
+class EagleAsmZ80;
+
 class Eagle
 {
 	public:
 		Eagle(void);
+		~Eagle(void);
 		void parser_word(void);
 		void load_file(const char *path);
 		void write_file(const char *path,std::string text);
@@ -172,11 +175,8 @@ class Eagle
 		void asm_call_jump_80186(const EAGLE_VARIABLE &var,int narg,int type);
 
 		//---------z80--------------
-		void asm_return_z80(const EAGLE_VARIABLE &ret,bool retvoid);
-		void asm_alu_z80(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
 
-		void asm_bru_z80(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
-		void asm_call_jump_z80(const EAGLE_VARIABLE &var,int narg,int type);
+		EagleAsmZ80 *asm_z80;
 
 		//---------AltairX--------------
 		void asm_return_AltairX(const EAGLE_VARIABLE &ret,bool retvoid);
