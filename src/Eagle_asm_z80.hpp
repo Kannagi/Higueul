@@ -41,7 +41,7 @@ class EagleAsmZ80 {
                            std::string &labelcall);
 
     private:
-		Eagle &eagle;
+        Eagle &eagle;
         // temporary hack, needs to be discussed
         int &ilabel;
 };

@@ -18,7 +18,6 @@ EagleAsmZ80::EagleAsmZ80(Eagle &eagle, int &ilabel) : eagle(eagle), ilabel(ilabe
 
 void EagleAsmZ80::initialize() {
 	// more to come here
-	this->ilabel = 0U;
 }
 
 void EagleAsmZ80::asm_bru(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel)
