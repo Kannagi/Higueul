@@ -1,5 +1,9 @@
 #pragma once
 
+#define TYPE_LOOP 0
+#define TYPE_WHILE 1
+#define TYPE_IF 2
+
 enum class EAGLE_keywords : unsigned char
 {
 	UNKNOW,

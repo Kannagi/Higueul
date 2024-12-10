@@ -11,10 +11,6 @@
 
 #include "Eagle.hpp"
 
-#define TYPE_LOOP 0
-#define TYPE_WHILE 1
-#define TYPE_IF 2
-
 int asm65XX_mul(int64_t immediate,std::string &src1value,std::string &text_code);
 
 static int asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std::string &pregister,std::string &srcvalue,std::string &str_code);

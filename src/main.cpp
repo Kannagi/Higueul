@@ -14,7 +14,7 @@
 
 int rmakeLoad(const char *filename);
 
-Eagle eagle;
+static Eagle eagle;
 void test_constant();
 int main()
 {
@@ -173,7 +173,7 @@ void rmake_compile_run(char *target)
 
 	if(eagle.target == TARGET_Z80)
 	{
-		eagle.bin_z80();
+		//eagle.bin_z80();
 	}
 
 	if(eagle.target == TARGET_80286)

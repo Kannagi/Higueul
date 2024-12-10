@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 #include "Eagle.hpp"
+#include "CPU_Z80.hpp"
 
 Eagle::Eagle()
 {
@@ -134,6 +135,8 @@ Eagle::Eagle()
 	this->bcycle = false;
 	this->bmesen = false;
 	this->snes_checksum = false;
+
+	cpu_z80.initialize();
 }
 
 uint64_t Eagle::alloc(EAGLE_keywords type,int n)

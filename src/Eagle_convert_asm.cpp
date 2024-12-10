@@ -369,6 +369,8 @@ void Eagle::out_asm()
 
 					this->text_code += ".label_b"+std::to_string(this->scope_label[tword.scope&0x7F]) +":\n";
 					this->ilabel++;
+
+					this->asm_do_else();
 				}
 
 
@@ -393,6 +395,8 @@ void Eagle::out_asm()
 					int scope = (tword.scope)&0x7F;
 					this->scope_label[scope] = this->ilabel;
 					this->ilabel++;
+
+					this->asm_do_else();
 				}
 
 
