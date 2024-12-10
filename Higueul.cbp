@@ -44,7 +44,6 @@
 		</Linker>
 		<Unit filename="src/CPU_Z80.hpp" />
 		<Unit filename="src/CPU_Z80_asm.cpp" />
-		<Unit filename="src/CPU_Z80_bin.cpp" />
 		<Unit filename="src/Eagle.cpp" />
 		<Unit filename="src/Eagle.hpp" />
 		<Unit filename="src/Eagle_asm.cpp" />
@@ -52,7 +51,6 @@
 		<Unit filename="src/Eagle_asm_65816.cpp" />
 		<Unit filename="src/Eagle_asm_80286.cpp" />
 		<Unit filename="src/Eagle_asm_AltairX.cpp" />
-		<Unit filename="src/Eagle_asm_z80.cpp" />
 		<Unit filename="src/Eagle_bin_6502.cpp" />
 		<Unit filename="src/Eagle_bin_65816.cpp" />
 		<Unit filename="src/Eagle_bin_80286.cpp" />
