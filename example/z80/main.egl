@@ -1,96 +1,46 @@
 
+// -----------------------------------------------------------------------------
+// Definitions
 
+.define NOS_STATEBIT_SFX_PLAYING 0x00
 
+// -----------------------------------------------------------------------------
+// main entry point, on Z80, entry point is $0000
 
-.map.func 0x200
-.map.funcspm 0xF0
-.map.funclib 0xE0
-.map.spm 0x00
-.map.lib 0x80
+.code 0x0000
 
-
-//-----------------------
-.bss 0x2000
-uint8 PPU_CTRL1
-uint8 PPU_CTRL2
-uint8 PPU_STATUS
-uint8 SPR_ADD
-uint8 SPR_DATA
-uint8 PPU_SCROLL
-uint8 VRAM_ADD
-uint8 VRAM_DATA
-
-
-.bss 0x4014
-uint8 SPR_DMA
-//-----------------------
-
-.bss 0x600
-
-.code 0x8000
 proc _start:
 {
-	asm "
-	
-
-	";
-	PPU_CTRL1 = 0x88
-	PPU_CTRL2 = 0x1E
-
+	// theres no room for code, we are in the interrupt vector and address
+	// $0000 is the reset ISR. Let's jump somewhere else.
 	jump main:
 }
 
+// -----------------------------------------------------------------------------
+// Some vacriables. We shouldn't define variables here, but this part of the
+// interrupt vector isn't used because the interrupt mode is 1.
+.bss 0x10
+
+uint8 NOS_sysMissedClock
+uint8 NOS_state
+uint16 SGA_selectedBank
+
+.code 0x100
 
 proc main:
 {
+	asm "di"
 
-	uint16 testa,testb,res
-	uint8 test8
+	asm "ld sp, 0x1FFF"
 
-	[res,idx,uint16] = 0x1234
+	asm "im 1"
 
-	[res,idx,uint16] = testb + 0x1001
+	//acc = 24
 
-	[res,idx,uint16] = [res,idx,uint16] + 0x1003
+	//NOS_sysMissedClock = 0
+	NOS_state = 0
+	SGA_selectedBank = 0
 
-	res = testb
-
-	res = 0x1234
-
-	res = [STR_HELLO:,idx,uint16]
-
-
-	res = [STR_HELLO:,idx,uint16] + testb
-
-
-	[res,idx,uint16] = [STR_HELLO:,idx,uint16] + 5
-
-	res = 0x211
-
-	res = testb +2
-	res+=1
-
-
-	res = testb >> 8
-	res = testb << 8
-
-
-	uint8 test
-	if test & 3
-	{
-
-	}
-	else
-	{
-
-	}
-
-	do
-	{
-	}while 1 == 1
-
+	asm "ei"
 }
-
-
-.org 0x800
 

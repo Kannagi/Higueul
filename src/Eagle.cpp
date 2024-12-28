@@ -8,8 +8,8 @@
 #include <stdint.h>
 
 #include "Eagle.hpp"
-#include "CPU_Z80.hpp"
-
+#include "CPU_Z80_asm.hpp"
+ 
 Eagle::Eagle()
 {
 	this->keywords["int8"]    = EAGLE_keywords::INT8;
