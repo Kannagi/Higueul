@@ -38,10 +38,6 @@ void Eagle::asm_return_AltairX(const EAGLE_VARIABLE &ret,bool retvoid)
 			this->text_code += "move acc,t2\n";
 		}
 
-		if(ret.type == EAGLE_keywords::BACC)
-		{
-			this->text_code += "move a0,t0\n";
-		}
 
 		if(ret.type != EAGLE_keywords::ACC)
 		{
@@ -277,10 +273,6 @@ static void asm_address(const EAGLE_VARIABLE &src,std::string &labelp,const std:
 			if(src.type == EAGLE_keywords::ACC)
 			{
 				srcvalue = "acc";
-			}else
-			if(src.type == EAGLE_keywords::BACC)
-			{
-				srcvalue = "t0";
 			}
 
 		}
