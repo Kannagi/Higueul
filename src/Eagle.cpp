@@ -110,13 +110,21 @@ Eagle::Eagle()
 
 	this->target = TARGET_65816;
 
+	//6+502
 	this->gvariable["acc"].type  = EAGLE_keywords::ACC;
-	this->gvariable["bacc"].type = EAGLE_keywords::BACC;
-	this->gvariable["facc"].type = EAGLE_keywords::FACC;
 	this->gvariable["idx"].type  = EAGLE_keywords::IDX;
 	this->gvariable["idy"].type  = EAGLE_keywords::IDY;
 
-	this->gvariable["cacc"].type = EAGLE_keywords::CACC;
+	this->gvariable["ra"].type = EAGLE_keywords::ACC;
+	this->gvariable["rb"].type = EAGLE_keywords::REGB;
+	this->gvariable["rc"].type = EAGLE_keywords::REGC;
+	this->gvariable["rd"].type = EAGLE_keywords::REGD;
+	this->gvariable["re"].type = EAGLE_keywords::REGE;
+	this->gvariable["rf"].type = EAGLE_keywords::REGF;
+
+	this->gvariable["rbc"].type = EAGLE_keywords::REGBC;
+	this->gvariable["rde"].type = EAGLE_keywords::REGDE;
+
 	this->gvariable["idhl"].type  = EAGLE_keywords::IDHL;
 
 	this->kmacro[0] = ".arg1";
