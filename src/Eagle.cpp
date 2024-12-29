@@ -122,6 +122,9 @@ Eagle::Eagle()
 	this->gvariable["re"].type = EAGLE_keywords::REGE;
 	this->gvariable["rf"].type = EAGLE_keywords::REGF;
 
+	this->gvariable["idh"].type = EAGLE_keywords::IDH;
+	this->gvariable["idl"].type = EAGLE_keywords::IDL;
+
 	this->gvariable["rbc"].type = EAGLE_keywords::REGBC;
 	this->gvariable["rde"].type = EAGLE_keywords::REGDE;
 
@@ -725,4 +728,44 @@ int Eagle::line_code_asm(int mode)
 	}
 
 	return 0;
+}
+
+bool Eagle::define_exist(std::string &tmp)
+{
+	auto it = this->define.find(tmp);
+
+	if (it != this->define.end())
+		return true;
+
+	return false;
+}
+
+bool Eagle::keywords_exist(std::string &tmp)
+{
+	auto it = this->keywords.find(tmp);
+
+	if (it != this->keywords.end())
+		return true;
+
+	return false;
+}
+
+bool Eagle::label_exist(std::string &tmp)
+{
+	auto it = this->label.find(tmp);
+
+	if (it != this->label.end())
+		return true;
+
+	return false;
+}
+
+bool Eagle::labelbin_exist(std::string &tmp)
+{
+	auto it = this->labelbin.find(tmp);
+
+	if (it != this->labelbin.end())
+		return true;
+
+	return false;
 }

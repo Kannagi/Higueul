@@ -1005,6 +1005,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 				var.bimm = true;
 				var.blabel = false;
 				var.bptr = false;
+				var.type = EAGLE_keywords::IMM;
 
 				convertStringToNumber(tword.item,var.immediate,var.dimmediate);
 
@@ -1018,6 +1019,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 				var.bimm = false;
 				var.blabel = false;
 				var.bptr = true;
+				var.type = EAGLE_keywords::PTR;
 
 				var.immediate = 0;
 				var.ptr_type = EAGLE_keywords::UINT8;
@@ -1123,6 +1125,7 @@ bool Eagle::variable_exist(EAGLE_WORDS tword,EAGLE_VARIABLE &var,int elabel)
 			{
 				var.bimm = false;
 				var.blabel = true;
+				var.type = EAGLE_keywords::LABEL;
 
 				var.token1 = tword.token1;
 				var.token2 = tword.token2;

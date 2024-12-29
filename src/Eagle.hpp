@@ -95,6 +95,11 @@ class Eagle
 		bool gvariable_exist(std::string &tmp,EAGLE_VARIABLE &var);
 		bool variable_exist(std::string &tmp,EAGLE_VARIABLE &var);
 
+		bool define_exist(std::string &tmp);
+		bool keywords_exist(std::string &tmp);
+		bool label_exist(std::string &tmp);
+		bool labelbin_exist(std::string &tmp);
+
 		//---------ALL--------------
 		void asm_return(const EAGLE_VARIABLE &ret,bool retvoid);
 		void asm_alu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);

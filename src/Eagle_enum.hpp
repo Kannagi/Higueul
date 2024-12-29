@@ -49,6 +49,10 @@ enum class EAGLE_keywords : unsigned char
 
 	VOID,
 
+	PTR,
+	LABEL,
+	IMM,
+
 	REGISTER,
 	SPM,
 	LIB,
@@ -84,10 +88,11 @@ enum class EAGLE_keywords : unsigned char
 	REGF,
 	REGBC,
 	REGDE,
+	IDH,
+	IDL,
 	IDHL,
 	IDX,
 	IDY,
-	FACC,
 
 	//preproc
 	DEFINE,
@@ -115,7 +120,5 @@ enum class EAGLE_keywords : unsigned char
 	DATAH,
 	DATAF,
 	DATAD,
-
-	PTR,
 };
 
