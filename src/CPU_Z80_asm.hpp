@@ -2,10 +2,11 @@
 #pragma once
 
 // Forward Declarations --------------------------------------------------------
-enum
+enum Z80SizeType : uint16_t
 {
-	Z80_SIZE_BYTE = 1,
-	Z80_SIZE_WORD = 2
+	Z80_SIZE_UNKOWN = 0,
+	Z80_SIZE_BYTE	= 1,
+	Z80_SIZE_WORD	= 2
 };
 
 // Forward Declarations --------------------------------------------------------
@@ -18,46 +19,78 @@ class Z80;
 class Z80Evaluable
 {
 	public:
-		virtual uint16_t get_value(void) const	  = 0;
-		virtual std::string to_string(void) const = 0;
-		virtual size_t get_size(void) const		  = 0;
-		virtual bool is_register(void) const	  = 0;
+		virtual uint16_t get_value(void) const		= 0;
+		virtual std::string to_string(void) const	= 0;
+		virtual Z80SizeType get_size(void) const	= 0;
+		virtual bool is_register(void) const		= 0;
+		virtual bool is_location(void) const		= 0;
+		virtual OpFlag get_opflag(void) const		= 0;
+		virtual bool load_immediate(uint16_t value) = 0;
+		virtual bool load_address(uint16_t address) = 0;
 };
 
 // -----------------------------------------------------------------------------
 class Z80Location : public Z80Evaluable
 {
 	public:
-		Z80Location(uint16_t value) : value(value) {}
+		Z80Location(void) : value(0), oper_size(Z80_SIZE_UNKOWN) {}
 		uint16_t get_value(void) const override { return this->value; }
 		std::string to_string(void) const override
 		{
 			return "(" + std::to_string(this->value) + ")";
 		}
-		size_t get_size(void) const override { return Z80_SIZE_WORD; }
+		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 		bool is_register(void) const override { return false; }
+		bool is_location(void) const override { return true; }
+		OpFlag get_opflag(void) const override
+		{
+			return this->oper_size == Z80_SIZE_BYTE ? IMM_PTR8 : IMM_PTR16;
+		}
+		bool load_immediate(uint16_t value) override { return false; }
+		bool load_address(uint16_t address) override { return false; }
+
+		void set_address(uint16_t address, Z80SizeType oper_size)
+		{
+			this->value		= address;
+			this->oper_size = oper_size;
+		}
 
 	private:
 		uint16_t value;
+		Z80SizeType oper_size;
 };
 
 // -----------------------------------------------------------------------------
 class Z80Value : public Z80Evaluable
 {
 	public:
-		Z80Value(uint16_t value) : value((uint16_t)value), is16bit(true) {}
-		Z80Value(uint8_t value) : value((uint8_t)value), is16bit(false) {}
+		Z80Value(void) : value(0U), is16bit(false) {}
 
 		uint16_t get_value(void) const override { return this->value; }
 		std::string to_string(void) const override
 		{
 			return std::to_string(this->value);
 		}
-		size_t get_size(void) const override
+		Z80SizeType get_size(void) const override
 		{
 			return (this->is16bit) ? Z80_SIZE_WORD : Z80_SIZE_BYTE;
 		}
 		bool is_register(void) const override { return false; }
+		bool is_location(void) const override { return false; }
+		OpFlag get_opflag(void) const override { return IMM; };
+		bool load_immediate(uint16_t value) override { return false; }
+		bool load_address(uint16_t address) override { return false; }
+
+		void set_value(uint16_t value)
+		{
+			this->value	  = value;
+			this->is16bit = true;
+		}
+		void set_value(uint8_t value)
+		{
+			this->value	  = (uint16_t)value;
+			this->is16bit = false;
+		}
 
 	private:
 		uint16_t value;
@@ -96,14 +129,16 @@ class Z80Register : public Z80Evaluable
 		// memory location, it will be wrapped in parentheses.
 		virtual std::string to_string(void) const = 0;
 		// get_size of the register.
-		virtual size_t get_size(void) const = 0;
+		virtual Z80SizeType get_size(void) const = 0;
 
 		virtual bool is_register(void) const = 0;
+		virtual bool is_location(void) const = 0;
+
+		virtual OpFlag get_opflag(void) const = 0;
 
 	protected:
 		enum State
 		{
-			UNDEFINED,
 			NUMBER,
 			ADDRESS
 		};
@@ -116,32 +151,50 @@ class Z80Register : public Z80Evaluable
 class Z80Register8 : public Z80Register
 {
 	public:
-		Z80Register8(std::string name) : name(name), value(0), state(UNDEFINED)
+		Z80Register8(std::string name, OpFlag opflag)
+			: name(name), value(0), state(NUMBER), opflag(opflag), undef(true)
 		{
 		}
 
 		uint16_t get_value(void) const override { return (uint16_t)value; }
 
-		bool is_undef(void) const override { return this->state == UNDEFINED; }
+		bool is_undef(void) const override { return this->undef; }
 
 		bool load_immediate(uint16_t value) override;
 
 		bool load_address(uint16_t address) override;
 
-		void set_undef(void) override { this->state = UNDEFINED; }
+		void set_undef(void) override { this->undef = true; }
 
 		bool is_register(void) const override { return true; }
 
-		size_t get_size(void) const override { return Z80_SIZE_BYTE; }
+		bool is_location(void) const override { return this->state == ADDRESS; }
+
+		Z80SizeType get_size(void) const override { return Z80_SIZE_BYTE; }
 
 		std::string get_name(void) const override { return name; }
 
 		std::string to_string(void) const override;
 
+		OpFlag get_opflag(void) const override
+		{
+			switch (this->state)
+			{
+			case NUMBER:
+				return static_cast<OpFlag>(this->opflag | REG);
+			case ADDRESS:
+				return static_cast<OpFlag>(this->opflag | REG_PTR);
+			default:
+				return NOOPFLAGS;
+			}
+		};
+
 	private:
 		std::string name;
 		uint8_t value;
 		State state;
+		OpFlag opflag;
+		bool undef;
 };
 
 // -----------------------------------------------------------------------------
@@ -151,30 +204,50 @@ class Z80Register8 : public Z80Register
 class Z80Indexer : public Z80Register
 {
 	public:
-		Z80Indexer(std::string name) : name(name), value(0), state(UNDEFINED) {}
+		Z80Indexer(std::string name, OpFlag opflag)
+			: name(name), value(0), state(NUMBER), opflag(opflag), undef(true)
+		{
+		}
 
 		uint16_t get_value(void) const override { return value; }
 
-		bool is_undef(void) const override { return this->state == UNDEFINED; }
+		bool is_undef(void) const override { return this->undef; }
 
 		bool load_immediate(uint16_t value) override;
 
 		bool load_address(uint16_t address) override;
 
-		void set_undef(void) override { this->state = UNDEFINED; }
+		void set_undef(void) override { this->undef = true; }
 
 		bool is_register(void) const override { return true; }
 
-		size_t get_size(void) const override { return Z80_SIZE_WORD; }
+		bool is_location(void) const override { return this->state == ADDRESS; }
+
+		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 
 		std::string get_name(void) const override { return name; }
 
 		std::string to_string(void) const override;
 
+		OpFlag get_opflag(void) const override
+		{
+			switch (this->state)
+			{
+			case NUMBER:
+				return static_cast<OpFlag>(this->opflag | REG);
+			case ADDRESS:
+				return static_cast<OpFlag>(this->opflag | REG_PTR);
+			default:
+				return NOOPFLAGS;
+			}
+		};
+
 	private:
 		std::string name;
 		uint16_t value;
 		State state;
+		OpFlag opflag;
+		bool undef;
 };
 
 // -----------------------------------------------------------------------------
@@ -183,8 +256,8 @@ class Z80Indexer : public Z80Register
 class Z80RegisterPair16 : public Z80Register
 {
 	public:
-		Z80RegisterPair16(Z80Register8 &low, Z80Register8 &high)
-			: low(low), high(high)
+		Z80RegisterPair16(Z80Register8 &low, Z80Register8 &high, OpFlag opflag)
+			: low(low), high(high), opflag(opflag), undef(true)
 		{
 			this->name = low.get_name() + high.get_name();
 		}
@@ -199,23 +272,40 @@ class Z80RegisterPair16 : public Z80Register
 
 		bool is_register(void) const override { return true; }
 
+		bool is_location(void) const override { return this->state == ADDRESS; }
+
 		void set_undef(void) override
 		{
 			this->low.set_undef();
 			this->high.set_undef();
-			this->state = UNDEFINED;
+			this->undef = true;
 		}
 
-		size_t get_size(void) const override { return Z80_SIZE_WORD; }
+		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 
 		std::string get_name(void) const override { return name; }
 
 		std::string to_string(void) const override;
 
+		OpFlag get_opflag(void) const override
+		{
+			switch (this->state)
+			{
+			case NUMBER:
+				return static_cast<OpFlag>(this->opflag | REG);
+			case ADDRESS:
+				return static_cast<OpFlag>(this->opflag | REG_PTR);
+			default:
+				return NOOPFLAGS;
+			}
+		};
+
 	private:
 		std::string name;
 		Z80Register8 &low, &high;
 		State state;
+		OpFlag opflag;
+		bool undef;
 };
 
 // -----------------------------------------------------------------------------
@@ -250,40 +340,33 @@ class CPU_Z80
 
 		void asm_do_else(void);
 
-	private:
-		std::map<std::string, Z80Register *> registers;
-
 		// General purpose registers
 		Z80Register8 A, B, C, D, E, H, L;
 		// Flags register
 		Z80Register8 F;
 		// 16-bit pair registers
-		Z80RegisterPair16 AF, BC, DE, HL;
+		Z80RegisterPair16 BC, DE, HL;
 		// 16-bit index registers
 		Z80Indexer IX, IY;
 
-		std::vector<Z80Value> value_pool;
-		std::vector<Z80Location> location_pool;
+	private:
+		std::map<std::string, Z80Register *> registers;
 
-		Z80Evaluable &new_value(const EAGLE_VARIABLE &var);
-		Z80Evaluable &new_location(const EAGLE_VARIABLE &var);
+		// I dont know why std::vector segfault on me. I don't love C++ enough
+		// to find why and their standard library is just unreadable.
+		Z80Value value_pool[8];
+		Z80Location location_pool[8];
+		uint8_t location_pool_pos;
+		uint8_t value_pool_pos;
+
+		Z80Evaluable &new_value(const EAGLE_VARIABLE &var,
+								Z80SizeType oper_size);
+		Z80Evaluable &new_location(const EAGLE_VARIABLE &var,
+								   Z80SizeType oper_size);
 
 		// from Eagle_VARIABLE to Z80Evaluable. This function guess the type and
 		// returns an appropriate Z80Evaluable object.
-		Z80Evaluable &from(const EAGLE_VARIABLE &var);
-
-		// returns a register by its name
-		Z80Register &get_reg(std::string name) const
-		{
-			if (registers.find(name) == registers.end())
-			{
-				std::cerr << "Error: Register '" << name << "' not found."
-						  << std::endl;
-				exit(1);
-			}
-
-			return *registers.at(name);
-		}
+		Z80Evaluable &from(const EAGLE_VARIABLE &var, Z80SizeType oper_size);
 
 		// when exiting a continuous block of non structural instruction, this
 		// function is called to ensure that all registers are marked as

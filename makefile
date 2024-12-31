@@ -11,11 +11,11 @@ AR = ar
 LD = g++
 WINDRES = windres
 
-INC = 
+INC =
 CFLAGS = -fomit-frame-pointer -Wextra -Wall -std=c++11 -fexceptions -Wno-unused-parameter
-RESINC = 
-LIBDIR = 
-LIB = 
+RESINC =
+LIBDIR =
+LIB =
 LDFLAGS = -O1 -s
 
 INC_BIN = $(INC) -Isrc
@@ -26,7 +26,7 @@ LIBDIR_BIN = $(LIBDIR)
 LIB_BIN = $(LIB)
 LDFLAGS_BIN = $(LDFLAGS)
 OBJDIR_BIN = obj
-DEP_BIN = 
+DEP_BIN =
 OUT_BIN = bin/higueulc
 
 OBJ_BIN = $(OBJDIR_BIN)/src/Eagle_bin_65816.o $(OBJDIR_BIN)/src/rmake.o $(OBJDIR_BIN)/src/main.o $(OBJDIR_BIN)/src/constant_folding.o $(OBJDIR_BIN)/src/Eagle_parser.o $(OBJDIR_BIN)/src/Eagle_convert_asm.o $(OBJDIR_BIN)/src/Eagle_bin_z80.o $(OBJDIR_BIN)/src/Eagle_bin_AltairX.o $(OBJDIR_BIN)/src/Eagle_bin_80286.o $(OBJDIR_BIN)/src/Eagle_bin_6502.o $(OBJDIR_BIN)/src/Eagle_asm_AltairX.o $(OBJDIR_BIN)/src/Eagle_asm_80286.o $(OBJDIR_BIN)/src/Eagle_asm_65816.o $(OBJDIR_BIN)/src/Eagle_asm_6502.o $(OBJDIR_BIN)/src/Eagle_asm.o $(OBJDIR_BIN)/src/Eagle.o $(OBJDIR_BIN)/src/CPU_Z80_asm.o
@@ -35,11 +35,11 @@ all: bin
 
 clean: clean_bin
 
-before_bin: 
+before_bin:
 	test -d bin || mkdir -p bin
 	test -d $(OBJDIR_BIN)/src || mkdir -p $(OBJDIR_BIN)/src
 
-after_bin: 
+after_bin:
 
 bin: before_bin out_bin after_bin
 
@@ -97,7 +97,10 @@ $(OBJDIR_BIN)/src/Eagle.o: src/Eagle.cpp
 $(OBJDIR_BIN)/src/CPU_Z80_asm.o: src/CPU_Z80_asm.cpp
 	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/CPU_Z80_asm.cpp -o $(OBJDIR_BIN)/src/CPU_Z80_asm.o
 
-clean_bin: 
+$(OBJDIR_BIN)/src/CPU_Z80_opcode_index.o: src/CPU_Z80_opcode_index.cpp
+	$(CXX) $(CFLAGS_BIN) $(INC_BIN) -c src/CPU_Z80_opcode_index.cpp -o $(OBJDIR_BIN)/src/CPU_Z80_opcode_index.o
+
+clean_bin:
 	rm -f $(OBJ_BIN) $(OUT_BIN)
 	rm -rf bin
 	rm -rf $(OBJDIR_BIN)/src

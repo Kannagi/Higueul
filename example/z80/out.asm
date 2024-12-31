@@ -13,11 +13,17 @@ main:
  ld sp, 0x1FFF
 ;asm
  im 1
-;NOS_state = 0
-ld a, 0
-ld 0, a
-;SGA_selectedBank = 0
-ld (18), a
+;idhl = 3
+ld hl, 3
+;rb = .ptr
+ld a, (0)
+ld b, a
+;SGA_selectedBank = NOS_state
+ld hl, (17)
+ld (18), hl
+;NOS_state = SGA_selectedBank
+ld a, (19)
+ld (17), a
 ;asm
  ei
 ..end

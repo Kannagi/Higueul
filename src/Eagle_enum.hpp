@@ -8,7 +8,7 @@ enum class EAGLE_keywords : unsigned char
 {
 	UNKNOW,
 
-	//Variable
+	// Variable
 	INT8,
 	INT16,
 	INT32,
@@ -56,7 +56,7 @@ enum class EAGLE_keywords : unsigned char
 
 	EXTERN,
 
-	//Control
+	// Control
 	IF,
 	ELSE,
 	DO,
@@ -66,7 +66,7 @@ enum class EAGLE_keywords : unsigned char
 	RETURN,
 	CALL,
 
-	//Function
+	// Function
 	FUNC,
 	FUNCSPM,
 	FUNCLIB,
@@ -74,7 +74,7 @@ enum class EAGLE_keywords : unsigned char
 	PROC,
 	END,
 
-	//extra
+	// extra
 	ASM,
 	ACC,
 	REGB,
@@ -89,7 +89,7 @@ enum class EAGLE_keywords : unsigned char
 	IDY,
 	FACC,
 
-	//preproc
+	// preproc
 	DEFINE,
 	MACRO,
 	ENDMACRO,
@@ -105,8 +105,7 @@ enum class EAGLE_keywords : unsigned char
 	LIBMAP,
 	ORG,
 
-
-	//DATA ROW
+	// DATA ROW
 	DATAB,
 	DATAW,
 	DATAL,
@@ -119,3 +118,51 @@ enum class EAGLE_keywords : unsigned char
 	PTR,
 };
 
+// Enumerates the different Z80 operations
+enum OpType : uint64_t
+{
+	OP_LOAD,
+	OP__MAX,
+};
+
+// Enumerates the properties of a Z80 Operand. An operand might be a register,
+// a memory location or an immediate value. These properties are used to build
+// the opcode index table.
+enum OpFlag : uint32_t
+{
+	NOOPFLAGS = 0,
+	// Immediate value flag
+	IMM		  = 1 << 0,
+	REG		  = 1 << 1,
+	REG_PTR	  = 1 << 2,
+	IMM_PTR8  = 1 << 3,
+	IMM_PTR16 = 1 << 4,
+
+	// Indexable flag, memory location may be indexed, works only with IX, IY
+	INDEXED = 1 << 5,
+	// Register flags
+	R_A = 1 << 8,
+	R_B = 1 << 9,
+	R_C = 1 << 10,
+	R_D = 1 << 11,
+	R_E = 1 << 12,
+	R_F = 1 << 13,
+	R_H = 1 << 14,
+	R_L = 1 << 15,
+	RBC = 1 << 16,
+	RDE = 1 << 17,
+	RHL = 1 << 18,
+	RIX = (1 << 19),
+	RIY = (1 << 20),
+	RSP = 1 << 21,
+
+	REG8  = (R_A | R_B | R_C | R_D | R_E | R_H | R_L),
+	REG16 = (RBC | RDE | RHL),
+	REGXY = (RIX | RIY),
+};
+
+inline OpFlag operator|(OpFlag a, OpFlag b)
+{
+	return static_cast<OpFlag>(static_cast<uint64_t>(a) |
+							   static_cast<uint64_t>(b));
+}

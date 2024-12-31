@@ -35,12 +35,21 @@ proc main:
 
 	asm "im 1"
 
-	//acc = 24
+	// acc = 24
+	// NOS_sysMissedClock = 0
+	// NOS_state = 0
+	// SGA_selectedBank = 0
+//
+	// rb = 0
+	// acc = rb
+	// SGA_selectedBank = ra
+	// rc = SGA_selectedBank
+	// rb = 22
+	idhl = 3
+	rb = [idhl]
 
-	//NOS_sysMissedClock = 0
-	NOS_state = 0
-	SGA_selectedBank = 0
-
+	SGA_selectedBank = NOS_state
+	NOS_state = SGA_selectedBank
 	asm "ei"
 }
 
