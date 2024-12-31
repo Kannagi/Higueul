@@ -27,6 +27,30 @@
 
 static Z80NullEvaluable null_evaluable;
 
+// .............................................................................
+// transform a string to a pointer string. To avoid searching in the code if the
+// syntax changes.
+static inline std::string ptr_string(std::string str)
+{
+	return "(" + str + ")";
+}
+
+// -----------------------------------------------------------------------------
+// .............................................................................
+class Z80NullRegister : public Z80Register
+{
+	public:
+		std::string get_name(void) const override { return "undef"; }
+		uint16_t get_value(void) const override { return 0; }
+		bool is_undef(void) const override { return true; }
+		Z80LoadResult load_value(uint16_t value) override { return {0}; }
+		void set_undef(void) override {}
+		Z80SizeType get_size(void) const override { return Z80_SIZE_UNKOWN; }
+		bool is_register(void) const override { return false; }
+		bool is_deferencing(void) const override { return false; }
+		std::string to_string(void) const override { return ""; }
+} static null_register;
+
 // -----------------------------------------------------------------------------
 // Z80Register8
 // .............................................................................
@@ -57,7 +81,19 @@ Z80LoadResult Z80Register8::load_value(uint16_t value)
 }
 
 // .............................................................................
-std::string Z80Register8::to_string(void) const { return this->name; }
+std::string Z80Register8::to_string(void) const
+{
+	switch (this->state)
+	{
+	case NUMBER:
+		return this->name;
+	case ADDRESS:
+		die("8bit register " + this->name +
+			" is a 8bit register and cannot be used as a pointer");
+	default:
+		die("unknown register state");
+	}
+}
 
 // -----------------------------------------------------------------------------
 // Z80Register16
@@ -88,7 +124,18 @@ Z80LoadResult Z80Indexer::load_value(uint16_t value)
 }
 
 // .............................................................................
-std::string Z80Indexer::to_string(void) const { return this->name; }
+std::string Z80Indexer::to_string(void) const
+{
+	switch (this->state)
+	{
+	case NUMBER:
+		return this->name;
+	case ADDRESS:
+		return ptr_string(this->name);
+	default:
+		die("unknown register state");
+	}
+}
 
 // -----------------------------------------------------------------------------
 // Z80RegisterPair16
@@ -122,11 +169,23 @@ Z80LoadResult Z80RegisterPair16::load_value(uint16_t value)
 	uint16_t v_new = this->low.get_value() | (this->high.get_value() << 8);
 	result.delta   = (int16_t)(v_new - v_old);
 	result.changed = result.delta != 0;
+
 	return result;
 }
 
 // .............................................................................
-std::string Z80RegisterPair16::to_string(void) const { return this->name; }
+std::string Z80RegisterPair16::to_string(void) const
+{
+	switch (this->state)
+	{
+	case NUMBER:
+		return this->name;
+	case ADDRESS:
+		return ptr_string(this->name);
+	default:
+		die("unknown register state");
+	}
+}
 
 // -----------------------------------------------------------------------------
 // helper functions
@@ -270,11 +329,60 @@ Z80Evaluable &CPU_Z80::new_location(const EAGLE_VARIABLE &var,
 	return location;
 }
 
+Z80Register &CPU_Z80::get_register_by_eagle_type(const EAGLE_keywords &type)
+{
+	switch (type)
+	{
+		// clang-format off
+	case EAGLE_keywords::ACC:   return this->A;
+	case EAGLE_keywords::IDX:   return this->IX;
+	case EAGLE_keywords::IDY:   return this->IY;
+	case EAGLE_keywords::REGB:  return this->B;
+	case EAGLE_keywords::REGC:  return this->C;
+	case EAGLE_keywords::REGD:  return this->D;
+	case EAGLE_keywords::REGE:  return this->E;
+	case EAGLE_keywords::IDHL:  return this->HL;
+	case EAGLE_keywords::REGBC: return this->BC;
+	case EAGLE_keywords::REGDE: return this->DE;
+	default:
+		return null_register;
+		// clang-format on
+	}
+}
+
 Z80Evaluable &CPU_Z80::from(const EAGLE_VARIABLE &var, Z80SizeType oper_size)
 {
 	if (var.bimm)
 	{
 		return this->new_value(var, oper_size);
+	}
+	else if (var.bptr)
+	{
+		if (var.ptr2_exist)
+		{
+			die("no indexed mode supported on Z80 [pointers]. Only "
+				"[registers16] are supported.");
+		}
+
+		Z80Register &reg = this->get_register_by_eagle_type(var.ptr_type);
+		if (reg.get_size() != Z80_SIZE_WORD)
+		{
+			// eventually this translator could have the option to alias any
+			// 8bit pointers to a idhl.
+			die("8bit registers can't be used as [pointers] on Z80. Transfert "
+				"the value to `idhl`, `idx` or `idy` to perform a pointer "
+				"operation.");
+		}
+
+		if (reg.is_register())
+		{
+			reg.set_pointing(true);
+			return reg;
+		}
+		else
+		{
+			die("")
+		}
 	}
 	else if (var.type == EAGLE_keywords::UNKNOW)
 	{
@@ -299,46 +407,16 @@ Z80Evaluable &CPU_Z80::from(const EAGLE_VARIABLE &var, Z80SizeType oper_size)
 	}
 	else
 	{
-		Z80Register *reg = nullptr;
-
-		switch (var.type)
+		Z80Register &reg = this->get_register_by_eagle_type(var.type);
+		if (!reg.is_register())
 		{
-		case EAGLE_keywords::ACC:
-			reg = &this->A;
-			break;
-		case EAGLE_keywords::IDX:
-			reg = &this->IX;
-			break;
-		case EAGLE_keywords::IDY:
-			reg = &this->IY;
-			break;
-		case EAGLE_keywords::REGB:
-			reg = &this->B;
-			break;
-		case EAGLE_keywords::REGC:
-			reg = &this->C;
-			break;
-		case EAGLE_keywords::REGD:
-			reg = &this->D;
-			break;
-		case EAGLE_keywords::REGE:
-			reg = &this->E;
-			break;
-		case EAGLE_keywords::IDHL:
-			reg = &this->HL;
-			break;
-		case EAGLE_keywords::REGBC:
-			reg = &this->BC;
-			break;
-		case EAGLE_keywords::REGDE:
-			reg = &this->DE;
-			break;
-		default:
-			printf("Unsupported register type: %x\n", (unsigned char)var.type);
-			die("");
+			std::string msg =
+				("Invalid register type: " + (uint16_t)var.type) + '\n';
+			die(msg);
 		}
 
-		return *reg;
+		reg.set_pointing(false);
+		return reg;
 	}
 }
 
@@ -480,14 +558,15 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 		else
 		{
 			Z80LoadResult ld_result = dst_reg.load_value(src.get_value());
-			if (!ld_result.changed)
+			if (!ld_result.changed && !ld_result.was_undef)
 			{
 				mode = MODE_IGNORE;
 				return "";
 			}
 			else
 			{
-				if (dst_reg.get_value() == 0)
+				if (dst_reg.get_name() == cpu.A.get_name() &&
+					dst_reg.get_value() == 0)
 				{
 					mode = MODE_XOR;
 				}

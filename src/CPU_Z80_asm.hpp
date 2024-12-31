@@ -140,14 +140,34 @@ class Z80Register : public Z80Evaluable
 
 		virtual bool is_register(void) const = 0;
 
-		virtual OpFlag get_opflag(void) const = 0;
+		// setting a register as a pointer state, changes how it is rendered
+		// during a transformation and for selecting transform function as well.
+		virtual void set_pointing(bool pointer) final
+		{
+			this->state = pointer ? ADDRESS : NUMBER;
+		}
+
+		virtual OpFlag get_opflag(void) const final
+		{
+			switch (this->state)
+			{
+			case NUMBER:
+				return static_cast<OpFlag>(this->opflag | REG);
+			case ADDRESS:
+				return static_cast<OpFlag>(this->opflag | REG_PTR);
+			default:
+				return NOOPFLAGS;
+			}
+		};
 
 	protected:
-		enum State
+		enum State : uint16_t
 		{
 			NUMBER,
 			ADDRESS
 		};
+		State state;
+		OpFlag opflag;
 };
 
 // -----------------------------------------------------------------------------
@@ -158,8 +178,10 @@ class Z80Register8 : public Z80Register
 {
 	public:
 		Z80Register8(std::string name, OpFlag opflag)
-			: name(name), value(0), state(NUMBER), opflag(opflag), undef(true)
+			: name(name), value(0), undef(true)
 		{
+			this->state	 = NUMBER;
+			this->opflag = opflag;
 		}
 
 		uint16_t get_value(void) const override { return (uint16_t)value; }
@@ -183,24 +205,9 @@ class Z80Register8 : public Z80Register
 
 		std::string to_string(void) const override;
 
-		OpFlag get_opflag(void) const override
-		{
-			switch (this->state)
-			{
-			case NUMBER:
-				return static_cast<OpFlag>(this->opflag | REG);
-			case ADDRESS:
-				return static_cast<OpFlag>(this->opflag | REG_PTR);
-			default:
-				return NOOPFLAGS;
-			}
-		};
-
 	private:
 		std::string name;
 		uint8_t value;
-		State state;
-		OpFlag opflag;
 		bool undef;
 };
 
@@ -212,8 +219,10 @@ class Z80Indexer : public Z80Register
 {
 	public:
 		Z80Indexer(std::string name, OpFlag opflag)
-			: name(name), value(0), state(NUMBER), opflag(opflag), undef(true)
+			: name(name), value(0), undef(true)
 		{
+			this->state	 = NUMBER;
+			this->opflag = opflag;
 		}
 
 		uint16_t get_value(void) const override { return value; }
@@ -237,24 +246,9 @@ class Z80Indexer : public Z80Register
 
 		std::string to_string(void) const override;
 
-		OpFlag get_opflag(void) const override
-		{
-			switch (this->state)
-			{
-			case NUMBER:
-				return static_cast<OpFlag>(this->opflag | REG);
-			case ADDRESS:
-				return static_cast<OpFlag>(this->opflag | REG_PTR);
-			default:
-				return NOOPFLAGS;
-			}
-		};
-
 	private:
 		std::string name;
 		uint16_t value;
-		State state;
-		OpFlag opflag;
 		bool undef;
 };
 
@@ -265,9 +259,10 @@ class Z80RegisterPair16 : public Z80Register
 {
 	public:
 		Z80RegisterPair16(Z80Register8 &low, Z80Register8 &high, OpFlag opflag)
-			: low(low), high(high), opflag(opflag), undef(true)
+			: low(low), high(high), undef(true)
 		{
-			this->name = low.get_name() + high.get_name();
+			this->name	 = low.get_name() + high.get_name();
+			this->opflag = opflag;
 		}
 
 		uint16_t get_value(void) const override;
@@ -296,24 +291,9 @@ class Z80RegisterPair16 : public Z80Register
 
 		std::string to_string(void) const override;
 
-		OpFlag get_opflag(void) const override
-		{
-			switch (this->state)
-			{
-			case NUMBER:
-				return static_cast<OpFlag>(this->opflag | REG);
-			case ADDRESS:
-				return static_cast<OpFlag>(this->opflag | REG_PTR);
-			default:
-				return NOOPFLAGS;
-			}
-		};
-
 	private:
 		std::string name;
 		Z80Register8 &low, &high;
-		State state;
-		OpFlag opflag;
 		bool undef;
 };
 
@@ -378,6 +358,8 @@ class CPU_Z80
 		// from Eagle_VARIABLE to Z80Evaluable. This function guess the type and
 		// returns an appropriate Z80Evaluable object.
 		Z80Evaluable &from(const EAGLE_VARIABLE &var, Z80SizeType oper_size);
+
+		Z80Register &get_register_by_eagle_type(const EAGLE_keywords &type);
 
 		// when exiting a continuous block of non structural instruction, this
 		// function is called to ensure that all registers are marked as

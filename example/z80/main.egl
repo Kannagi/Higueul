@@ -39,21 +39,25 @@ proc main:
 	// NOS_state = NOS_state + acc
 
 	// assignation test ------------------------
+	rb = [idhl]
+
 
 	acc = 0
 	acc = NOS_sysMissedClock
 	acc = $NOS_sysMissedClock
 	acc = $NOS_state
 	acc = @NOS_sysMissedClock
-	//NOS_sysMissedClock = 0
-	//NOS_state = 0
-	//SGA_selectedBank = 0
-	//rb = 0
-	//acc = rb
-	//SGA_selectedBank = ra
+	//NOS_sysMissedClock = [idhl]
+
+	NOS_sysMissedClock = 0
+	NOS_state = 0
+	SGA_selectedBank = 0
+	SGA_selectedBank = 1
+	rb = 0
+	acc = rb
+	idhl = 3
+	SGA_selectedBank = ra
 	//rb = 22
-	//idhl = 3
-	//rb = [idhl]
 	//rb = [$SGA_selectedBank, acc, uint16]
 
 	//SGA_selectedBank = [$NOS_state] + [$NOS_state] + [$NOS_state]
