@@ -319,3 +319,10 @@ enum
 	TYPE_PTR,
 	TYPE_END,
 };
+
+// when a label is prefixed by '@', it indicates the value pointed by the
+// address.
+const unsigned char DEREF_OPERATOR = '@';
+
+// when a label is prefixed by '$', it indicates the address of the label.
+const unsigned char POINTER_OPERATOR = '$';

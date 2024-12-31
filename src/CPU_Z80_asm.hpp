@@ -14,22 +14,34 @@ enum Z80SizeType : uint16_t
 class Z80;
 
 // Types -----------------------------------------------------------------------
-
 // -----------------------------------------------------------------------------
 class Z80Evaluable
 {
 	public:
-		virtual uint16_t get_value(void) const		= 0;
-		virtual std::string to_string(void) const	= 0;
-		virtual Z80SizeType get_size(void) const	= 0;
-		virtual bool is_register(void) const		= 0;
-		virtual bool is_location(void) const		= 0;
-		virtual OpFlag get_opflag(void) const		= 0;
-		virtual bool load_immediate(uint16_t value) = 0;
-		virtual bool load_address(uint16_t address) = 0;
+		virtual uint16_t get_value(void) const	  = 0;
+		virtual std::string to_string(void) const = 0;
+		virtual Z80SizeType get_size(void) const  = 0;
+		virtual bool is_register(void) const	  = 0;
+		virtual bool is_deferencing(void) const	  = 0;
+		virtual OpFlag get_opflag(void) const	  = 0;
 };
 
 // -----------------------------------------------------------------------------
+// Z80NullEvaluable implement null object pattern. This implementation is used
+// when a reference is required, but it makes no sens to return something.
+class Z80NullEvaluable : public Z80Evaluable
+{
+	public:
+		uint16_t get_value(void) const override { return 0; }
+		std::string to_string(void) const override { return "(null)"; }
+		Z80SizeType get_size(void) const override { return Z80_SIZE_UNKOWN; }
+		bool is_register(void) const override { return false; }
+		OpFlag get_opflag(void) const override { return NOOPFLAGS; }
+		bool is_deferencing(void) const override { return false; }
+};
+
+// -----------------------------------------------------------------------------
+// Z80Location represent an evaluable for a immediate memory location.
 class Z80Location : public Z80Evaluable
 {
 	public:
@@ -41,14 +53,11 @@ class Z80Location : public Z80Evaluable
 		}
 		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 		bool is_register(void) const override { return false; }
-		bool is_location(void) const override { return true; }
 		OpFlag get_opflag(void) const override
 		{
 			return this->oper_size == Z80_SIZE_BYTE ? IMM_PTR8 : IMM_PTR16;
 		}
-		bool load_immediate(uint16_t value) override { return false; }
-		bool load_address(uint16_t address) override { return false; }
-
+		bool is_deferencing(void) const override { return true; }
 		void set_address(uint16_t address, Z80SizeType oper_size)
 		{
 			this->value		= address;
@@ -76,10 +85,8 @@ class Z80Value : public Z80Evaluable
 			return (this->is16bit) ? Z80_SIZE_WORD : Z80_SIZE_BYTE;
 		}
 		bool is_register(void) const override { return false; }
-		bool is_location(void) const override { return false; }
 		OpFlag get_opflag(void) const override { return IMM; };
-		bool load_immediate(uint16_t value) override { return false; }
-		bool load_address(uint16_t address) override { return false; }
+		bool is_deferencing(void) const override { return false; }
 
 		void set_value(uint16_t value)
 		{
@@ -97,6 +104,13 @@ class Z80Value : public Z80Evaluable
 		bool is16bit;
 };
 
+struct Z80LoadResult
+{
+		int16_t delta;
+		bool changed : 1;
+		bool was_undef : 1;
+};
+
 // -----------------------------------------------------------------------------
 // Z80 Registers Virtual. Since there 3 types of registers on the Z80, this
 // interface smooths, through polymorphism, the handling of the different types
@@ -111,17 +125,10 @@ class Z80Register : public Z80Evaluable
 		virtual bool is_undef(void) const = 0;
 		// set_undef the register
 		virtual void set_undef(void) = 0;
-		// load_immediate value in the register. If the value changes, it
-		// returns true. If the previous value isn't the same as the newer one,
+		// load_value in the register. The method returns the magnitude of the
+		// change. If the previous value isn't the same as the newer one,
 		// or the register is undef, false is returned.
-		virtual bool load_immediate(uint16_t value) = 0;
-		// load_address value in the register. It behave exactly the same way
-		// as load_immediate, but when `to_string` is called, the formatting is
-		// different. If the address is the same value as a previously loaded
-		// immediate, or the inverse, the change detection works as expected.
-		//
-		// Notice, 8bit registers do not support address loading.
-		virtual bool load_address(uint16_t address) = 0;
+		virtual Z80LoadResult load_value(uint16_t value) = 0;
 		// get_value of the register (I don't thing this method is going to be
 		// used).
 		virtual uint16_t get_value(void) const = 0;
@@ -132,7 +139,6 @@ class Z80Register : public Z80Evaluable
 		virtual Z80SizeType get_size(void) const = 0;
 
 		virtual bool is_register(void) const = 0;
-		virtual bool is_location(void) const = 0;
 
 		virtual OpFlag get_opflag(void) const = 0;
 
@@ -160,15 +166,16 @@ class Z80Register8 : public Z80Register
 
 		bool is_undef(void) const override { return this->undef; }
 
-		bool load_immediate(uint16_t value) override;
-
-		bool load_address(uint16_t address) override;
+		Z80LoadResult load_value(uint16_t value) override;
 
 		void set_undef(void) override { this->undef = true; }
 
 		bool is_register(void) const override { return true; }
 
-		bool is_location(void) const override { return this->state == ADDRESS; }
+		bool is_deferencing(void) const override
+		{
+			return this->state == ADDRESS;
+		}
 
 		Z80SizeType get_size(void) const override { return Z80_SIZE_BYTE; }
 
@@ -213,15 +220,16 @@ class Z80Indexer : public Z80Register
 
 		bool is_undef(void) const override { return this->undef; }
 
-		bool load_immediate(uint16_t value) override;
-
-		bool load_address(uint16_t address) override;
+		Z80LoadResult load_value(uint16_t value) override;
 
 		void set_undef(void) override { this->undef = true; }
 
 		bool is_register(void) const override { return true; }
 
-		bool is_location(void) const override { return this->state == ADDRESS; }
+		bool is_deferencing(void) const override
+		{
+			return this->state == ADDRESS;
+		}
 
 		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 
@@ -266,13 +274,14 @@ class Z80RegisterPair16 : public Z80Register
 
 		bool is_undef(void) const override;
 
-		bool load_immediate(uint16_t value) override;
-
-		bool load_address(uint16_t value) override;
+		Z80LoadResult load_value(uint16_t value) override;
 
 		bool is_register(void) const override { return true; }
 
-		bool is_location(void) const override { return this->state == ADDRESS; }
+		bool is_deferencing(void) const override
+		{
+			return this->state == ADDRESS;
+		}
 
 		void set_undef(void) override
 		{
@@ -307,6 +316,8 @@ class Z80RegisterPair16 : public Z80Register
 		OpFlag opflag;
 		bool undef;
 };
+
+const uint Z80_POOL_SIZE = 16U;
 
 // -----------------------------------------------------------------------------
 // EagleZ80 - assembly code generation for Z80
@@ -354,8 +365,8 @@ class CPU_Z80
 
 		// I dont know why std::vector segfault on me. I don't love C++ enough
 		// to find why and their standard library is just unreadable.
-		Z80Value value_pool[8];
-		Z80Location location_pool[8];
+		Z80Value value_pool[Z80_POOL_SIZE];
+		Z80Location location_pool[Z80_POOL_SIZE];
 		uint8_t location_pool_pos;
 		uint8_t value_pool_pos;
 

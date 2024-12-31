@@ -13,17 +13,16 @@ main:
  ld sp, 0x1FFF
 ;asm
  im 1
-;idhl = 3
-ld hl, 3
-;rb = .ptr
-ld a, (0)
-ld b, a
-;SGA_selectedBank = NOS_state
-ld hl, (17)
-ld (18), hl
-;NOS_state = SGA_selectedBank
-ld a, (19)
-ld (17), a
+;acc = 0
+xor a
+;acc = NOS_sysMissedClock
+ld a, (16)
+;acc = NOS_sysMissedClock
+ld a, 16
+;acc = NOS_state
+inc a
+;acc = NOS_sysMissedClock
+ld a, (16)
 ;asm
  ei
 ..end

@@ -35,21 +35,31 @@ proc main:
 
 	asm "im 1"
 
-	// acc = 24
-	// NOS_sysMissedClock = 0
-	// NOS_state = 0
-	// SGA_selectedBank = 0
-//
-	// rb = 0
-	// acc = rb
-	// SGA_selectedBank = ra
-	// rc = SGA_selectedBank
-	// rb = 22
-	idhl = 3
-	rb = [idhl]
+	// Addition test ---------------------------
+	// NOS_state = NOS_state + acc
 
-	SGA_selectedBank = NOS_state
-	NOS_state = SGA_selectedBank
+	// assignation test ------------------------
+
+	acc = 0
+	acc = NOS_sysMissedClock
+	acc = $NOS_sysMissedClock
+	acc = $NOS_state
+	acc = @NOS_sysMissedClock
+	//NOS_sysMissedClock = 0
+	//NOS_state = 0
+	//SGA_selectedBank = 0
+	//rb = 0
+	//acc = rb
+	//SGA_selectedBank = ra
+	//rb = 22
+	//idhl = 3
+	//rb = [idhl]
+	//rb = [$SGA_selectedBank, acc, uint16]
+
+	//SGA_selectedBank = [$NOS_state] + [$NOS_state] + [$NOS_state]
+
+	//SGA_selectedBank = NOS_state // <- in error
+	//NOS_state = SGA_selectedBank
 	asm "ei"
 }
 

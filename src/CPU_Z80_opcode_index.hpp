@@ -20,5 +20,5 @@ class Z80OpcodeIndex
 		std::map<int64_t, translator_fn> table;
 };
 
-int64_t make_z80_opkey(OpType type, OpFlag dst, OpFlag src);
+int64_t make_z80_opkey(OpType type, Z80Evaluable &dst, Z80Evaluable &src);
 uint64_t get_z80_optype_from_key(int64_t key);

@@ -23,6 +23,8 @@
 
 static const size_t KEY_STRIDE = 24;
 
+static int64_t make_z80_key(OpType type, OpFlag dst, OpFlag src);
+
 static const std::string op_strings[OP__MAX] = {
 	"ld",
 };
@@ -121,8 +123,8 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 
 		if (s_trans & NOTREG)
 		{
-			int64_t final = make_z80_opkey(type, (OpFlag)(d_flag | d_trans),
-										   (OpFlag)(s_flag | s_trans));
+			int64_t final = make_z80_key(type, (OpFlag)(d_flag | d_trans),
+										 (OpFlag)(s_flag | s_trans));
 			// std::cout << "indexing : " << type << explain_key(d_flag |
 			// d_trans)
 			// 		  << ", " << explain_key(s_flag | s_trans) << std::endl;
@@ -136,8 +138,8 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 				{
 					continue;
 				}
-				int64_t final = make_z80_opkey(type, (OpFlag)(d_flag | d_trans),
-											   (OpFlag)(s_flag | s_trans));
+				int64_t final = make_z80_key(type, (OpFlag)(d_flag | d_trans),
+											 (OpFlag)(s_flag | s_trans));
 				// std::cout << "indexing : " << type
 				// 		  << explain_key(d_flag | d_trans) << ", "
 				// 		  << explain_key(s_flag | s_trans) << std::endl;
@@ -147,9 +149,14 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 	}
 }
 
-int64_t make_z80_opkey(OpType type, OpFlag dst, OpFlag src)
+static int64_t make_z80_key(OpType type, OpFlag dst, OpFlag src)
 {
 	return dst | (src << KEY_STRIDE) | (type << (KEY_STRIDE * 2U));
+}
+
+int64_t make_z80_opkey(OpType type, Z80Evaluable &dst, Z80Evaluable &src)
+{
+	return make_z80_key(type, dst.get_opflag(), src.get_opflag());
 }
 
 uint64_t get_z80_optype_from_key(int64_t key)
