@@ -22,3 +22,4 @@ class Z80OpcodeIndex
 
 int64_t make_z80_opkey(OpType type, Z80Evaluable &dst, Z80Evaluable &src);
 uint64_t get_z80_optype_from_key(int64_t key);
+std::string explain_key(uint64_t flags);

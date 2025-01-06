@@ -131,7 +131,7 @@ std::string Z80Indexer::to_string(void) const
 	case NUMBER:
 		return this->name;
 	case ADDRESS:
-		return ptr_string(this->name);
+		return ptr_string(this->name + "+0");
 	default:
 		die("unknown register state");
 	}
@@ -174,6 +174,16 @@ Z80LoadResult Z80RegisterPair16::load_value(uint16_t value)
 }
 
 // .............................................................................
+Z80Register &Z80RegisterPair16::get_subregister(uint8_t index) const
+{
+	if (index > 1)
+	{
+		die("Invalid register index");
+	}
+	return (index == 0) ? this->low : this->high;
+}
+
+// .............................................................................
 std::string Z80RegisterPair16::to_string(void) const
 {
 	switch (this->state)
@@ -189,6 +199,55 @@ std::string Z80RegisterPair16::to_string(void) const
 
 // -----------------------------------------------------------------------------
 // helper functions
+
+Z80Evaluable &get_low(Z80Evaluable &e, CPU_Z80 &cpu)
+{
+	if (e.get_size() != Z80_SIZE_WORD)
+	{
+		return e;
+	}
+
+	if (e.is_register())
+	{
+		Z80RegisterPair16 &pair = static_cast<Z80RegisterPair16 &>(e);
+		return pair.get_subregister(0);
+	}
+	else
+	{
+		if (e.is_deferencing())
+		{
+			return cpu.new_location(e.get_value() + 1, Z80_SIZE_BYTE);
+		}
+		else
+		{
+			return cpu.new_value(e.get_value());
+		}
+	}
+}
+
+Z80Evaluable &get_high(Z80Evaluable &e, CPU_Z80 &cpu)
+{
+	if (e.get_size() != Z80_SIZE_WORD)
+	{
+		return cpu.new_value(0U);
+	}
+	if (e.is_register())
+	{
+		Z80RegisterPair16 &pair = static_cast<Z80RegisterPair16 &>(e);
+		return pair.get_subregister(1);
+	}
+	else
+	{
+		if (e.is_deferencing())
+		{
+			return cpu.new_location(e.get_value(), Z80_SIZE_BYTE);
+		}
+		else
+		{
+			return cpu.new_value(e.get_value() >> 8);
+		}
+	}
+}
 
 // .............................................................................
 // get the register size if the variable is a register, else, return
@@ -213,29 +272,36 @@ static Z80SizeType register_size(const EAGLE_VARIABLE &var)
 static Z80SizeType guess_operation_size(const EAGLE_VARIABLE &dst,
 										const EAGLE_VARIABLE &src1)
 {
-	const EAGLE_VARIABLE *all[] = {&dst, &src1};
 
-	for (uint32_t i = 0U; i < sizeof(all) / sizeof(all[0]); ++i)
+	// const EAGLE_VARIABLE *all[] = {&dst, &src1};
+
+	// for (uint32_t i = 0U; i < sizeof(all) / sizeof(all[0]); ++i)
+	// {
+	// 	const EAGLE_VARIABLE &var = *all[i];
+	// 	Z80SizeType size		  = register_size(var);
+	// 	if (size != Z80_SIZE_UNKOWN)
+	// 	{
+	// 		return size;
+	// 	}
+	// 	else if (!var.bimm)
+	// 	{
+	// 		return (Z80SizeType)var.nsize;
+	// 	}
+	// 	else
+	// 	{
+	// 		// probably an immediate, we can't assume anything from it
+	// 		continue;
+	// 	}
+	// }
+
+	// debug_print("Unable to determine operation size");
+	Z80SizeType size = register_size(dst);
+	if (size == Z80_SIZE_UNKOWN && !dst.bimm)
 	{
-		const EAGLE_VARIABLE &var = *all[i];
-		Z80SizeType size		  = register_size(var);
-		if (size != Z80_SIZE_UNKOWN)
-		{
-			return size;
-		}
-		else if (!var.bimm)
-		{
-			return (Z80SizeType)var.nsize;
-		}
-		else
-		{
-			// probably an immediate, we can't assume anything from it
-			continue;
-		}
+		size = (Z80SizeType)dst.nsize;
 	}
 
-	debug_print("Unable to determine operation size");
-	return Z80_SIZE_BYTE;
+	return size;
 }
 
 // -----------------------------------------------------------------------------
@@ -275,6 +341,18 @@ void CPU_Z80::exit_block(void)
 	}
 }
 
+Z80Evaluable &CPU_Z80::new_value(uint8_t value)
+{
+	if (this->value_pool_pos >= Z80_POOL_SIZE)
+	{
+		std::cerr << "Value pool overflow" << std::endl;
+		exit(1);
+	}
+	Z80Value &evaluable = this->value_pool[this->value_pool_pos++];
+	evaluable.set_value((uint8_t)(value & 0xff));
+	return evaluable;
+}
+
 Z80Evaluable &CPU_Z80::new_value(const EAGLE_VARIABLE &var,
 								 Z80SizeType oper_size)
 {
@@ -284,23 +362,43 @@ Z80Evaluable &CPU_Z80::new_value(const EAGLE_VARIABLE &var,
 		exit(1);
 	}
 
-	uint16_t value = var.bimm ? var.immediate : var.address;
-
+	uint16_t value		= var.bimm ? var.immediate : var.address;
 	Z80Value &evaluable = this->value_pool[this->value_pool_pos++];
-	switch (oper_size)
+
+	if (var.bimm)
 	{
-	case Z80_SIZE_BYTE:
-		evaluable.set_value((uint8_t)(value & 0xff));
-		break;
-	case Z80_SIZE_WORD:
+		switch (oper_size)
+		{
+		case Z80_SIZE_BYTE:
+			evaluable.set_value((uint8_t)(value & 0xff));
+			break;
+		case Z80_SIZE_WORD:
+			evaluable.set_value((uint16_t)(value & 0xffff));
+			break;
+		default:
+			std::cerr << "Unsupported variable type: size=" << (var.nsize)
+					  << std::endl;
+			exit(1);
+		}
+	}
+	else
+	{
 		evaluable.set_value((uint16_t)(value & 0xffff));
-		break;
-	default:
-		std::cerr << "Unsupported variable type: size=" << (var.nsize)
-				  << std::endl;
-		exit(1);
+		std::cout << evaluable.get_size() << std::endl;
 	}
 
+	return evaluable;
+}
+
+Z80Evaluable &CPU_Z80::new_location(uint16_t value, Z80SizeType size)
+{
+	if (this->location_pool_pos >= Z80_POOL_SIZE)
+	{
+		std::cerr << "Location pool overflow" << std::endl;
+		exit(1);
+	}
+	Z80Location &evaluable = this->location_pool[this->location_pool_pos++];
+	evaluable.set_address(value, size);
 	return evaluable;
 }
 
@@ -314,18 +412,22 @@ Z80Evaluable &CPU_Z80::new_location(const EAGLE_VARIABLE &var,
 	}
 
 	Z80Location &location = this->location_pool[this->location_pool_pos++];
-
-	uint64_t address = var.address;
+	uint64_t address	  = var.address;
 
 	// when dealing with an operation size of 8bit but the location refers to
 	// a 16 bit reference, we have to adjust the address. The z80 is big endian,
 	// the uneven byte is what we are looking for.
-	if (oper_size == Z80_SIZE_BYTE && var.nsize == Z80_SIZE_WORD)
+	bool loading_8bit_to_16bit =
+		(oper_size == Z80_SIZE_BYTE && var.nsize == Z80_SIZE_WORD);
+	bool loading_16bit_to_8bit =
+		(oper_size == Z80_SIZE_BYTE && (var.type == EAGLE_keywords::UINT16 ||
+										var.type == EAGLE_keywords::INT16));
+
+	if (loading_8bit_to_16bit || loading_16bit_to_8bit)
 	{
 		address++;
 	}
-
-	location.set_address(address & 0xffff, oper_size);
+	location.set_address(address & 0xffff, (Z80SizeType)var.nsize);
 	return location;
 }
 
@@ -350,7 +452,8 @@ Z80Register &CPU_Z80::get_register_by_eagle_type(const EAGLE_keywords &type)
 	}
 }
 
-Z80Evaluable &CPU_Z80::from(const EAGLE_VARIABLE &var, Z80SizeType oper_size)
+Z80Evaluable &CPU_Z80::get_from_eagle_var(const EAGLE_VARIABLE &var,
+										  Z80SizeType oper_size)
 {
 	if (var.bimm)
 	{
@@ -365,23 +468,24 @@ Z80Evaluable &CPU_Z80::from(const EAGLE_VARIABLE &var, Z80SizeType oper_size)
 		}
 
 		Z80Register &reg = this->get_register_by_eagle_type(var.ptr_type);
-		if (reg.get_size() != Z80_SIZE_WORD)
+		if (reg.exists())
 		{
-			// eventually this translator could have the option to alias any
-			// 8bit pointers to a idhl.
-			die("8bit registers can't be used as [pointers] on Z80. Transfert "
-				"the value to `idhl`, `idx` or `idy` to perform a pointer "
-				"operation.");
-		}
-
-		if (reg.is_register())
-		{
+			if (reg.get_size() != Z80_SIZE_WORD)
+			{
+				// eventually this translator could have the option to alias any
+				// 8bit pointers to a idhl.
+				die("8bit registers can't be used as [pointers] on Z80. "
+					"Transfert "
+					"the value to `idhl`, `idx` or `idy` to perform a pointer "
+					"operation.");
+			}
 			reg.set_pointing(true);
 			return reg;
 		}
 		else
 		{
-			die("")
+			die("variable pointers not supported on Z80. Load the address into "
+				"{`idhl`, `idx`, `idy`} and use [register pointers] instead.");
 		}
 	}
 	else if (var.type == EAGLE_keywords::UNKNOW)
@@ -532,6 +636,30 @@ std::string CPU_Z80::asm_return(const EAGLE_VARIABLE &ret, bool retvoid)
 	return text_code;
 }
 
+std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
+				Z80Evaluable &idx)
+{
+	if (!dst.is_register())
+	{
+		die("Destination must be a register.");
+	}
+
+	Z80Register &dst_reg = reinterpret_cast<Z80Register &>(dst);
+	return "inc " + dst_reg.get_name() + "\n";
+}
+
+std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
+				Z80Evaluable &idx)
+{
+	if (!dst.is_register())
+	{
+		die("Destination must be a register.");
+	}
+
+	Z80Register &dst_reg = reinterpret_cast<Z80Register &>(dst);
+	return "dec " + dst_reg.get_name() + "\n";
+}
+
 std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 				 Z80Evaluable &idx)
 {
@@ -546,9 +674,9 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 
 	Mode mode = MODE_LD;
 
-	if (dst.is_register())
+	if (dst.is_register() && !dst.is_deferencing())
 	{
-		Z80Register &dst_reg = reinterpret_cast<Z80Register &>(dst);
+		Z80RegisterPair16 &dst_reg = reinterpret_cast<Z80RegisterPair16 &>(dst);
 
 		if (src.is_deferencing())
 		{
@@ -613,10 +741,84 @@ std::string load_byregister8(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 	return load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx);
 }
 
-std::string load_byregister16(CPU_Z80 &cpu, Z80Evaluable &dst,
+std::string load_byregister16from8(CPU_Z80 &cpu, Z80Evaluable &dst,
+								   Z80Evaluable &src, Z80Evaluable &idx)
+{
+	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
+	{
+		die("Invalid size for load_byregister16from8");
+	}
+	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U), idx) +
+		   load(cpu, cpu.A, src, idx) + load(cpu, cpu.L, cpu.A, idx) +
+		   load(cpu, dst, cpu.HL, idx);
+}
+
+std::string load_reg16fromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
+							   Z80Evaluable &src, Z80Evaluable &idx)
+{
+	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
+	{
+		die("Invalid size for load_reg16fromreg8");
+	}
+
+	Z80RegisterPair16 &dst_pair = reinterpret_cast<Z80RegisterPair16 &>(dst);
+	return load(cpu, dst_pair.get_subregister(1U), cpu.new_value((uint8_t)0U),
+				idx) +
+		   load(cpu, dst_pair.get_subregister(0U), src, idx);
+
+	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U), idx) +
+		   load(cpu, cpu.A, src, idx) + load(cpu, cpu.L, cpu.A, idx) +
+		   load(cpu, dst, cpu.HL, idx);
+}
+
+std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
+									  Z80Evaluable &src, Z80Evaluable &idx)
+{
+	return load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx) +
+		   inc(cpu, dst, null_evaluable, null_evaluable) +
+		   inc(cpu, src, null_evaluable, null_evaluable) +
+		   load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx) +
+		   dec(cpu, dst, null_evaluable, null_evaluable) +
+		   dec(cpu, src, null_evaluable, null_evaluable);
+}
+
+std::string load_ptr_using_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
 							  Z80Evaluable &src, Z80Evaluable &idx)
 {
+	cpu.HL.set_pointing(false);
 	return load(cpu, cpu.HL, src, idx) + load(cpu, dst, cpu.HL, idx);
+}
+
+std::string load_ptr16_using_a(CPU_Z80 &cpu, Z80Evaluable &dst,
+							   Z80Evaluable &src, Z80Evaluable &idx)
+{
+	std::string text = load(cpu, cpu.A, get_high(src, cpu), idx);
+	text += load(cpu, get_high(dst, cpu), cpu.A, idx);
+
+	text += load(cpu, cpu.A, get_low(src, cpu), idx);
+	text += load(cpu, get_low(dst, cpu), cpu.A, idx);
+
+	return text;
+}
+
+std::string load_ptr16_using_a_and_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
+									  Z80Evaluable &src, Z80Evaluable &idx)
+{
+	cpu.HL.set_pointing(false);
+
+	std::string text = load(cpu, cpu.A, get_high(src, cpu), idx);
+	text += load(cpu, cpu.H, cpu.A, idx);
+	text += load(cpu, cpu.A, get_low(src, cpu), idx);
+	text += load(cpu, cpu.L, cpu.A, idx);
+	text += load(cpu, dst, cpu.HL, idx);
+
+	return text;
+}
+
+std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
+						 Z80Evaluable &idx)
+{
+	return "";
 }
 
 static inline OpFlag o_dst(unsigned int i) { return static_cast<OpFlag>(i); }
@@ -630,34 +832,52 @@ Z80OpcodeIndex build_index(void)
 
 	// Covers every LD variants ----------------------------------------------------------------------------------------------
 	// LD - load to bus ------------------------------------------------------------------------------------------------------
-	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RBC|RDE), 				o_src(REG|R_A), 				load);
-	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RHL), 					o_src(REG|REG8), 				load);
-	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RHL), 					o_src(IMM), 					load);
-	opcode_index.index(OP_LOAD, o_dst(REG_PTR|INDEXED|REGXY),  			o_src(REG|REG8), 				load);
-	opcode_index.index(OP_LOAD, o_dst(REG_PTR|INDEXED|REGXY),  			o_src(IMM), 					load);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR8),    					o_src(REG|R_A),					load);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR16),    					o_src(REG|R_A),					load);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR16),    					o_src(REG|REG16|REGXY|RSP),		load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RBC|RDE), o_src(REG|R_A), load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RHL), o_src(REG|REG8), load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR|RHL), o_src(IMM16), load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR|INDEXED|REGXY), o_src(REG|REG8), load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR|INDEXED|REGXY), o_src(IMM16), load);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(REG|R_A), load);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR16), o_src(REG|R_A), load_byregister16from8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR16), o_src(REG|REG16|REGXY|RSP), load);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(REG_PTR|RHL), load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(REG_PTR|REGXY), load_byregister8);
 	// LD - from bus 8bit ----------------------------------------------------------------------------------------------------
-	opcode_index.index(OP_LOAD, o_dst(REG|R_A),    						o_src(REG_PTR|REG16),			load);
-	opcode_index.index(OP_LOAD, o_dst(REG|R_C|R_D|R_E|R_H|R_L), 		o_src(REG_PTR|RHL),				load);
-	opcode_index.index(OP_LOAD, o_dst(REG|R_B), 						o_src(REG_PTR|RHL),				load_byregister8);
-	opcode_index.index(OP_LOAD, o_dst(REG|R_A|R_C|R_D|R_E|R_H|R_L), 	o_src(REG_PTR|INDEXED|REGXY),	load);
-	opcode_index.index(OP_LOAD, o_dst(REG|R_A),    						o_src(IMM_PTR8),				load);
-	opcode_index.index(OP_LOAD, o_dst(REG|REG8),						o_src(IMM_PTR8),				load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(REG|R_A), o_src(REG_PTR|REG16), load);
+	opcode_index.index(OP_LOAD, o_dst(REG|R_C|R_D|R_E|R_H|R_L), o_src(REG_PTR|RHL), load);
+	opcode_index.index(OP_LOAD, o_dst(REG|R_B), o_src(REG_PTR|RHL), load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(REG|R_A|R_C|R_D|R_E|R_H|R_L), o_src(REG_PTR|INDEXED|REGXY),	load);
+	opcode_index.index(OP_LOAD, o_dst(REG|R_A), o_src(IMM_VAR8), load);
+	opcode_index.index(OP_LOAD, o_dst(REG|REG8), o_src(IMM_VAR8), load_byregister8);
 	// LD - registers 8bit ---------------------------------------------------------------------------------------------------
-	opcode_index.index(OP_LOAD, o_dst(REG|REG8),                		o_src(REG|REG8), 				load);
-	opcode_index.index(OP_LOAD, o_dst(REG|REG8),                		o_src(IMM), 					load);
+	opcode_index.index(OP_LOAD, o_dst(REG|REG8), o_src(REG|REG8), load);
+	opcode_index.index(OP_LOAD, o_dst(REG|REG8), o_src(IMM8), load);
 	// LD - from bus 16bit ---------------------------------------------------------------------------------------------------
-	opcode_index.index(OP_LOAD, o_dst(REG|REG16|REGXY),					o_src(IMM_PTR16),				load);
+	opcode_index.index(OP_LOAD, o_dst(REG|REG16|REGXY),	o_src(IMM_VAR16), load);
 	// LD - impossible on Z80, must be broken --------------------------------------------------------------------------------
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR8),  						o_src(IMM), 					load_byregister8);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR16), 						o_src(IMM), 					load_byregister16);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR16), 						o_src(IMM_PTR16),				load_byregister16);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR16), 						o_src(IMM_PTR8),				load_byregister16);
-	opcode_index.index(OP_LOAD, o_dst(IMM_PTR8),  						o_src(IMM_PTR8),				load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(REG|REG16), o_src(REG|REG8), load_reg16fromreg8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(IMM8), load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(IMM_VAR8), load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR8), o_src(IMM_VAR16), load_byregister8);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR16), o_src(IMM16), load_ptr_using_hl);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR16), o_src(IMM_VAR16), load_ptr_using_hl);
+	opcode_index.index(OP_LOAD, o_dst(IMM_VAR16), o_src(IMM_VAR8), load_byregister16from8);
+	opcode_index.index(OP_LOAD, o_dst(REG | REG16 | REGXY), o_src(IMM16), 	load);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RBC), o_src(REG_PTR | RBC), load_nothing);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RHL), o_src(REG_PTR | RHL), load_nothing);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RDE), o_src(REG_PTR | RDE), load_nothing);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RBC), o_src(REG_PTR | RHL), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RHL), o_src(REG_PTR | RBC), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RDE), o_src(REG_PTR | RHL), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RHL), o_src(REG_PTR | RDE), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RDE), o_src(REG_PTR | RBC), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | RBC), o_src(REG_PTR | RDE), load_16bitmem_copy_with_a);
+
+	// these could be optimized to use (IX+0) instead of incrementing, but this
+	// will suffice for now.
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | REG16), o_src(REG_PTR | REGXY), load_16bitmem_copy_with_a);
+	opcode_index.index(OP_LOAD, o_dst(REG_PTR | REGXY), o_src(REG_PTR | REG16), load_16bitmem_copy_with_a);
 	// clang-format on
-	opcode_index.index(OP_LOAD, o_dst(REG | REG16 | REGXY), o_src(IMM), load);
 
 	return opcode_index;
 }
@@ -702,9 +922,9 @@ std::string CPU_Z80::asm_alu(const EAGLE_VARIABLE &dst,
 	// lets transform the eagle variable to a more usable datatype.
 	// Knowing the size of the operation, the immediate values can be
 	// ajusted to match.
-	Z80Evaluable &dstEv	 = this->from(dst, oper_size);
-	Z80Evaluable &src1Ev = this->from(src1, oper_size);
-	Z80Evaluable &src2Ev = this->from(src2, oper_size);
+	Z80Evaluable &dstEv	 = this->get_from_eagle_var(dst, oper_size);
+	Z80Evaluable &src1Ev = this->get_from_eagle_var(src1, oper_size);
+	Z80Evaluable &src2Ev = this->get_from_eagle_var(src2, oper_size);
 
 	OpType type;
 
@@ -712,8 +932,12 @@ std::string CPU_Z80::asm_alu(const EAGLE_VARIABLE &dst,
 	{
 	case '=':
 	{
-		type					 = OP_LOAD;
-		uint64_t key			 = make_z80_opkey(type, dstEv, src2Ev);
+		type		 = OP_LOAD;
+		uint64_t key = make_z80_opkey(type, dstEv, src2Ev);
+
+		// std::cout << explain_key(key) << ", " << explain_key(key >> 24)
+		//		  << std::endl;
+
 		translator_fn translator = opcode_index.get_translator(key);
 
 		text_code = translator(*this, dstEv, src2Ev, src1Ev);

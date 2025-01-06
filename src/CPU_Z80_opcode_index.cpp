@@ -29,19 +29,24 @@ static const std::string op_strings[OP__MAX] = {
 	"ld",
 };
 
-static std::string explain_key(uint64_t flags)
+std::string explain_key(uint64_t flags)
 {
 	std::string result;
-	if (flags & IMM)
-		result += "<immediate> ";
-	if (flags & IMM_PTR8)
+
+	uint64_t oper_type = flags & 0xF;
+
+	if (oper_type == IMM8)
+		result += "<immediate8> ";
+	if (oper_type == IMM16)
+		result += "<immediate16> ";
+	if (oper_type == IMM_VAR8)
 		result += "<mem_ptr8> ";
-	if (flags & IMM_PTR16)
+	if (oper_type == IMM_VAR16)
 		result += "<mem_ptr16> ";
-	if (flags & (REG | REG_PTR))
+	if (oper_type == REG || oper_type == REG_PTR)
 	{
 		result += "<reg: ";
-		if (flags & REG_PTR)
+		if (oper_type == REG_PTR)
 			result += "(";
 
 		if (flags & R_A)
@@ -74,7 +79,7 @@ static std::string explain_key(uint64_t flags)
 			result += "SP ";
 		if (flags & INDEXED)
 			result += "+indexed";
-		if (flags & REG_PTR)
+		if (oper_type == REG_PTR)
 			result += ")";
 		result += ">";
 	}
@@ -87,7 +92,8 @@ translator_fn Z80OpcodeIndex::get_translator(int64_t key)
 	{
 		std::string msg =
 			"No such opcode " + op_strings[get_z80_optype_from_key(key)] + " " +
-			explain_key(key) + "," + explain_key(key >> KEY_STRIDE);
+			explain_key(key) + "," + explain_key(key >> KEY_STRIDE) + " [" +
+			std::to_string(key) + "]";
 		die(msg);
 	}
 
@@ -102,39 +108,41 @@ translator_fn Z80OpcodeIndex::get_translator(int64_t key)
 // combinations.
 void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 {
-	const uint32_t NOTREG = (IMM_PTR8 | IMM_PTR16 | IMM);
+	uint32_t d_trans  = dst & 0xff;
+	uint32_t d_notreg = (d_trans & 0xF) < REG;
 
-	uint32_t d_trans = dst & 0xff;
-	uint32_t s_trans = src & 0xff;
+	uint32_t s_trans  = src & 0xff;
+	uint32_t s_notreg = (s_trans & 0xF) < REG;
 
 	// std::cout << explain_key(dst) << std::endl;
 	// std::cout << explain_key(src) << std::endl;
-	uint32_t d_flag		  = R_A;
-	uint32_t max_dst_iter = (d_trans & NOTREG) ? 24 : 24;
+	uint32_t d_flag		  = d_notreg ? 0 : R_A;
+	uint32_t max_dst_iter = d_notreg ? 1 : 24;
 
 	for (uint v = 0U; v < max_dst_iter; ++v, d_flag <<= 1)
 	{
-		if (!(d_flag & dst) && !(d_trans & NOTREG))
+		if (!(d_flag & dst) && !d_notreg)
 		{
 			continue;
 		}
 
 		uint32_t s_flag = R_A;
 
-		if (s_trans & NOTREG)
+		if (s_notreg)
 		{
 			int64_t final = make_z80_key(type, (OpFlag)(d_flag | d_trans),
-										 (OpFlag)(s_flag | s_trans));
+										 (OpFlag)(s_trans));
 			// std::cout << "indexing : " << type << explain_key(d_flag |
 			// d_trans)
-			// 		  << ", " << explain_key(s_flag | s_trans) << std::endl;
+			// 		  << ", " << explain_key(s_flag | s_trans) << " = " << final
+			// << std::endl;
 			this->table[final] = f;
 		}
 		else
 		{
 			for (uint u = 0U; u < 24; ++u, s_flag <<= 1)
 			{
-				if (!(s_flag & src) && !(s_trans & NOTREG))
+				if (!(s_flag & src) && !s_notreg)
 				{
 					continue;
 				}
@@ -142,7 +150,8 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 											 (OpFlag)(s_flag | s_trans));
 				// std::cout << "indexing : " << type
 				// 		  << explain_key(d_flag | d_trans) << ", "
-				// 		  << explain_key(s_flag | s_trans) << std::endl;
+				// 		  << explain_key(s_flag | s_trans) << " = " << final <<
+				// std::endl;
 				this->table[final] = f;
 			}
 		}
@@ -151,12 +160,17 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 
 static int64_t make_z80_key(OpType type, OpFlag dst, OpFlag src)
 {
-	return dst | (src << KEY_STRIDE) | (type << (KEY_STRIDE * 2U));
+	return ((uint64_t)dst) |
+		   (((uint64_t)src)
+			<< KEY_STRIDE); // | (((uint64_t)type) << (KEY_STRIDE * 2U));
 }
 
 int64_t make_z80_opkey(OpType type, Z80Evaluable &dst, Z80Evaluable &src)
 {
-	return make_z80_key(type, dst.get_opflag(), src.get_opflag());
+	OpFlag flg_dst = dst.get_opflag();
+	OpFlag flg_src = src.get_opflag();
+
+	return make_z80_key(type, flg_dst, flg_src);
 }
 
 uint64_t get_z80_optype_from_key(int64_t key)

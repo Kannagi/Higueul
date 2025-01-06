@@ -24,6 +24,10 @@ class Z80Evaluable
 		virtual bool is_register(void) const	  = 0;
 		virtual bool is_deferencing(void) const	  = 0;
 		virtual OpFlag get_opflag(void) const	  = 0;
+		virtual bool exists(void) const final
+		{
+			return this->get_size() != Z80_SIZE_UNKOWN;
+		}
 };
 
 // -----------------------------------------------------------------------------
@@ -51,21 +55,36 @@ class Z80Location : public Z80Evaluable
 		{
 			return "(" + std::to_string(this->value) + ")";
 		}
-		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
+		Z80SizeType get_size(void) const override { return this->oper_size; }
 		bool is_register(void) const override { return false; }
 		OpFlag get_opflag(void) const override
 		{
-			return this->oper_size == Z80_SIZE_BYTE ? IMM_PTR8 : IMM_PTR16;
+			if (this->pointer)
+			{
+				return this->oper_size == Z80_SIZE_BYTE ? IMM_PTR8 : IMM_PTR16;
+			}
+			else
+			{
+				return this->oper_size == Z80_SIZE_BYTE ? IMM_VAR8 : IMM_VAR16;
+			}
 		}
-		bool is_deferencing(void) const override { return true; }
+		bool is_deferencing(void) const override { return false; }
 		void set_address(uint16_t address, Z80SizeType oper_size)
 		{
 			this->value		= address;
+			this->oper_size = oper_size;
+			this->pointer	= false;
+		}
+		void set_pointer(uint16_t address, Z80SizeType oper_size)
+		{
+			this->value		= address;
+			this->pointer	= true;
 			this->oper_size = oper_size;
 		}
 
 	private:
 		uint16_t value;
+		bool pointer;
 		Z80SizeType oper_size;
 };
 
@@ -85,7 +104,10 @@ class Z80Value : public Z80Evaluable
 			return (this->is16bit) ? Z80_SIZE_WORD : Z80_SIZE_BYTE;
 		}
 		bool is_register(void) const override { return false; }
-		OpFlag get_opflag(void) const override { return IMM; };
+		OpFlag get_opflag(void) const override
+		{
+			return (this->is16bit) ? IMM16 : IMM8;
+		};
 		bool is_deferencing(void) const override { return false; }
 
 		void set_value(uint16_t value)
@@ -156,6 +178,8 @@ class Z80Register : public Z80Evaluable
 			case ADDRESS:
 				return static_cast<OpFlag>(this->opflag | REG_PTR);
 			default:
+				std::cerr << "Invalid state for Z80Register8::get_opflag()"
+						  << std::endl;
 				return NOOPFLAGS;
 			}
 		};
@@ -285,6 +309,8 @@ class Z80RegisterPair16 : public Z80Register
 			this->undef = true;
 		}
 
+		Z80Register &get_subregister(uint8_t index) const;
+
 		Z80SizeType get_size(void) const override { return Z80_SIZE_WORD; }
 
 		std::string get_name(void) const override { return name; }
@@ -340,6 +366,9 @@ class CPU_Z80
 		// 16-bit index registers
 		Z80Indexer IX, IY;
 
+		Z80Evaluable &new_value(uint8_t value);
+		Z80Evaluable &new_location(uint16_t value, Z80SizeType size);
+
 	private:
 		std::map<std::string, Z80Register *> registers;
 
@@ -352,17 +381,19 @@ class CPU_Z80
 
 		Z80Evaluable &new_value(const EAGLE_VARIABLE &var,
 								Z80SizeType oper_size);
+
 		Z80Evaluable &new_location(const EAGLE_VARIABLE &var,
 								   Z80SizeType oper_size);
 
-		// from Eagle_VARIABLE to Z80Evaluable. This function guess the type and
-		// returns an appropriate Z80Evaluable object.
-		Z80Evaluable &from(const EAGLE_VARIABLE &var, Z80SizeType oper_size);
+		// get_from_eagle_var a matching Z80Evaluable. This function guess the
+		// type and returns an appropriate Z80Evaluable object.
+		Z80Evaluable &get_from_eagle_var(const EAGLE_VARIABLE &var,
+										 Z80SizeType oper_size);
 
 		Z80Register &get_register_by_eagle_type(const EAGLE_keywords &type);
 
-		// when exiting a continuous block of non structural instruction, this
-		// function is called to ensure that all registers are marked as
-		// undefined and can no further be optimizedvoid
+		// when exiting a continuous block of non structural instruction,
+		// this function is called to ensure that all registers are marked
+		// as undefined and can no further be optimizedvoid
 		void exit_block(void);
 };

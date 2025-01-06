@@ -24,6 +24,7 @@ proc _start:
 uint8 NOS_sysMissedClock
 uint8 NOS_state
 uint16 SGA_selectedBank
+uint16 SGA_selectedBank2
 
 .code 0x100
 
@@ -41,13 +42,14 @@ proc main:
 	// assignation test ------------------------
 	rb = [idhl]
 
-
 	acc = 0
 	acc = NOS_sysMissedClock
-	acc = $NOS_sysMissedClock
-	acc = $NOS_state
+	//acc = $NOS_sysMissedClock
+	//acc = $NOS_state
 	acc = @NOS_sysMissedClock
-	//NOS_sysMissedClock = [idhl]
+	ra = [idhl]
+	SGA_selectedBank = ra
+	NOS_sysMissedClock = [idx]
 
 	NOS_sysMissedClock = 0
 	NOS_state = 0
@@ -56,14 +58,20 @@ proc main:
 	rb = 0
 	acc = rb
 	idhl = 3
-	SGA_selectedBank = ra
-	//rb = 22
-	//rb = [$SGA_selectedBank, acc, uint16]
+	rb = 22
+	[rbc] = [idhl]
+	[rbc] = [idx]
+	NOS_state = SGA_selectedBank
+	SGA_selectedBank = SGA_selectedBank2
+
+	// not supported
+	//[SGA_selectedBank] = NOS_state
+
+	//SGA_selectedBank = NOS_state
 
 	//SGA_selectedBank = [$NOS_state] + [$NOS_state] + [$NOS_state]
 
 	//SGA_selectedBank = NOS_state // <- in error
-	//NOS_state = SGA_selectedBank
 	asm "ei"
 }
 

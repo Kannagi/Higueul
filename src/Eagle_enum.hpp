@@ -132,14 +132,17 @@ enum OpFlag : uint32_t
 {
 	NOOPFLAGS = 0,
 	// Immediate value flag
-	IMM		  = 1 << 0,
-	REG		  = 1 << 1,
-	REG_PTR	  = 1 << 2,
-	IMM_PTR8  = 1 << 3,
-	IMM_PTR16 = 1 << 4,
+	IMM8	  = 1,
+	IMM16	  = 2,
+	IMM_VAR8  = 3,
+	IMM_VAR16 = 4,
+	REG		  = 5,
+	REG_PTR	  = 6,
+	IMM_PTR8  = 7,
+	IMM_PTR16 = 8,
 
 	// Indexable flag, memory location may be indexed, works only with IX, IY
-	INDEXED = 1 << 5,
+	INDEXED = 1 << 7,
 	// Register flags
 	R_A = 1 << 8,
 	R_B = 1 << 9,
