@@ -200,6 +200,7 @@ std::string Z80RegisterPair16::to_string(void) const
 // -----------------------------------------------------------------------------
 // helper functions
 
+// .............................................................................
 Z80Evaluable &get_low(Z80Evaluable &e, CPU_Z80 &cpu)
 {
 	if (e.get_size() != Z80_SIZE_WORD)
@@ -225,6 +226,7 @@ Z80Evaluable &get_low(Z80Evaluable &e, CPU_Z80 &cpu)
 	}
 }
 
+// .............................................................................
 Z80Evaluable &get_high(Z80Evaluable &e, CPU_Z80 &cpu)
 {
 	if (e.get_size() != Z80_SIZE_WORD)
@@ -272,29 +274,6 @@ static Z80SizeType register_size(const EAGLE_VARIABLE &var)
 static Z80SizeType guess_operation_size(const EAGLE_VARIABLE &dst,
 										const EAGLE_VARIABLE &src1)
 {
-
-	// const EAGLE_VARIABLE *all[] = {&dst, &src1};
-
-	// for (uint32_t i = 0U; i < sizeof(all) / sizeof(all[0]); ++i)
-	// {
-	// 	const EAGLE_VARIABLE &var = *all[i];
-	// 	Z80SizeType size		  = register_size(var);
-	// 	if (size != Z80_SIZE_UNKOWN)
-	// 	{
-	// 		return size;
-	// 	}
-	// 	else if (!var.bimm)
-	// 	{
-	// 		return (Z80SizeType)var.nsize;
-	// 	}
-	// 	else
-	// 	{
-	// 		// probably an immediate, we can't assume anything from it
-	// 		continue;
-	// 	}
-	// }
-
-	// debug_print("Unable to determine operation size");
 	Z80SizeType size = register_size(dst);
 	if (size == Z80_SIZE_UNKOWN && !dst.bimm)
 	{
@@ -341,6 +320,7 @@ void CPU_Z80::exit_block(void)
 	}
 }
 
+// .............................................................................
 Z80Evaluable &CPU_Z80::new_value(uint8_t value)
 {
 	if (this->value_pool_pos >= Z80_POOL_SIZE)
@@ -353,6 +333,7 @@ Z80Evaluable &CPU_Z80::new_value(uint8_t value)
 	return evaluable;
 }
 
+// .............................................................................
 Z80Evaluable &CPU_Z80::new_value(const EAGLE_VARIABLE &var,
 								 Z80SizeType oper_size)
 {
@@ -390,6 +371,7 @@ Z80Evaluable &CPU_Z80::new_value(const EAGLE_VARIABLE &var,
 	return evaluable;
 }
 
+// .............................................................................
 Z80Evaluable &CPU_Z80::new_location(uint16_t value, Z80SizeType size)
 {
 	if (this->location_pool_pos >= Z80_POOL_SIZE)
@@ -402,6 +384,7 @@ Z80Evaluable &CPU_Z80::new_location(uint16_t value, Z80SizeType size)
 	return evaluable;
 }
 
+// .............................................................................
 Z80Evaluable &CPU_Z80::new_location(const EAGLE_VARIABLE &var,
 									Z80SizeType oper_size)
 {
@@ -431,6 +414,7 @@ Z80Evaluable &CPU_Z80::new_location(const EAGLE_VARIABLE &var,
 	return location;
 }
 
+// .............................................................................
 Z80Register &CPU_Z80::get_register_by_eagle_type(const EAGLE_keywords &type)
 {
 	switch (type)
@@ -452,6 +436,7 @@ Z80Register &CPU_Z80::get_register_by_eagle_type(const EAGLE_keywords &type)
 	}
 }
 
+// .............................................................................
 Z80Evaluable &CPU_Z80::get_from_eagle_var(const EAGLE_VARIABLE &var,
 										  Z80SizeType oper_size)
 {
@@ -524,8 +509,10 @@ Z80Evaluable &CPU_Z80::get_from_eagle_var(const EAGLE_VARIABLE &var,
 	}
 }
 
+// .............................................................................
 void CPU_Z80::asm_do_else() {}
 
+// .............................................................................
 std::string CPU_Z80::asm_bru(const EAGLE_VARIABLE &src1,
 							 const EAGLE_VARIABLE &src2, const char operator1,
 							 const char operator2, int type, int clabel,
@@ -556,6 +543,7 @@ std::string CPU_Z80::asm_bru(const EAGLE_VARIABLE &src1,
 	return text_code;
 }
 
+// .............................................................................
 std::string CPU_Z80::asm_call_jump(const EAGLE_VARIABLE &src, int narg,
 								   int type, std::string &labelcall)
 {
@@ -602,6 +590,7 @@ std::string CPU_Z80::asm_call_jump(const EAGLE_VARIABLE &src, int narg,
 	return text_code;
 }
 
+// .............................................................................
 std::string CPU_Z80::asm_return(const EAGLE_VARIABLE &ret, bool retvoid)
 {
 	std::string text_code;
@@ -636,6 +625,7 @@ std::string CPU_Z80::asm_return(const EAGLE_VARIABLE &ret, bool retvoid)
 	return text_code;
 }
 
+// .............................................................................
 std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 				Z80Evaluable &idx)
 {
@@ -648,6 +638,7 @@ std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 	return "inc " + dst_reg.get_name() + "\n";
 }
 
+// .............................................................................
 std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 				Z80Evaluable &idx)
 {
@@ -660,6 +651,7 @@ std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 	return "dec " + dst_reg.get_name() + "\n";
 }
 
+// .............................................................................
 std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 				 Z80Evaluable &idx)
 {
@@ -735,12 +727,14 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 	}
 }
 
+// .............................................................................
 std::string load_byregister8(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 							 Z80Evaluable &idx)
 {
 	return load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx);
 }
 
+// .............................................................................
 std::string load_byregister16from8(CPU_Z80 &cpu, Z80Evaluable &dst,
 								   Z80Evaluable &src, Z80Evaluable &idx)
 {
@@ -753,6 +747,7 @@ std::string load_byregister16from8(CPU_Z80 &cpu, Z80Evaluable &dst,
 		   load(cpu, dst, cpu.HL, idx);
 }
 
+// .............................................................................
 std::string load_reg16fromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
 							   Z80Evaluable &src, Z80Evaluable &idx)
 {
@@ -771,6 +766,7 @@ std::string load_reg16fromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
 		   load(cpu, dst, cpu.HL, idx);
 }
 
+// .............................................................................
 std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
 									  Z80Evaluable &src, Z80Evaluable &idx)
 {
@@ -782,6 +778,7 @@ std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
 		   dec(cpu, src, null_evaluable, null_evaluable);
 }
 
+// .............................................................................
 std::string load_ptr_using_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
 							  Z80Evaluable &src, Z80Evaluable &idx)
 {
@@ -801,6 +798,7 @@ std::string load_ptr16_using_a(CPU_Z80 &cpu, Z80Evaluable &dst,
 	return text;
 }
 
+// .............................................................................
 std::string load_ptr16_using_a_and_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
 									  Z80Evaluable &src, Z80Evaluable &idx)
 {
@@ -815,15 +813,19 @@ std::string load_ptr16_using_a_and_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
 	return text;
 }
 
+// .............................................................................
 std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 						 Z80Evaluable &idx)
 {
 	return "";
 }
 
+// .............................................................................
 static inline OpFlag o_dst(unsigned int i) { return static_cast<OpFlag>(i); }
+// .............................................................................
 static inline OpFlag o_src(unsigned int i) { return static_cast<OpFlag>(i); }
 
+// .............................................................................
 Z80OpcodeIndex build_index(void)
 {
 	Z80OpcodeIndex opcode_index;
@@ -882,6 +884,7 @@ Z80OpcodeIndex build_index(void)
 	return opcode_index;
 }
 
+// .............................................................................
 static Z80OpcodeIndex opcode_index = build_index();
 
 void print_eaglevarp(const EAGLE_VARIABLEP &var)
@@ -891,6 +894,7 @@ void print_eaglevarp(const EAGLE_VARIABLEP &var)
 			  << ", token2 : " << var.token2 << "}";
 }
 
+// .............................................................................
 void print_eaglevar(const EAGLE_VARIABLE &var)
 {
 	std::cout << "{ immediate : " << var.immediate
@@ -908,6 +912,7 @@ void print_eaglevar(const EAGLE_VARIABLE &var)
 	std::cout << "}" << std::endl;
 }
 
+// .............................................................................
 std::string CPU_Z80::asm_alu(const EAGLE_VARIABLE &dst,
 							 const EAGLE_VARIABLE &src1,
 							 const EAGLE_VARIABLE &src2, const char operator1,
