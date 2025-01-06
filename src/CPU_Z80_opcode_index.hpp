@@ -6,7 +6,7 @@ class Z80Evaluable;
 
 // Types -----------------------------------------------------------------------
 typedef std::string (*translator_fn)(CPU_Z80 &cpu, Z80Evaluable &dst,
-									 Z80Evaluable &src, Z80Evaluable &idx);
+									 Z80Evaluable &src);
 
 // Z80OpcodeIndex keeps an index of all possible Z80 operations related to
 // translator functions.

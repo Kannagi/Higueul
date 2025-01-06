@@ -626,8 +626,7 @@ std::string CPU_Z80::asm_return(const EAGLE_VARIABLE &ret, bool retvoid)
 }
 
 // .............................................................................
-std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
-				Z80Evaluable &idx)
+std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	if (!dst.is_register())
 	{
@@ -639,8 +638,7 @@ std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 }
 
 // .............................................................................
-std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
-				Z80Evaluable &idx)
+std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	if (!dst.is_register())
 	{
@@ -652,8 +650,7 @@ std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 }
 
 // .............................................................................
-std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
-				 Z80Evaluable &idx)
+std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	enum Mode : uint16_t
 	{
@@ -728,28 +725,27 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
 }
 
 // .............................................................................
-std::string load_byregister8(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
-							 Z80Evaluable &idx)
+std::string load_byregister8(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
-	return load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx);
+	return load(cpu, cpu.A, src) + load(cpu, dst, cpu.A);
 }
 
 // .............................................................................
 std::string load_byregister16from8(CPU_Z80 &cpu, Z80Evaluable &dst,
-								   Z80Evaluable &src, Z80Evaluable &idx)
+								   Z80Evaluable &src)
 {
 	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
 	{
 		die("Invalid size for load_byregister16from8");
 	}
-	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U), idx) +
-		   load(cpu, cpu.A, src, idx) + load(cpu, cpu.L, cpu.A, idx) +
-		   load(cpu, dst, cpu.HL, idx);
+	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U)) +
+		   load(cpu, cpu.A, src) + load(cpu, cpu.L, cpu.A) +
+		   load(cpu, dst, cpu.HL);
 }
 
 // .............................................................................
 std::string load_reg16fromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
-							   Z80Evaluable &src, Z80Evaluable &idx)
+							   Z80Evaluable &src)
 {
 	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
 	{
@@ -757,65 +753,61 @@ std::string load_reg16fromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
 	}
 
 	Z80RegisterPair16 &dst_pair = reinterpret_cast<Z80RegisterPair16 &>(dst);
-	return load(cpu, dst_pair.get_subregister(1U), cpu.new_value((uint8_t)0U),
-				idx) +
-		   load(cpu, dst_pair.get_subregister(0U), src, idx);
+	return load(cpu, dst_pair.get_subregister(1U), cpu.new_value((uint8_t)0U)) +
+		   load(cpu, dst_pair.get_subregister(0U), src);
 
-	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U), idx) +
-		   load(cpu, cpu.A, src, idx) + load(cpu, cpu.L, cpu.A, idx) +
-		   load(cpu, dst, cpu.HL, idx);
+	return load(cpu, cpu.H, cpu.new_value((uint8_t)0U)) +
+		   load(cpu, cpu.A, src) + load(cpu, cpu.L, cpu.A) +
+		   load(cpu, dst, cpu.HL);
 }
 
 // .............................................................................
 std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
-									  Z80Evaluable &src, Z80Evaluable &idx)
+									  Z80Evaluable &src)
 {
-	return load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx) +
-		   inc(cpu, dst, null_evaluable, null_evaluable) +
-		   inc(cpu, src, null_evaluable, null_evaluable) +
-		   load(cpu, cpu.A, src, idx) + load(cpu, dst, cpu.A, idx) +
-		   dec(cpu, dst, null_evaluable, null_evaluable) +
-		   dec(cpu, src, null_evaluable, null_evaluable);
+	return load(cpu, cpu.A, src) + load(cpu, dst, cpu.A) +
+		   inc(cpu, dst, null_evaluable) + inc(cpu, src, null_evaluable) +
+		   load(cpu, cpu.A, src) + load(cpu, dst, cpu.A) +
+		   dec(cpu, dst, null_evaluable) + dec(cpu, src, null_evaluable);
 }
 
 // .............................................................................
 std::string load_ptr_using_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
-							  Z80Evaluable &src, Z80Evaluable &idx)
+							  Z80Evaluable &src)
 {
 	cpu.HL.set_pointing(false);
-	return load(cpu, cpu.HL, src, idx) + load(cpu, dst, cpu.HL, idx);
+	return load(cpu, cpu.HL, src) + load(cpu, dst, cpu.HL);
 }
 
 std::string load_ptr16_using_a(CPU_Z80 &cpu, Z80Evaluable &dst,
-							   Z80Evaluable &src, Z80Evaluable &idx)
+							   Z80Evaluable &src)
 {
-	std::string text = load(cpu, cpu.A, get_high(src, cpu), idx);
-	text += load(cpu, get_high(dst, cpu), cpu.A, idx);
+	std::string text = load(cpu, cpu.A, get_high(src, cpu));
+	text += load(cpu, get_high(dst, cpu), cpu.A);
 
-	text += load(cpu, cpu.A, get_low(src, cpu), idx);
-	text += load(cpu, get_low(dst, cpu), cpu.A, idx);
+	text += load(cpu, cpu.A, get_low(src, cpu));
+	text += load(cpu, get_low(dst, cpu), cpu.A);
 
 	return text;
 }
 
 // .............................................................................
 std::string load_ptr16_using_a_and_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
-									  Z80Evaluable &src, Z80Evaluable &idx)
+									  Z80Evaluable &src)
 {
 	cpu.HL.set_pointing(false);
 
-	std::string text = load(cpu, cpu.A, get_high(src, cpu), idx);
-	text += load(cpu, cpu.H, cpu.A, idx);
-	text += load(cpu, cpu.A, get_low(src, cpu), idx);
-	text += load(cpu, cpu.L, cpu.A, idx);
-	text += load(cpu, dst, cpu.HL, idx);
+	std::string text = load(cpu, cpu.A, get_high(src, cpu));
+	text += load(cpu, cpu.H, cpu.A);
+	text += load(cpu, cpu.A, get_low(src, cpu));
+	text += load(cpu, cpu.L, cpu.A);
+	text += load(cpu, dst, cpu.HL);
 
 	return text;
 }
 
 // .............................................................................
-std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src,
-						 Z80Evaluable &idx)
+std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	return "";
 }
@@ -944,8 +936,7 @@ std::string CPU_Z80::asm_alu(const EAGLE_VARIABLE &dst,
 		//		  << std::endl;
 
 		translator_fn translator = opcode_index.get_translator(key);
-
-		text_code = translator(*this, dstEv, src2Ev, src1Ev);
+		text_code				 = translator(*this, dstEv, src2Ev);
 	}
 	break;
 	default:
