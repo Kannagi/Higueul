@@ -122,6 +122,8 @@ enum class EAGLE_keywords : unsigned char
 enum OpType : uint64_t
 {
 	OP_LOAD,
+	OP__ARITHMETIC,
+	OP_ADD,
 	OP__MAX,
 };
 

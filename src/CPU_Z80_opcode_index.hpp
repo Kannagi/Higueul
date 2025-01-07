@@ -16,6 +16,8 @@ class Z80OpcodeIndex
 		translator_fn get_translator(int64_t key);
 		void index(OpType type, OpFlag dst, OpFlag src, translator_fn f);
 
+		uint64_t get_size(void) { return table.size(); }
+
 	private:
 		std::map<int64_t, translator_fn> table;
 };

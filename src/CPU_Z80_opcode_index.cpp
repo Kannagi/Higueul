@@ -27,6 +27,8 @@ static int64_t make_z80_key(OpType type, OpFlag dst, OpFlag src);
 
 static const std::string op_strings[OP__MAX] = {
 	"ld",
+	"<invalid>",
+	"add",
 };
 
 std::string explain_key(uint64_t flags)
@@ -36,13 +38,18 @@ std::string explain_key(uint64_t flags)
 	uint64_t oper_type = flags & 0xF;
 
 	if (oper_type == IMM8)
-		result += "<immediate8> ";
+		result += "<immediate8>";
 	if (oper_type == IMM16)
-		result += "<immediate16> ";
+		result += "<immediate16>";
 	if (oper_type == IMM_VAR8)
-		result += "<mem_ptr8> ";
+		result += "<var8>";
 	if (oper_type == IMM_VAR16)
-		result += "<mem_ptr16> ";
+		result += "<var16>";
+	if (oper_type == IMM_PTR16)
+		result += "<(var16)>";
+	if (oper_type == IMM_PTR8)
+		result += "<(var8)>";
+
 	if (oper_type == REG || oper_type == REG_PTR)
 	{
 		result += "<reg: ";
@@ -50,33 +57,33 @@ std::string explain_key(uint64_t flags)
 			result += "(";
 
 		if (flags & R_A)
-			result += "A ";
+			result += "A";
 		if (flags & R_B)
-			result += "B ";
+			result += "B";
 		if (flags & R_C)
-			result += "C ";
+			result += "C";
 		if (flags & R_D)
-			result += "D ";
+			result += "D";
 		if (flags & R_E)
-			result += "E ";
+			result += "E";
 		if (flags & R_F)
-			result += "F ";
+			result += "F";
 		if (flags & R_H)
-			result += "H ";
+			result += "H";
 		if (flags & R_L)
-			result += "L ";
+			result += "L";
 		if (flags & RBC)
-			result += "BC ";
+			result += "BC";
 		if (flags & RDE)
-			result += "DE ";
+			result += "DE";
 		if (flags & RHL)
-			result += "HL ";
+			result += "HL";
 		if (flags & RIX)
-			result += "IX ";
+			result += "IX";
 		if (flags & RIY)
-			result += "IY ";
+			result += "IY";
 		if (flags & RSP)
-			result += "SP ";
+			result += "SP";
 		if (flags & INDEXED)
 			result += "+indexed";
 		if (oper_type == REG_PTR)
@@ -91,9 +98,9 @@ translator_fn Z80OpcodeIndex::get_translator(int64_t key)
 	if (this->table.find(key) == this->table.end())
 	{
 		std::string msg =
-			"No such opcode " + op_strings[get_z80_optype_from_key(key)] + " " +
-			explain_key(key) + "," + explain_key(key >> KEY_STRIDE) + " [" +
-			std::to_string(key) + "]";
+			"No such operation : " + op_strings[get_z80_optype_from_key(key)] +
+			" " + explain_key(key) + ", " + explain_key(key >> KEY_STRIDE) +
+			" [ key=" + std::to_string(key) + " ]";
 		die(msg);
 	}
 
@@ -116,7 +123,7 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 
 	// std::cout << explain_key(dst) << std::endl;
 	// std::cout << explain_key(src) << std::endl;
-	uint32_t d_flag		  = d_notreg ? 0 : R_A;
+	uint32_t d_flag		  = d_notreg ? NOOPFLAGS : R_A;
 	uint32_t max_dst_iter = d_notreg ? 1 : 24;
 
 	for (uint v = 0U; v < max_dst_iter; ++v, d_flag <<= 1)
@@ -160,13 +167,21 @@ void Z80OpcodeIndex::index(OpType type, OpFlag dst, OpFlag src, translator_fn f)
 
 static int64_t make_z80_key(OpType type, OpFlag dst, OpFlag src)
 {
-	return ((uint64_t)dst) |
-		   (((uint64_t)src)
-			<< KEY_STRIDE); // | (((uint64_t)type) << (KEY_STRIDE * 2U));
+	return ((uint64_t)dst) | (((uint64_t)src) << KEY_STRIDE) |
+		   (((uint64_t)type) << (KEY_STRIDE * 2U));
 }
 
 int64_t make_z80_opkey(OpType type, Z80Evaluable &dst, Z80Evaluable &src)
 {
+	if (!dst.exists())
+	{
+		die("Destination does not exist");
+	}
+	if (!src.exists())
+	{
+		die("Source does not exist");
+	}
+
 	OpFlag flg_dst = dst.get_opflag();
 	OpFlag flg_src = src.get_opflag();
 

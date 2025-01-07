@@ -37,32 +37,51 @@ proc main:
 	asm "im 1"
 
 	// Addition test ---------------------------
-	// NOS_state = NOS_state + acc
-
-	// assignation test ------------------------
-	rb = [idhl]
+	NOS_state = SGA_selectedBank2 + rc
+	SGA_selectedBank = NOS_state + rc
+	SGA_selectedBank = SGA_selectedBank2 + rc
 
 	acc = 0
-	acc = NOS_sysMissedClock
+	acc = acc + acc
+	NOS_state = idhl
+	NOS_state = idhl + idhl
+
+	acc = rc + acc
+	acc = rc + acc
+
+	SGA_selectedBank = rc
+
+	NOS_state = rc + acc
+	NOS_state = rc + NOS_state
+	//idx = $NOS_state
+	NOS_state = [idhl] + rbc
+	NOS_state = [idhl] + [idhl]
+
+
+	// assignation test ------------------------
+	//rb = [idhl]
+	//rb = NOS_state
+	//acc = 0
+	//acc = NOS_sysMissedClock
 	//acc = $NOS_sysMissedClock
 	//acc = $NOS_state
-	acc = @NOS_sysMissedClock
-	ra = [idhl]
-	SGA_selectedBank = ra
-	NOS_sysMissedClock = [idx]
+	//acc = @NOS_sysMissedClock
+	//ra = [idhl]
+	//SGA_selectedBank = ra
+	//NOS_sysMissedClock = [idx]
 
-	NOS_sysMissedClock = 0
-	NOS_state = 0
-	SGA_selectedBank = 0
-	SGA_selectedBank = 1
-	rb = 0
-	acc = rb
-	idhl = 3
-	rb = 22
-	[rbc] = [idhl]
-	[rbc] = [idx]
-	NOS_state = SGA_selectedBank
-	SGA_selectedBank = SGA_selectedBank2
+	// NOS_sysMissedClock = 0
+	// NOS_state = 0
+	// SGA_selectedBank = 0
+	// SGA_selectedBank = 1
+	// rb = 0
+	// acc = rb
+	// idhl = 3
+	// rb = 22
+	// [rbc] = [idhl]
+	// [rbc] = [idx]
+	// NOS_state = SGA_selectedBank
+	// SGA_selectedBank = SGA_selectedBank2
 
 	// not supported
 	//[SGA_selectedBank] = NOS_state

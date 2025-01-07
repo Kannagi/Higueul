@@ -24,6 +24,7 @@ class Z80Evaluable
 		virtual bool is_register(void) const	  = 0;
 		virtual bool is_deferencing(void) const	  = 0;
 		virtual OpFlag get_opflag(void) const	  = 0;
+		virtual bool is_undef(void) const		  = 0;
 		virtual bool exists(void) const final
 		{
 			return this->get_size() != Z80_SIZE_UNKOWN;
@@ -42,6 +43,7 @@ class Z80NullEvaluable : public Z80Evaluable
 		bool is_register(void) const override { return false; }
 		OpFlag get_opflag(void) const override { return NOOPFLAGS; }
 		bool is_deferencing(void) const override { return false; }
+		bool is_undef(void) const override { return true; }
 };
 
 // -----------------------------------------------------------------------------
@@ -57,34 +59,20 @@ class Z80Location : public Z80Evaluable
 		}
 		Z80SizeType get_size(void) const override { return this->oper_size; }
 		bool is_register(void) const override { return false; }
+		bool is_undef(void) const override { return true; }
 		OpFlag get_opflag(void) const override
 		{
-			if (this->pointer)
-			{
-				return this->oper_size == Z80_SIZE_BYTE ? IMM_PTR8 : IMM_PTR16;
-			}
-			else
-			{
-				return this->oper_size == Z80_SIZE_BYTE ? IMM_VAR8 : IMM_VAR16;
-			}
+			return this->oper_size == Z80_SIZE_BYTE ? IMM_VAR8 : IMM_VAR16;
 		}
-		bool is_deferencing(void) const override { return false; }
+		bool is_deferencing(void) const override { return true; }
 		void set_address(uint16_t address, Z80SizeType oper_size)
 		{
 			this->value		= address;
-			this->oper_size = oper_size;
-			this->pointer	= false;
-		}
-		void set_pointer(uint16_t address, Z80SizeType oper_size)
-		{
-			this->value		= address;
-			this->pointer	= true;
 			this->oper_size = oper_size;
 		}
 
 	private:
 		uint16_t value;
-		bool pointer;
 		Z80SizeType oper_size;
 };
 
@@ -109,7 +97,7 @@ class Z80Value : public Z80Evaluable
 			return (this->is16bit) ? IMM16 : IMM8;
 		};
 		bool is_deferencing(void) const override { return false; }
-
+		bool is_undef(void) const override { return false; }
 		void set_value(uint16_t value)
 		{
 			this->value	  = value;
@@ -282,10 +270,10 @@ class Z80Indexer : public Z80Register
 class Z80RegisterPair16 : public Z80Register
 {
 	public:
-		Z80RegisterPair16(Z80Register8 &low, Z80Register8 &high, OpFlag opflag)
+		Z80RegisterPair16(Z80Register8 &high, Z80Register8 &low, OpFlag opflag)
 			: low(low), high(high), undef(true)
 		{
-			this->name	 = low.get_name() + high.get_name();
+			this->name	 = high.get_name() + low.get_name();
 			this->opflag = opflag;
 		}
 
@@ -366,8 +354,22 @@ class CPU_Z80
 		// 16-bit index registers
 		Z80Indexer IX, IY;
 
-		Z80Evaluable &new_value(uint8_t value);
+		Z80Evaluable &new_value(uint16_t value, Z80SizeType size);
 		Z80Evaluable &new_location(uint16_t value, Z80SizeType size);
+
+		// this variable keeps track of an entermediary register used to
+		// store a temporary result. This is used during arithmetic operations
+		// where an add is made and then the result stored to a destination
+		// Z80Evaluable object. If the result_register.exists() is false, it
+		// means, this hasn't been assigned yet.
+
+		void set_result_register(Z80Register &reg) { result_register = &reg; }
+
+		std::string translate(OpType type, Z80Evaluable &dstEv,
+							  Z80Evaluable &src2Ev);
+
+		std::string translate(OpType type, Z80Evaluable &dstEv,
+							  Z80Evaluable &src1Ev, Z80Evaluable &src2Ev);
 
 	private:
 		std::map<std::string, Z80Register *> registers;
@@ -378,6 +380,7 @@ class CPU_Z80
 		Z80Location location_pool[Z80_POOL_SIZE];
 		uint8_t location_pool_pos;
 		uint8_t value_pool_pos;
+		Z80Register *result_register;
 
 		Z80Evaluable &new_value(const EAGLE_VARIABLE &var,
 								Z80SizeType oper_size);
