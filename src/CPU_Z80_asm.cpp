@@ -658,32 +658,41 @@ std::string CPU_Z80::asm_return(const EAGLE_VARIABLE &ret, bool retvoid)
 }
 
 // .............................................................................
-std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
+// increment translation strategy
+static std::string inc(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	if (!dst.is_register())
 	{
 		die("Destination must be a register.");
 	}
+
+	// its incomplete
 
 	Z80Register &dst_reg = reinterpret_cast<Z80Register &>(dst);
 	return "inc " + dst_reg.get_name() + "\n";
 }
 
 // .............................................................................
-std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
+// decrement translation strategy
+static std::string dec(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
 	if (!dst.is_register())
 	{
 		die("Destination must be a register.");
 	}
 
+	// its incomplete
+
 	Z80Register &dst_reg = reinterpret_cast<Z80Register &>(dst);
 	return "dec " + dst_reg.get_name() + "\n";
 }
 
 // .............................................................................
-std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
+// LD main strategy
+// [refactor me]: it grew a bit and became a bit hard to follow... (sigh)
+static std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 {
+	// lets define some translation outcomes
 	enum Mode : uint16_t
 	{
 		MODE_IGNORE,
@@ -696,12 +705,15 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 	Mode mode		   = MODE_LD;
 	bool src_was_undef = src.is_undef();
 
+	// when the destination is a register and the destination isn't a variable
+	// or a pointer, some optimization are possible.
 	if (dst.is_register() && !dst.is_deferencing())
 	{
 		Z80RegisterPair16 &dst_reg = reinterpret_cast<Z80RegisterPair16 &>(dst);
 
 		if (src.is_deferencing())
 		{
+			// [todo] why are we doing this? To revise this branch is needed.
 			dst_reg.load_value(src.get_value());
 			dst_reg.set_undef();
 		}
@@ -711,18 +723,24 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 
 			if (!ld_result.changed && !ld_result.was_undef && !src_was_undef)
 			{
+				// in other words, if the operation changes nothing, lets just
+				// not generate any code.
 				mode = MODE_IGNORE;
 				return "";
 			}
 			else
 			{
+				// some interesting optimizations
 				if (dst_reg.get_name() == cpu.A.get_name() &&
 					dst_reg.get_value() == 0 && !cpu.A.is_undef())
 				{
+					// xor a is classic on Z80 and 8080
 					mode = MODE_XOR;
 				}
 				else if (!ld_result.was_undef && ld_result.delta == 1)
 				{
+					// when dealing with immediate values or addresses,
+					// incrementing or decrementing is faster
 					mode = MODE_INC;
 				}
 				else if (!ld_result.was_undef && ld_result.delta == -1)
@@ -734,6 +752,8 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 
 		if (src_was_undef)
 		{
+			// this is a security measure, if the source value is undef, we must
+			// ensure the dst register is now also undef.
 			dst_reg.set_undef();
 			mode = MODE_LD;
 		}
@@ -763,11 +783,12 @@ std::string load(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 		die("invalid mode");
 	}
 }
+
 // .............................................................................
 // transfert data from 16bit register to another 16bit register, except IX or
 // IY. By example, BC = DE will be converted to B = D and C = E.
-std::string load16_copy_reg_by_8bit(CPU_Z80 &cpu, Z80Evaluable &dst,
-									Z80Evaluable &src)
+static std::string load16_copy_reg_by_8bit(CPU_Z80 &cpu, Z80Evaluable &dst,
+										   Z80Evaluable &src)
 {
 	if (!dst.is_register() || !src.is_register())
 	{
@@ -792,16 +813,18 @@ std::string load16_copy_reg_by_8bit(CPU_Z80 &cpu, Z80Evaluable &dst,
 }
 
 // .............................................................................
-std::string load8_byregister_a(CPU_Z80 &cpu, Z80Evaluable &dst,
-							   Z80Evaluable &src)
+// when it's not possible to load a 8bit value directly to the destination, uses
+// A as register in the middle.
+static std::string load8_byregister_a(CPU_Z80 &cpu, Z80Evaluable &dst,
+									  Z80Evaluable &src)
 {
 	return load(cpu, cpu.A, src) + load(cpu, dst, cpu.A);
 }
 
 // .............................................................................
 // load only the LSB part of the source
-std::string load8_from16byregister_a(CPU_Z80 &cpu, Z80Evaluable &dst,
-									 Z80Evaluable &src)
+static std::string load8_from16byregister_a(CPU_Z80 &cpu, Z80Evaluable &dst,
+											Z80Evaluable &src)
 {
 	if (src.get_size() != Z80_SIZE_WORD || dst.get_size() != Z80_SIZE_BYTE)
 	{
@@ -816,8 +839,10 @@ std::string load8_from16byregister_a(CPU_Z80 &cpu, Z80Evaluable &dst,
 }
 
 // .............................................................................
-std::string load16_byregisterfrom8(CPU_Z80 &cpu, Z80Evaluable &dst,
-								   Z80Evaluable &src)
+// load only the LSB part of the source, sets the MSB part of the destination
+// to zero. This is intended for memory operations
+static std::string load16_byregisterfrom8(CPU_Z80 &cpu, Z80Evaluable &dst,
+										  Z80Evaluable &src)
 {
 	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
 	{
@@ -840,9 +865,10 @@ std::string load16_byregisterfrom8(CPU_Z80 &cpu, Z80Evaluable &dst,
 }
 
 // .............................................................................
-// this one set the HI register to zero and transfer value to low register.
-std::string load16_regfromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
-							   Z80Evaluable &src)
+// this one set the MSB register to zero and transfer value to low register.
+// This is intended for register operations.
+static std::string load16_regfromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
+									  Z80Evaluable &src)
 {
 	if (src.get_size() != Z80_SIZE_BYTE || dst.get_size() != Z80_SIZE_WORD)
 	{
@@ -853,16 +879,14 @@ std::string load16_regfromreg8(CPU_Z80 &cpu, Z80Evaluable &dst,
 	return load(cpu, dst_pair.get_subregister(1U),
 				cpu.new_value(0U, Z80_SIZE_BYTE)) +
 		   load(cpu, dst_pair.get_subregister(0U), src);
-
-	return load(cpu, cpu.H, cpu.new_value(0U, Z80_SIZE_BYTE)) +
-		   load(cpu, cpu.A, src) + load(cpu, cpu.L, cpu.A) +
-		   load(cpu, dst, cpu.HL);
 }
 
 // .............................................................................
-// copy data from a pointer-to-word to the data of another pointer-to-word.
-std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
-									  Z80Evaluable &src)
+// copy data from a pointer-to-word to the data of another pointer-to-word by
+// incrementing the pointers. This strategy sucks when programming Z80
+// assembly, it still sucks here. 50 T-States in average.
+static std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
+											 Z80Evaluable &src)
 {
 	return load(cpu, cpu.A, src) + load(cpu, dst, cpu.A) +
 		   inc(cpu, dst, null_evaluable) + inc(cpu, src, null_evaluable) +
@@ -871,10 +895,11 @@ std::string load_16bitmem_copy_with_a(CPU_Z80 &cpu, Z80Evaluable &dst,
 }
 
 // .............................................................................
-// this transfert is slow it involve setting the register to 0 and then add
-// the other operand to it. This is the only way to move data to and from IX and
-// IY.
-std::string load16_byadding(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
+// Assign a value by addition. This is slow it involve setting the register to 0
+// and then add the other operand to it. This is the only way to move data to
+// and from IX and IY. This sucks as well.
+static std::string load16_byadding(CPU_Z80 &cpu, Z80Evaluable &dst,
+								   Z80Evaluable &src)
 {
 	std::string text_code = "";
 	text_code += cpu.translate(OP_LOAD, dst, cpu.new_value(0, Z80_SIZE_WORD));
@@ -890,21 +915,26 @@ std::string load16_byadding(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
 }
 
 // .............................................................................
-std::string load16_ptr_using_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
-								Z80Evaluable &src)
+// This strategy is intended for memory operations, it transfer date from a
+// variable to another variable by using HL.
+static std::string load16_ptr_using_hl(CPU_Z80 &cpu, Z80Evaluable &dst,
+									   Z80Evaluable &src)
 {
 	cpu.HL.set_pointing(false);
 	return load(cpu, cpu.HL, src) + load(cpu, dst, cpu.HL);
 }
 
 // .............................................................................
-std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst, Z80Evaluable &src)
+// sometime this is needed to avoid using NULL pointers.
+static std::string load_nothing(CPU_Z80 &cpu, Z80Evaluable &dst,
+								Z80Evaluable &src)
 {
 	return "";
 }
 
 // .............................................................................
-std::string add8(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
+// 8Bit base addition strategy. Covers most cases.
+static std::string add8(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 {
 	std::string text_code = "";
 
@@ -913,8 +943,8 @@ std::string add8(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 	Z80Evaluable *src1_ptr = &src1;
 	Z80Evaluable *src2_ptr = &src2;
 
-	// src2 being a register is faster, lets swap the operands to prevent
-	// register juggling
+	// when src2 is a register, it triggers an optimisation. Let's swap the
+	// operands to reduce register juggling
 	if (src1.is_register() && !src2.is_register())
 	{
 		std::swap(src1_ptr, src2_ptr);
@@ -925,12 +955,13 @@ std::string add8(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 
 	if (src1_name == src2_name)
 	{
+		// that one is fun :)
 		text_code += cpu.translate(OP_LOAD, cpu.A, *src1_ptr);
 		text_code += "rlca\n";
 	}
 	else if (src2_name == cpu.A.get_name())
 	{
-		// we do not need to use register L when A is used here. Lets just
+		// we do not need to use the register L when A is used. Lets just
 		// use the accumulator for its intended use :).
 		text_code +=
 			"add " + cpu.A.to_string() + ", " + src1_ptr->to_string() + "\n";
@@ -952,7 +983,9 @@ std::string add8(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 }
 
 // .............................................................................
-std::string add16(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
+// 16Bit base addition strategy. Covers most cases, but not pointers mixed with
+// variables or registers.
+static std::string add16(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 {
 	std::string text_code = "";
 
@@ -961,8 +994,8 @@ std::string add16(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 	Z80Evaluable *src1_ptr = &src1;
 	Z80Evaluable *src2_ptr = &src2;
 
-	// src2 being a register is faster, lets swap the operands to prevent
-	// register juggling
+	// when src2 is a register, it triggers an optimisation. Let's swap the
+	// operands to reduce register juggling
 	if (src1.is_register() && !src2.is_register())
 	{
 		std::swap(src1_ptr, src2_ptr);
@@ -973,6 +1006,7 @@ std::string add16(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 
 	if (src1_name == src2_name)
 	{
+		// not as great as rlca, but still better by a lot.
 		text_code += cpu.translate(OP_LOAD, cpu.HL, *src1_ptr);
 		text_code +=
 			"add " + cpu.HL.get_name() + ", " + cpu.HL.get_name() + "\n";
@@ -994,12 +1028,16 @@ std::string add16(CPU_Z80 &cpu, Z80Evaluable &src1, Z80Evaluable &src2)
 }
 
 // .............................................................................
+// used to mark as destination operand and hide cast
 static inline OpFlag D(unsigned int i) { return static_cast<OpFlag>(i); }
 // .............................................................................
+// used to mark as source operand and hide cast
 static inline OpFlag S(unsigned int i) { return static_cast<OpFlag>(i); }
 
 // .............................................................................
-Z80OpcodeIndex build_index(void)
+// build a registery of all possible operations. This associates translation
+// strategies to different operand combinations.
+static Z80OpcodeIndex build_index(void)
 {
 	Z80OpcodeIndex opcodes;
 
@@ -1123,7 +1161,8 @@ std::string CPU_Z80::translate(OpType type, Z80Evaluable &dstEv,
 }
 
 // .............................................................................
-void print_eaglevarp(const EAGLE_VARIABLEP &var)
+// debugging utilities - TODO remove later
+static void print_eaglevarp(const EAGLE_VARIABLEP &var)
 {
 	std::cout << "{ value: " << var.value << ", type : " << (uint16_t)var.type
 			  << ", bimm : " << var.bimm << ", token1 : " << var.token1
@@ -1131,7 +1170,8 @@ void print_eaglevarp(const EAGLE_VARIABLEP &var)
 }
 
 // .............................................................................
-void print_eaglevar(const EAGLE_VARIABLE &var)
+// debugging utilities - TODO remove later
+static void print_eaglevar(const EAGLE_VARIABLE &var)
 {
 	std::cout << "{ immediate : " << var.immediate
 			  << ", dimmediate : " << var.dimmediate

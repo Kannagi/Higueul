@@ -354,20 +354,21 @@ class CPU_Z80
 		// 16-bit index registers
 		Z80Indexer IX, IY;
 
+		// allocates a new value from the value pool.
 		Z80Evaluable &new_value(uint16_t value, Z80SizeType size);
+		// allocates a new location (for variables) from the location pool.
 		Z80Evaluable &new_location(uint16_t value, Z80SizeType size);
-
-		// this variable keeps track of an entermediary register used to
-		// store a temporary result. This is used during arithmetic operations
-		// where an add is made and then the result stored to a destination
-		// Z80Evaluable object. If the result_register.exists() is false, it
-		// means, this hasn't been assigned yet.
 
 		void set_result_register(Z80Register &reg) { result_register = &reg; }
 
+		// translate a single operation from it's operand, when the operation is
+		// has only two operands.
 		std::string translate(OpType type, Z80Evaluable &dstEv,
 							  Z80Evaluable &src2Ev);
 
+		// translate a single operation from it's operand, when the operation is
+		// has 3 operands. To translate a two operands operation using this
+		// method, just send src2Ev twice.
 		std::string translate(OpType type, Z80Evaluable &dstEv,
 							  Z80Evaluable &src1Ev, Z80Evaluable &src2Ev);
 
@@ -380,6 +381,12 @@ class CPU_Z80
 		Z80Location location_pool[Z80_POOL_SIZE];
 		uint8_t location_pool_pos;
 		uint8_t value_pool_pos;
+
+		// this variable keeps track of an entermediary register used to
+		// store a temporary result. This is used during arithmetic operations
+		// where an add is made and then the result stored to a destination
+		// Z80Evaluable object. If the result_register.exists() is false, it
+		// means, this hasn't been assigned yet.
 		Z80Register *result_register;
 
 		Z80Evaluable &new_value(const EAGLE_VARIABLE &var,
