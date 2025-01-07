@@ -37,25 +37,26 @@ proc main:
 	asm "im 1"
 
 	// Addition test ---------------------------
-	NOS_state = SGA_selectedBank2 + rc
-	SGA_selectedBank = NOS_state + rc
-	SGA_selectedBank = SGA_selectedBank2 + rc
-
 	acc = 0
-	acc = acc + acc
-	NOS_state = idhl
-	NOS_state = idhl + idhl
+	NOS_state = rd + acc
 
+	//NOS_state = SGA_selectedBank2 + rc
+	//SGA_selectedBank = NOS_state + rc
+	//SGA_selectedBank = SGA_selectedBank2 + rc
+//
+	//NOS_state = idhl
+	//NOS_state = idhl + idhl
+//
 	acc = rc + acc
 	acc = rc + acc
 
 	SGA_selectedBank = rc
 
 	NOS_state = rc + acc
-	NOS_state = rc + NOS_state
+	//NOS_state = rc + NOS_state
 	//idx = $NOS_state
-	NOS_state = [idhl] + rbc
-	NOS_state = [idhl] + [idhl]
+	//NOS_state = [idhl] + rbc
+	//NOS_state = [idhl] + [idhl]
 
 
 	// assignation test ------------------------
