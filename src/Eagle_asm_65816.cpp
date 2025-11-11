@@ -340,8 +340,6 @@ void Eagle::asm_call_jump_65816(const EAGLE_VARIABLE &src,int ninst,int type)
 				this->text_code += mne1 + saddress2 + "\n";
 				this->text_code += mne2 + src1value + "..arg" + std::to_string(i) + "+\n";
 			}
-
-
 		}
 	}
 

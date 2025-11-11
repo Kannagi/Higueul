@@ -10,6 +10,8 @@
 #include "Eagle.hpp"
 #include "CPU_Z80.hpp"
 
+
+
 Eagle::Eagle()
 {
 	this->keywords["int8"]    = EAGLE_keywords::INT8;
@@ -107,21 +109,25 @@ Eagle::Eagle()
 	this->idf = 0;
 	this->sizebin = 0;
 	this->mmap = 0;
+	this->snesromfree = 0;
 
 	this->target = TARGET_65816;
 
-	//6+502
+	//6502
 	this->gvariable["acc"].type  = EAGLE_keywords::ACC;
 	this->gvariable["idx"].type  = EAGLE_keywords::IDX;
 	this->gvariable["idy"].type  = EAGLE_keywords::IDY;
 
-	this->gvariable["ra"].type = EAGLE_keywords::ACC;
-	this->gvariable["rb"].type = EAGLE_keywords::REGB;
-	this->gvariable["rc"].type = EAGLE_keywords::REGC;
-	this->gvariable["rd"].type = EAGLE_keywords::REGD;
-	this->gvariable["re"].type = EAGLE_keywords::REGE;
-	this->gvariable["rf"].type = EAGLE_keywords::REGF;
+	this->gvariable["reg1"].type = EAGLE_keywords::REG1; //B / BX
+	this->gvariable["reg2"].type = EAGLE_keywords::REG2; //C / CX
+	this->gvariable["reg3"].type = EAGLE_keywords::REG3; //D / DX
+	this->gvariable["reg4"].type = EAGLE_keywords::REG4; //E / BP
+	this->gvariable["reg5"].type = EAGLE_keywords::REG5; //F / SI
+	this->gvariable["reg6"].type = EAGLE_keywords::REG6; //0 / DI
 
+	this->gvariable["regsp"].type = EAGLE_keywords::REGSP; //SP
+
+	//Z80
 	this->gvariable["idh"].type = EAGLE_keywords::IDH;
 	this->gvariable["idl"].type = EAGLE_keywords::IDL;
 
@@ -146,8 +152,6 @@ Eagle::Eagle()
 	this->bcycle = false;
 	this->bmesen = false;
 	this->snes_checksum = false;
-
-	cpu_z80.initialize();
 }
 
 uint64_t Eagle::alloc(EAGLE_keywords type,int n)
@@ -559,12 +563,15 @@ int Eagle::line_code_asm(int mode)
 						{
 							n = this->offset&0x7FFF;
 
+							this->snesromfree += (0x8000 - n);
+
 							if( (n != 0) && (n != 0x7FB0))
-							std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << "\n";
+								std::cout << "bloc size "<< ( (this->offset>>16)&0x7F)<<": "<< (this->offset&0x7FFF)  << " (" << (0x8000 - n) <<") \n";
 						}
 						else
 						{
-							std::cout << "bloc size "<< this->offset << "\n";
+
+							//std::cout << "bloc size "<< this->offset << "\n";
 						}
 
 					}

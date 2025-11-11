@@ -132,7 +132,12 @@ class Eagle
 		void asm_call_jump_80186(const EAGLE_VARIABLE &var,int narg,int type);
 
 		//---------z80--------------
-		CPU_Z80 cpu_z80;
+		void asm_return_z80(const EAGLE_VARIABLE &ret,bool retvoid);
+		void asm_alu_z80(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2);
+
+		void asm_bru_z80(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const char operator1,const char operator2,int type,int clabel);
+		void asm_call_jump_z80(const EAGLE_VARIABLE &var,int narg,int type);
+		std::string  asm_z80_arg(const EAGLE_VARIABLE &src,int &type,std::string &labelp);
 
 		//---------AltairX--------------
 		void asm_return_AltairX(const EAGLE_VARIABLE &ret,bool retvoid);
@@ -201,6 +206,7 @@ class Eagle
 		uint64_t stack_address;
 
 		int scope_label[128];
+		int snesromfree;
 };
 
 class Constant_folding

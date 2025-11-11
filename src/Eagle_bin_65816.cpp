@@ -1523,6 +1523,8 @@ void Eagle::bin_65816()
 	}
 
 
+
+
 	if(this->bmesen == true)
 	{
 		std::ofstream outfile(this->filename);
@@ -1576,6 +1578,7 @@ void Eagle::bin_65816()
 
 	//std::cout << checksum1 << " " << checksum2 << "\n";
 
+	//std::cout << "SNES ROM free :"<< this->snesromfree << "\n";
 	std::cout << "func used :"<< func_address << "\n";
 	std::cout << "wram used :"<< wram_address << "\n";
 }

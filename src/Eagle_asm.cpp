@@ -26,7 +26,7 @@ void Eagle::asm_bru(const EAGLE_VARIABLE &src1,const EAGLE_VARIABLE &src2,const 
 		break;
 
 		case TARGET_Z80:
-			this->text_code += cpu_z80.asm_bru(src1,src2,operator1,operator2,type,clabel,this->ilabel);
+			asm_bru_z80(src1,src2,operator1,operator2,type,clabel);
 		break;
 
 		case TARGET_AltairX:
@@ -50,7 +50,7 @@ void Eagle::asm_call_jump(const EAGLE_VARIABLE &src,int ninst,int type)
 		break;
 
 		case TARGET_Z80:
-			this->text_code += cpu_z80.asm_call_jump(src,ninst,type,this->labelcall);
+			asm_call_jump_z80(src,ninst,type);
 		break;
 
 		case TARGET_AltairX:
@@ -74,7 +74,7 @@ void Eagle::asm_return(const EAGLE_VARIABLE &ret,bool retvoid)
 		break;
 
 		case TARGET_Z80:
-			this->text_code += cpu_z80.asm_return(ret,retvoid);
+			asm_return_z80(ret,retvoid);
 		break;
 
 		case TARGET_AltairX:
@@ -98,7 +98,7 @@ void Eagle::asm_alu(const EAGLE_VARIABLE &dst,const EAGLE_VARIABLE &src1,const E
 		break;
 
 		case TARGET_Z80:
-			this->text_code += cpu_z80.asm_alu(dst,src1,src2,operator1,operator2);
+			asm_alu_z80(dst,src1,src2,operator1,operator2);
 		break;
 
 		case TARGET_AltairX:
@@ -120,7 +120,7 @@ void Eagle::asm_do_else()
 		break;
 
 		case TARGET_Z80:
-			cpu_z80.asm_do_else();
+
 		break;
 
 		case TARGET_AltairX:
