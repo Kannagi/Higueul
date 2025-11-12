@@ -272,7 +272,8 @@ void Eagle::write_file(const char *path,std::string text)
 
 	if(!file.is_open())
 	{
-		std::cerr << "Error: Unable to open file" << std::endl;
+		std::cerr << "Error: Unable to open file " << path << std::endl;
+		exit(1);
 		return;
 	}
 
@@ -287,7 +288,8 @@ void Eagle::write_file_bin(const char *path)
 
 	if(!file.is_open())
 	{
-		std::cerr << "Error: Unable to open file" << std::endl;
+		std::cerr << "Error: Unable to open file " << path << std::endl;
+		exit(1);
 		return;
 	}
 
@@ -302,7 +304,8 @@ void Eagle::load_file(const char *path)
 
 	if(!file.is_open())
 	{
-		std::cerr << "Error: Unable to open file" << std::endl;
+		std::cerr << "Error: Unable to open file " << path << std::endl;
+		exit(1);
 		return;
 	}
 
@@ -331,7 +334,8 @@ void Eagle::load_file_bin(const char *path,std::vector<char> &data)
 
 	if(!file.is_open())
 	{
-		std::cerr << "Error: Unable to open file" << std::endl;
+		std::cerr << "Error: Unable to open file " << path << std::endl;
+		exit(1);
 		return;
 	}
 
